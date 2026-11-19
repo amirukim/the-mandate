@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Stylised illustration of an empty parliamentary debating chamber">
+  <defs>
+    <linearGradient id="hall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1018"/>
+      <stop offset="1" stop-color="#171a20"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6cd8e" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#e6cd8e" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="benchLight" cx="0.5" cy="0" r="1">
+      <stop offset="0" stop-color="#c9a96a" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#c9a96a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1440" height="420" fill="url(#hall)"/>
+
+  <!-- ceiling light beams -->
+  <g>
+    <polygon points="360,0 470,0 560,300 270,300" fill="url(#beam)"/>
+    <polygon points="700,0 810,0 900,300 610,300" fill="url(#beam)"/>
+    <polygon points="1040,0 1150,0 1240,300 950,300" fill="url(#beam)"/>
+  </g>
+
+  <!-- columns -->
+  <g fill="#141a24">
+    <rect x="60" y="0" width="54" height="420"/>
+    <rect x="1330" y="0" width="54" height="420"/>
+    <rect x="220" y="0" width="34" height="420" opacity="0.7"/>
+    <rect x="1190" y="0" width="34" height="420" opacity="0.7"/>
+  </g>
+  <g fill="none" stroke="#c9a96a" stroke-opacity="0.35" stroke-width="2">
+    <rect x="60" y="0" width="54" height="420"/>
+    <rect x="1330" y="0" width="54" height="420"/>
+  </g>
+
+  <!-- speaker's chair, raised centre -->
+  <g>
+    <rect x="660" y="96" width="120" height="92" fill="#0e141e"/>
+    <path d="M660 96c0-30 27-52 60-52s60 22 60 52z" fill="#0e141e"/>
+    <rect x="660" y="96" width="120" height="92" fill="none" stroke="#c9a96a" stroke-opacity="0.5" stroke-width="2"/>
+    <rect x="640" y="188" width="160" height="14" fill="#141a24"/>
+    <rect x="640" y="188" width="160" height="3" fill="#c9a96a" opacity="0.55"/>
+  </g>
+
+  <!-- curved bench rows -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M180 330 Q720 236 1260 330" stroke="#2a323f" stroke-width="30"/>
+    <path d="M180 330 Q720 236 1260 330" stroke="#c9a96a" stroke-opacity="0.35" stroke-width="2"/>
+    <path d="M140 386 Q720 278 1300 386" stroke="#242c38" stroke-width="34"/>
+    <path d="M140 386 Q720 278 1300 386" stroke="#c9a96a" stroke-opacity="0.28" stroke-width="2"/>
+    <path d="M240 278 Q720 200 1200 278" stroke="#313a48" stroke-width="24"/>
+    <path d="M240 278 Q720 200 1200 278" stroke="#c9a96a" stroke-opacity="0.4" stroke-width="2"/>
+  </g>
+
+  <!-- desk surfaces catching light -->
+  <ellipse cx="720" cy="300" rx="360" ry="60" fill="url(#benchLight)" opacity="0.5"/>
+
+  <!-- empty seat marks -->
+  <g fill="#0e141e" opacity="0.9">
+    <rect x="330" y="258" width="26" height="16" rx="3"/>
+    <rect x="430" y="244" width="26" height="16" rx="3"/>
+    <rect x="530" y="234" width="26" height="16" rx="3"/>
+    <rect x="664" y="230" width="26" height="16" rx="3"/>
+    <rect x="794" y="234" width="26" height="16" rx="3"/>
+    <rect x="894" y="244" width="26" height="16" rx="3"/>
+    <rect x="994" y="258" width="26" height="16" rx="3"/>
+    <rect x="300" y="316" width="30" height="18" rx="3"/>
+    <rect x="430" y="300" width="30" height="18" rx="3"/>
+    <rect x="560" y="288" width="30" height="18" rx="3"/>
+    <rect x="700" y="284" width="30" height="18" rx="3"/>
+    <rect x="840" y="288" width="30" height="18" rx="3"/>
+    <rect x="970" y="300" width="30" height="18" rx="3"/>
+    <rect x="1100" y="316" width="30" height="18" rx="3"/>
+    <rect x="250" y="374" width="34" height="20" rx="3"/>
+    <rect x="410" y="356" width="34" height="20" rx="3"/>
+    <rect x="570" y="344" width="34" height="20" rx="3"/>
+    <rect x="736" y="340" width="34" height="20" rx="3"/>
+    <rect x="896" y="344" width="34" height="20" rx="3"/>
+    <rect x="1056" y="356" width="34" height="20" rx="3"/>
+    <rect x="1156" y="374" width="34" height="20" rx="3"/>
+  </g>
+
+  <!-- floor -->
+  <rect y="404" width="1440" height="16" fill="#080b10"/>
+  <rect y="402" width="1440" height="2" fill="#c9a96a" opacity="0.4"/>
+</svg>

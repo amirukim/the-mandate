@@ -1,0 +1,335 @@
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/public-sans";
+@import "tailwindcss";
+
+@custom-variant theme-paper (&:where(.theme-paper, .theme-paper *));
+
+/*
+  Design system: "The Chamber" — cinematic political thriller.
+  Default scheme is dark: midnight navy page, blue-cast charcoal surfaces, warm ivory type,
+  leaf-gold authority accent, lacquer burgundy for danger, teal for diplomacy,
+  warm grey metadata.
+  A light "paper" scheme remains available in Settings (.theme-paper on <html>).
+  Both schemes hold WCAG AA for body and metadata text.
+
+  Surfaces stack in four steps:  paper (page) < card (panel) < surface (raised) < inset wells.
+  Radius stays minimal (2px controls, 3px panels). Shadows are restrained and
+  used only on floating elements (decision rows, drawers).
+  Texture: a very low-opacity fixed film grain sits above the UI.
+*/
+
+:root {
+  --paper: #101722; /* midnight navy, page */
+  --paper-deep: #0b1018; /* recessed wells */
+  --card: #171d27; /* charcoal with a blue cast, panels */
+  --surface: #222a38; /* raised surface / hover */
+  --ink: #ece5d5; /* warm ivory */
+  --navy: #ece5d5; /* solid light fill (primary buttons, plates) */
+  --navy-deep: #d5ccb8; /* light fill hover */
+  --rule: #39414e; /* subtle borders */
+  --rule-strong: #525d6d; /* stronger separators */
+  --muted: #adaaa1; /* muted metadata text */
+  --gold: #c9a96a; /* brighter leaf gold: accents, rules, meters */
+  --gold-text: #d9b877; /* gold that clears AA as text */
+  --gold-bright: #e6cd8e; /* highlights on dark */
+  --brick: #8a474e; /* burgundy, lacquer red */
+  --brick-text: #dda7ac; /* burgundy that clears AA as text */
+  --moss: #6b9260;
+  --moss-text: #a9d09a;
+  --teal: #4d7f86; /* diplomacy / foreign affairs */
+  --teal-text: #93c5cb; /* teal that clears AA as text */
+  --scheme: dark;
+  --scrim: 6 9 14;
+}
+
+.theme-paper {
+  --paper: #f2ede3;
+  --paper-deep: #e7e0cf;
+  --card: #faf7ef;
+  --surface: #efe9dc;
+  --ink: #21242e;
+  --navy: #1c2a45;
+  --navy-deep: #14203a;
+  --rule: #d3c9b2;
+  --rule-strong: #b3a687;
+  --muted: #5f5a50;
+  --gold: #a8862c;
+  --gold-text: #7d621e;
+  --gold-bright: #c9a85c;
+  --brick: #96352b;
+  --brick-text: #8a2f26;
+  --moss: #4e6b46;
+  --moss-text: #44603d;
+  --teal: #35707a;
+  --teal-text: #2c5f67;
+  --scheme: light;
+  --scrim: 242 237 227;
+}
+
+@theme inline {
+  --font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+  --font-sans: "Public Sans Variable", "Segoe UI", system-ui, sans-serif;
+
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-card: var(--card);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-muted: var(--muted);
+  --color-gold: var(--gold);
+  --color-gold-text: var(--gold-text);
+  --color-gold-bright: var(--gold-bright);
+  --color-brick: var(--brick);
+  --color-brick-text: var(--brick-text);
+  --color-moss: var(--moss);
+  --color-moss-text: var(--moss-text);
+  --color-teal: var(--teal);
+  --color-teal-text: var(--teal-text);
+
+  --radius-control: 2px;
+  --radius-panel: 3px;
+
+  --shadow-lift: 0 14px 34px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.35);
+}
+
+html {
+  color-scheme: var(--scheme);
+}
+
+/* Affordances: pointers on live controls, not-allowed on disabled ones (R-39). */
+button:not(:disabled),
+a,
+label:has(input[type="radio"]),
+label:has(input[type="checkbox"]),
+select,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+  font-size: var(--mtm-body-size, 16px);
+}
+
+/* Film grain: atmospheric texture over the whole interface, never interactive. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Visible gold focus ring everywhere; never remove outlines (R-32). */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--paper);
+}
+
+.theme-paper ::selection {
+  color: #f2ede3;
+}
+
+/* ---- Typography ---- */
+
+.kicker {
+  @apply font-sans font-semibold uppercase;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.kicker-gold {
+  color: var(--gold-text);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.012em;
+}
+
+/* Expressive editorial headline: large, tight, serif. */
+.headline {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-size: clamp(2rem, 1.1rem + 3.4vw, 3.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 64ch;
+}
+
+.drop-cap::first-letter {
+  font-family: var(--font-display);
+  float: left;
+  font-size: 3.15em;
+  line-height: 0.8;
+  padding-right: 0.09em;
+  margin-top: 0.04em;
+  font-weight: 600;
+  color: var(--gold-text);
+}
+
+/* ---- Motifs ---- */
+
+/* Double hairline: the federal document rule, thinned for dark surfaces. */
+.rule-double {
+  border-top: 1px solid var(--rule-strong);
+  box-shadow: 0 3px 0 -2px var(--rule-strong);
+}
+
+.rule-gold {
+  border-top: 1px solid var(--gold);
+  opacity: 0.85;
+}
+
+.rule {
+  border-top: 1px solid var(--rule);
+}
+
+.stamp {
+  @apply inline-block font-sans font-bold uppercase;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  color: var(--brick-text);
+  border: 1px solid var(--brick);
+  border-radius: 2px;
+  padding: 0.2rem 0.6rem;
+  transform: rotate(-1.5deg);
+}
+
+/* Ruled meter with tick marks, like a statistical abstract chart. */
+.meter {
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0 calc(10% - 1px),
+      var(--rule) calc(10% - 1px) 10%
+    ),
+    var(--paper-deep);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Atmospheric light: gold from above, oxblood from below — the title screen wash. */
+.atmosphere {
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgb(201 169 106 / 0.22) 0%, transparent 55%),
+    radial-gradient(90% 60% at 85% 110%, rgb(138 71 78 / 0.24) 0%, transparent 60%),
+    radial-gradient(60% 45% at 12% 88%, rgb(77 127 134 / 0.14) 0%, transparent 65%),
+    linear-gradient(180deg, #101722 0%, #0b1018 100%);
+}
+
+/* Lamp-glow wash painted above an art layer: apply to the absolute inset-0
+   art wrapper inside a header (its ::after stacks above the image + scrims,
+   below the content layer that follows the wrapper). */
+.glow-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(75% 110% at 16% 30%, rgb(201 169 106 / 0.17) 0%, transparent 70%);
+}
+
+.theme-paper .glow-art::after {
+  background: radial-gradient(75% 110% at 16% 30%, rgb(168 134 44 / 0.15) 0%, transparent 70%);
+}
+
+/* Subtle screen fade for page continuity. Motion stays restrained, no loops. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter {
+    animation: page-fade 240ms ease-out 1;
+  }
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Accessible skip link. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--navy-deep);
+  color: var(--paper);
+  padding: 0.5rem 1rem;
+}
+.skip-link:focus-visible {
+  left: 0;
+}
+
+/* Tables scroll, not the page, on small screens. */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---- The newspaper sheet ----
+   A physical broadsheet laid on the dark desk: inside .newspaper every
+   Chamber token re-binds to newsprint values, so kickers, rules and text
+   flip to paper without touching any component. */
+.newspaper {
+  --paper: #f4efe3;
+  --paper-deep: #eae2d0;
+  --card: #faf7ee;
+  --surface: #efe8d9;
+  --ink: #1d1f25;
+  --navy: #1c2a45;
+  --navy-deep: #14203a;
+  --rule: #cec4ab;
+  --rule-strong: #a99c7d;
+  --muted: #5b564b;
+  --gold: #9a7b28;
+  --gold-text: #75591a;
+  --gold-bright: #8a6c1f;
+  --brick: #96352b;
+  --brick-text: #8a2f26;
+  --moss: #4e6b46;
+  --moss-text: #44603d;
+  --teal: #35707a;
+  --teal-text: #2c5f67;
+  color: var(--ink);
+  background:
+    linear-gradient(0deg, rgb(155 140 105 / 0.05), rgb(155 140 105 / 0.05)),
+    var(--paper);
+  border: 1px solid #0b1018;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.5), 0 2px 8px rgb(0 0 0 / 0.4);
+}
+
+/* Nameplate ornament: a double rule under the masthead. */
+.nameplate-rule {
+  border-top: 3px double var(--ink);
+}
