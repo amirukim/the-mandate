@@ -2,7 +2,7 @@ import { useGameStore } from "../stores/game-store";
 import { CHARACTERS } from "../data/characters";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Meter } from "../components/ui/Meter";
-import { Avatar } from "../components/ui/Avatar";
+import { CharacterPortrait } from "../components/game/CharacterPortrait";
 import { PartyFlag } from "../components/ui/PartyFlag";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
@@ -52,7 +52,7 @@ function CharacterCard({ id, tier }: CharacterCardProps) {
         TIER_META[tier].accent,
       )}
     >
-      <Avatar name={display.name} size="lg" className="shrink-0 self-start" />
+      <CharacterPortrait characterId={id} size="xl" className="shrink-0 self-start" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           {tier === "coalition" && FIGURE_PARTY[id] && (

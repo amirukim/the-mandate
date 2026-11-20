@@ -5,13 +5,14 @@ import type { GameEventDef } from "../../types/narrative";
 import type { ChosenOutcome } from "../../engine/turn-flow";
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/Button";
+import { NewspaperArticle } from "../../components/game/NewspaperArticle";
 import { artForScene } from "../../data/art";
 import { usePortalOverlay, trapTab, prefersReducedMotion } from "../../hooks/usePortalOverlay";
+import { useGameStore } from "../../stores/game-store";
+import { dateLabel } from "../../engine/calendar";
 import { useT } from "../../i18n/store";
 import { eventDisplay } from "../../i18n/data";
 import { cn } from "../../utils/cn";
-
-const LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
 
 interface SceneViewProps {
   event: GameEventDef;
@@ -40,6 +41,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
   const { t, lang } = useT();
   const display = eventDisplay(event, lang);
   const reduced = prefersReducedMotion();
+  const turn = useGameStore((s) => s.game?.turn ?? null);
 
   // The active speaker drives the big portrait; default to the first line.
   const [speakerIdx, setSpeakerIdx] = useState(0);
@@ -91,6 +93,12 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
           <p className="kicker kicker-gold">{display.location}</p>
           <span aria-hidden="true" className="text-rule">&middot;</span>
           <p className="kicker">{t(`category.${display.category}`)}</p>
+          {turn !== null && (
+            <>
+              <span aria-hidden="true" className="text-rule">&middot;</span>
+              <p className="kicker">{dateLabel(turn, lang)}</p>
+            </>
+          )}
         </div>
         <h1 className="display text-xl sm:text-2xl font-semibold mt-1.5 text-ink/90">{display.title}</h1>
       </div>
@@ -165,11 +173,14 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                               active ? "border-gold bg-white/[0.05]" : "border-rule/60 hover:bg-white/[0.03]",
                             )}
                           >
-                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-bright">
-                                {line.speaker}
-                              </p>
-                              <p className="kicker text-[10px]">{line.role}</p>
+                            <div className="flex items-center gap-2.5">
+                              <Avatar name={line.speaker} size="sm" className="shrink-0 ring-gold/40" />
+                              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 min-w-0">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-bright">
+                                  {line.speaker}
+                                </p>
+                                <p className="kicker text-[10px]">{line.role}</p>
+                              </div>
                             </div>
                             <p className="display text-[1.0313rem] leading-relaxed mt-1.5 text-ink/90 italic">
                               &ldquo;{line.text}&rdquo;
@@ -194,7 +205,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                 <div className="rule-double mt-6" />
 
                 {chosen.notes.length > 0 && (
-                  <section aria-label={t("scene.consequencesAria")} className="mt-6">
+                  <motion.section {...stageFade(0.15)} aria-label={t("scene.consequencesAria")} className="mt-6">
                     <p className="kicker kicker-gold mb-3">{t("scene.whatFollows")}</p>
                     <div className="space-y-3">
                       {chosen.notes.map((note, i) => (
@@ -206,25 +217,21 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                         </p>
                       ))}
                     </div>
-                  </section>
+                  </motion.section>
                 )}
 
                 {chosen.news.length > 0 && (
-                  <section aria-label={t("scene.wire")} className="mt-8">
+                  <motion.section {...stageFade(0.3)} aria-label={t("scene.wire")} className="mt-8">
                     <div className="flex items-center gap-3">
                       <p className="kicker kicker-gold shrink-0">{t("scene.wire")}</p>
                       <span aria-hidden="true" className="flex-1 border-t border-gold/40" />
                     </div>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
                       {chosen.news.map((item) => (
-                        <article key={item.id} className="bg-card/80 border border-rule rounded-panel p-4">
-                          <p className="kicker">{OUTLET_NAME[item.outlet]}</p>
-                          <h3 className="display text-base font-semibold leading-snug mt-1">{item.headline}</h3>
-                          {item.body && <p className="text-sm text-muted mt-1.5 leading-relaxed">{item.body}</p>}
-                        </article>
+                        <NewspaperArticle key={item.id} item={item} />
                       ))}
                     </div>
-                  </section>
+                  </motion.section>
                 )}
               </motion.section>
             )}
@@ -254,8 +261,8 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                       }}
                       className="group w-full text-left flex items-start gap-4 px-4 py-3 rounded-[3px] border border-white/10 bg-white/[0.04] transition-colors hover:border-gold/60 hover:bg-white/[0.07] focus-visible:border-gold"
                     >
-                      <span className="inline-flex w-7 h-7 shrink-0 mt-0.5 items-center justify-center border border-gold text-gold-text text-xs font-bold rounded-[2px] group-hover:bg-gold group-hover:text-paper transition-colors">
-                        {LETTERS[i]}
+                      <span className="tabular inline-flex w-7 h-7 shrink-0 mt-0.5 items-center justify-center border border-gold text-gold-text text-xs font-bold rounded-[2px] group-hover:bg-gold group-hover:text-paper transition-colors">
+                        {String(i + 1).padStart(2, "0")}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="display block text-base sm:text-lg font-semibold leading-snug">
@@ -302,9 +309,3 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
     container,
   );
 }
-
-const OUTLET_NAME: Record<string, string> = {
-  peninsula: "The Peninsula Post",
-  borneo: "Borneo Herald",
-  sinar: "Sinar Waktu",
-};

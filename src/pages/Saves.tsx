@@ -177,6 +177,7 @@ export function Saves() {
                           size="sm"
                           variant="danger"
                           onClick={() => {
+                            if (!window.confirm(t("saves.confirmDeleteLocal"))) return;
                             deleteLocal(slot);
                             setNote(tf("saves.deletedNote", { n: slot }));
                             refresh();
@@ -255,6 +256,7 @@ export function Saves() {
                           variant="danger"
                           disabled={!row}
                           onClick={async () => {
+                            if (!window.confirm(t("saves.confirmDeleteCloud"))) return;
                             const result = await deleteCloud(slot);
                             setNote(result.ok ? tf("saves.cloudDeleted", { n: slot }) : result.error ?? t("saves.deleteFail"));
                             listCloud().then(setCloudRows);

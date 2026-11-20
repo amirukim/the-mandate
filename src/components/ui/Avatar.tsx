@@ -8,26 +8,18 @@ interface AvatarProps {
   className?: string;
 }
 
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter((part) => /^[A-Za-z]/.test(part))
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
 /**
- * Character identity plate.
- * If a portrait is registered in data/portraits.ts it renders instead of the
- * initials; a missing or broken file falls back to the initials plate, so no
- * page needs to change when real assets are added. No photograph ships with
- * the game and every character is fictional.
+ * Character identity plate. Resolution order:
+ *   1. A painted portrait registered under the speaker's character id in
+ *      data/portraits.tsx (file missing or broken → falls through silently).
+ *   2. The character's engraved line-art portrait.
+ *   3. The anonymous engraved bust — never bare initials.
+ * No page needs to change when painted assets are added.
  */
 export function Avatar({ name, size = "md", className }: AvatarProps) {
   const [failed, setFailed] = useState(false);
   const src = portraitFor(name);
-  const artId = portraitArtId(name);
+  const artId = portraitArtId(name) ?? "generic";
   const sizeClass =
     size === "sm"
       ? "w-8 h-8 text-[11px]"
@@ -57,10 +49,8 @@ export function Avatar({ name, size = "md", className }: AvatarProps) {
           onError={() => setFailed(true)}
           className="absolute inset-0 h-full w-full object-cover object-top grayscale-[0.25] contrast-[1.05]"
         />
-      ) : artId ? (
-        <PortraitArt id={artId} />
       ) : (
-        initialsOf(name)
+        <PortraitArt id={artId} />
       )}
     </span>
   );

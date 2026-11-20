@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGameStore } from "../stores/game-store";
 import { getEventById } from "../data/events";
 import { characterById } from "../data/characters";
-import { Avatar } from "../components/ui/Avatar";
+import { CharacterPortrait } from "../components/game/CharacterPortrait";
 import { Button } from "../components/ui/Button";
 import { Meter } from "../components/ui/Meter";
 import { Panel } from "../components/ui/Panel";
@@ -56,7 +56,7 @@ export function Office() {
       {/* The secretary's desk: today's file count and the way in. */}
       <Panel kicker={t("office.pps")} title="Sarah Tan" variant="inset">
         <div className="flex gap-4">
-          <Avatar name="Sarah Tan" size="xl" className="shrink-0" />
+          <CharacterPortrait characterId="chiefOfStaff" size="xl" className="shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="display text-[1.0313rem] leading-relaxed text-ink/90">
               {morning}
@@ -94,7 +94,7 @@ export function Office() {
       {lastCounsel && (
         <Panel kicker={t("office.advice")} className="mt-6">
           <div role="status" className="flex gap-3">
-            <Avatar name={characterById(lastCounsel.characterId)?.name ?? t("office.adviser")} className="shrink-0" />
+            <CharacterPortrait characterId={lastCounsel.characterId} className="shrink-0" />
             <div className="min-w-0">
               <p className="kicker">{characterText(characterById(lastCounsel.characterId)!, getLang()).role ?? t("office.adviser")}</p>
               <p className="display italic text-[1.0313rem] leading-relaxed mt-1 text-ink/90">
@@ -121,7 +121,7 @@ export function Office() {
             return (
               <li key={id}>
                 <article className="bg-card border border-rule rounded-panel p-4 flex gap-3">
-                  <Avatar name={display.name} className="shrink-0" />
+                  <CharacterPortrait characterId={id} size="lg" className="shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="display font-semibold text-sm leading-tight">{display.name}</p>
                     <p className="text-xs text-muted mt-0.5">{display.role}</p>

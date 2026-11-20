@@ -3,20 +3,24 @@ import type { ReactNode } from "react";
 /**
  * Character portrait registry.
  *
- * Two layers:
- *   1. Engraved portraits — hand-drawn banknote-style line art below, one per
- *      fictional character. No photograph ships with the game and no image
- *      implies a real person.
- *   2. Real assets — to replace the engravings with actual files later, drop a
- *      file at public/portraits/<slug>.jpg and register it in PORTRAITS.
- *      Consumers resolve through Avatar, so adding images changes nothing else.
+ * Three layers, tried in order by Avatar / CharacterPortrait:
+ *   1. Painted assets — PORTRAITS maps a CHARACTER ID to a file under
+ *      public/portraits/. The artwork does not ship yet; exact requirements
+ *      are documented in public/portraits/README.md. Dropping a file in and
+ *      registering its id here changes the whole app — no component edits.
+ *   2. Engraved portraits — banknote-style line art below, one per fictional
+ *      character. This is the shipped presentation, not a placeholder.
+ *   3. Generic bust — speakers with no registered art get an anonymous
+ *      silhouette, never bare initials.
+ * Every character is fictional; no asset may depict a real politician.
  */
 
+/** Character ID → painted portrait file. Keyed by ID, not display name. */
 export const PORTRAITS: Record<string, string> = {
-  // "Sarah Tan": "/portraits/sarah-tan.jpg",
+  // chiefOfStaff: "/portraits/chiefOfStaff.webp",
 };
 
-/** Character display name → engraved art id. */
+/** Character display name → art id. Stable across locales: names never translate. */
 const ART_BY_NAME: Record<string, string> = {
   "Sarah Tan": "chiefOfStaff",
   "Tan Sri Azlan Mahmud": "finance",
@@ -30,8 +34,14 @@ const ART_BY_NAME: Record<string, string> = {
   "Dato' Iskandar Rahman": "oppositionLeader",
 };
 
+/** Painted portrait for a character ID, or null while artwork is missing. */
+export function portraitForId(id: string): string | null {
+  return PORTRAITS[id] ?? null;
+}
+
 export function portraitFor(name: string): string | null {
-  return PORTRAITS[name] ?? null;
+  const id = ART_BY_NAME[name];
+  return id ? PORTRAITS[id] ?? null : null;
 }
 
 export function portraitArtId(name: string): string | null {
@@ -307,11 +317,25 @@ const ART: Record<string, ReactNode> = {
       />
     </Plate>
   ),
+
+  /* Anonymous bust — speakers outside the registry, rendered as a designed
+     silhouette rather than bare initials. */
+  generic: (
+    <Plate>
+      <Bust attire="suit" />
+      <g fill="none" stroke={LINE} strokeLinecap="round">
+        <path d="M26.8 23.4c1-.9 2.6-1 3.8-.4M33.4 23c1.2-.6 2.8-.5 3.8.4" strokeOpacity="0.5" strokeWidth="0.85" />
+        <path d="M27 26.4h3.4M33.6 26.4H37" strokeOpacity="0.5" strokeWidth="0.85" />
+        <path d="M28.6 36.2c2.2 1.1 4.6 1.1 6.8 0" strokeOpacity="0.6" strokeWidth="0.9" />
+      </g>
+    </Plate>
+  ),
 };
 
 /**
  * The engraved portrait for a character id, sized to fill its Avatar plate.
- * Unknown ids render nothing and the Avatar falls back to initials.
+ * Callers pass `portraitArtId(name) ?? "generic"` so an unknown speaker
+ * renders the anonymous bust instead of bare initials.
  */
 export function PortraitArt({ id }: { id: string }) {
   const art = ART[id];
