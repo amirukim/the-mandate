@@ -54,6 +54,12 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
 
   const activeLine = display.dialogue[Math.min(speakerIdx, Math.max(0, display.dialogue.length - 1))];
 
+  // Scene cast in order of first appearance — the Suzerain-style speaker row.
+  const cast: Array<{ speaker: string; role: string; idx: number }> = [];
+  display.dialogue.forEach((line, i) => {
+    if (!cast.some((c) => c.speaker === line.speaker)) cast.push({ speaker: line.speaker, role: line.role, idx: i });
+  });
+
   const scene = (
     <motion.div
       key="theatre"
@@ -105,8 +111,8 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
 
       {/* the stage: portrait left, script right */}
       <div className="relative z-10 flex-1 min-h-0 flex items-stretch gap-6 px-5 sm:px-10 py-6">
-        {/* portrait column — cross-fades on speaker change */}
-        <div className="hidden sm:flex items-start shrink-0">
+        {/* portrait column — cross-fades on speaker change, cast row beneath */}
+        <div className="hidden sm:flex flex-col items-start gap-5 shrink-0">
           <AnimatePresence mode="wait" initial={false}>
             {activeLine ? (
               <motion.div
@@ -127,10 +133,16 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
               </motion.div>
             ) : null}
           </AnimatePresence>
+          {cast.length > 1 && (
+            <SpeakerStrip cast={cast} active={activeLine?.speaker} onFocus={setSpeakerIdx} className="hidden sm:flex" />
+          )}
         </div>
 
         {/* script column: briefing → dialogue → (chosen) reaction */}
         <div className="flex-1 min-w-0 overflow-y-auto pr-1 sm:pr-4">
+          {cast.length > 1 && (
+            <SpeakerStrip cast={cast} active={activeLine?.speaker} onFocus={setSpeakerIdx} className="flex sm:hidden mb-5" />
+          )}
           <AnimatePresence mode="wait" initial={false}>
             {chosen === null ? (
               <motion.div key="script" {...stageFade(0.05)}>
@@ -307,5 +319,56 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
       {scene}
     </AnimatePresence>,
     container,
+  );
+}
+
+/**
+ * The scene cast as portrait plates: the Suzerain character row. The speaking
+ * character is lit in gold; the others wait in shadow. Tapping one brings
+ * them to the stage.
+ */
+function SpeakerStrip({
+  cast,
+  active,
+  onFocus,
+  className,
+}: {
+  cast: Array<{ speaker: string; role: string; idx: number }>;
+  active?: string;
+  onFocus: (idx: number) => void;
+  className?: string;
+}) {
+  const { t } = useT();
+  return (
+    <div className={cn("items-start gap-2 overflow-x-auto max-w-full pt-1", className)} role="group" aria-label={t("scene.inRoom")}>
+      {cast.map((c) => {
+        const isActive = active === c.speaker;
+        return (
+          <button
+            key={c.speaker}
+            type="button"
+            onClick={() => onFocus(c.idx)}
+            aria-pressed={isActive}
+            className={cn(
+              "flex w-14 shrink-0 flex-col items-center gap-1 rounded-[2px] p-1 transition-all",
+              isActive
+                ? "bg-white/[0.07] opacity-100"
+                : "opacity-55 hover:opacity-95 focus-visible:opacity-100",
+            )}
+            title={`${c.speaker} — ${c.role}`}
+          >
+            <Avatar name={c.speaker} size="md" className={isActive ? "ring-gold" : "ring-white/10"} />
+            <span
+              className={cn(
+                "w-full truncate text-center text-[9px] font-semibold uppercase tracking-[0.06em] leading-tight",
+                isActive ? "text-gold-bright" : "text-muted",
+              )}
+            >
+              {c.speaker}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
