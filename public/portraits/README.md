@@ -1,27 +1,23 @@
 # Character portraits — asset requirements
 
-The game ships with **engraved line-art portraits** for every fictional
-character (banknote style, drawn in `src/data/portraits.tsx`). Painted
-portrait assets are **not** part of the build yet. This file documents exactly
-what a painted set must look like, so it can be produced later without any
-code changes.
+The game ships with **painted SVG portraits** for every fictional character
+(built in `src/data/portraits.tsx`, with per-character colour, lighting and
+silhouette). Painted **raster** portraits are **not** part of the build yet.
+This file documents exactly how to add them — with **no code changes**.
 
-## Registration (2 steps)
+## Drop-in (zero code)
 
-1. Save the file as `public/portraits/<characterId>.<ext>` (webp or jpg,
-   ~512×640 or larger, 4:5 vertical, bust/head-and-shoulders).
-2. Add the id to `PORTRAITS` in `src/data/portraits.tsx`:
+Save each portrait as `public/portraits/<characterId>.webp` (`.png` and
+`.jpg` also work — all three are tried in order). That's it. Every Avatar,
+dialogue stage plate and cast-row portrait picks it up automatically; missing
+files fall back to the painted SVG silently.
 
-```ts
-export const PORTRAITS: Record<string, string> = {
-  chiefOfStaff: "/portraits/chiefOfStaff.webp",
-  // ...one entry per character id below
-};
-```
+Requirements: 4:5 or square, 512×640 or larger, bust/head-and-shoulders.
 
-Nothing else changes: `Avatar` (name-keyed, dialogue) and `CharacterPortrait`
-(id-keyed, pages) resolve painted assets first and fall back to the engravings
-on a missing or broken file. Initials are never shown.
+## Manual override (optional)
+
+For non-standard filenames, register the path in `PORTRAITS` (keyed by
+character id) in `src/data/portraits.tsx`.
 
 ## The ten character ids
 

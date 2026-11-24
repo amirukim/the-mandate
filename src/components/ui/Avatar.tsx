@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { portraitFor, portraitArtId, PortraitArt } from "../../data/portraits";
+import { useState, useEffect } from "react";
+import { portraitFiles, portraitArtId, PortraitArt } from "../../data/portraits";
 import { cn } from "../../utils/cn";
 
 interface AvatarProps {
@@ -8,17 +8,31 @@ interface AvatarProps {
   className?: string;
 }
 
+/** Cycles a list of candidate files; hides itself once they are exhausted. */
+function PaintedFile({ srcs }: { srcs: string[] }) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => setIdx(0), [srcs.join("|")]);
+  if (idx >= srcs.length) return null;
+  return (
+    <img
+      src={srcs[idx]}
+      alt=""
+      loading="lazy"
+      onError={() => setIdx(idx + 1)}
+      className="absolute inset-0 h-full w-full object-cover object-top grayscale-[0.25] contrast-[1.05]"
+    />
+  );
+}
+
 /**
  * Character identity plate. Resolution order:
- *   1. A painted portrait registered under the speaker's character id in
- *      data/portraits.tsx (file missing or broken → falls through silently).
- *   2. The character's engraved line-art portrait.
+ *   1. Painted raster files (public/portraits/<id>.webp|png|jpg or a manual
+ *      PORTRAITS entry) — tried in order, missing files fall through.
+ *   2. The character's painted SVG portrait.
  *   3. The anonymous engraved bust — never bare initials.
- * No page needs to change when painted assets are added.
  */
 export function Avatar({ name, size = "md", className }: AvatarProps) {
-  const [failed, setFailed] = useState(false);
-  const src = portraitFor(name);
+  const srcs = portraitFiles(name);
   const artId = portraitArtId(name) ?? "generic";
   const sizeClass =
     size === "sm"
@@ -41,17 +55,9 @@ export function Avatar({ name, size = "md", className }: AvatarProps) {
         className,
       )}
     >
-      {src && !failed ? (
-        <img
-          src={src}
-          alt=""
-          loading="lazy"
-          onError={() => setFailed(true)}
-          className="absolute inset-0 h-full w-full object-cover object-top grayscale-[0.25] contrast-[1.05]"
-        />
-      ) : (
-        <PortraitArt id={artId} />
-      )}
+      {/* the painted SVG sits under any raster file; a 404 chain reveals it */}
+      <PortraitArt id={artId} />
+      {srcs.length > 0 && <PaintedFile srcs={srcs} />}
     </span>
   );
 }

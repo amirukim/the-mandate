@@ -6,7 +6,8 @@ import type { ChosenOutcome } from "../../engine/turn-flow";
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/Button";
 import { NewspaperArticle } from "../../components/game/NewspaperArticle";
-import { artForScene } from "../../data/art";
+import { PaintedScene } from "../../components/game/PaintedScene";
+import { artForScene, paintedSceneSrcs, sceneKeyFor } from "../../data/art";
 import { usePortalOverlay, trapTab, prefersReducedMotion } from "../../hooks/usePortalOverlay";
 import { useGameStore } from "../../stores/game-store";
 import { dateLabel } from "../../engine/calendar";
@@ -84,6 +85,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
             e.currentTarget.style.display = "none";
           }}
         />
+        <PaintedScene srcs={paintedSceneSrcs(sceneKeyFor(display.location))} className="opacity-75" />
         <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,transparent_40%,rgba(10,8,5,0.88)_100%)]" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0f0c08]/70 via-[#0f0c08]/30 to-transparent" />
       </div>
@@ -333,8 +335,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
  * The scene cast as portrait plates: the Suzerain character row. The speaking
  * character is lit in gold; the others wait in shadow. Tapping one brings
  * them to the stage.
- */
-function SpeakerStrip({
+ */function SpeakerStrip({
   cast,
   active,
   onFocus,

@@ -1,5 +1,4 @@
 import { useGameStore } from "../stores/game-store";
-import { PageHeader } from "../components/ui/PageHeader";
 import { Panel } from "../components/ui/Panel";
 import { Stat } from "../components/ui/Stat";
 import { TrendChart } from "../components/charts/TrendChart";
@@ -23,12 +22,27 @@ export function Economy() {
 
   return (
     <div className="page-enter">
-      <PageHeader
-        dense
-        kicker={t("economy.kicker")}
-        title={t("economy.title")}
-        lead={t("economy.lead")}
-      />
+      {/* Illustrated masthead: the Treasury briefing room. */}
+      <header className="relative -mx-4 sm:-mx-8 -mt-8 mb-6 border-b border-rule overflow-hidden">
+        <div className="absolute inset-0 glow-art" aria-hidden="true">
+          <img
+            src="/art/scene-treasury.svg"
+            alt=""
+            className="art-warm h-full w-full object-cover object-[center_45%] opacity-70"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-paper via-paper/85 to-paper/55" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper to-transparent" />
+        </div>
+        <div className="relative px-4 sm:px-8 pt-10 pb-6">
+          <p className="kicker kicker-gold">{t("economy.kicker")}</p>
+          <h1 className="display text-2xl sm:text-3xl font-semibold mt-1.5">{t("economy.title")}</h1>
+          <p className="text-sm text-muted leading-relaxed mt-2 max-w-4xl">{t("economy.lead")}</p>
+          <div className="rule mt-3" />
+        </div>
+      </header>
 
       {/* Ledger band: hairlines, not cards. */}
       <section

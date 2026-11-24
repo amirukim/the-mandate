@@ -39,9 +39,19 @@ export function portraitForId(id: string): string | null {
   return PORTRAITS[id] ?? null;
 }
 
-export function portraitFor(name: string): string | null {
+/**
+ * Every place a painted portrait may sit for a speaker, in priority order:
+ * any manual PORTRAITS override first, then the convention files. Drop a
+ * painting at public/portraits/<id>.webp (or .png / .jpg) and it appears
+ * everywhere with no code change; missing files fall through silently to the
+ * painted SVG below.
+ */
+export function portraitFiles(name: string): string[] {
   const id = ART_BY_NAME[name];
-  return id ? PORTRAITS[id] ?? null : null;
+  if (!id) return PORTRAITS[name] ? [PORTRAITS[name]] : [];
+  const manual = PORTRAITS[id] ?? PORTRAITS[name];
+  const convention = [`/portraits/${id}.webp`, `/portraits/${id}.png`, `/portraits/${id}.jpg`];
+  return manual ? [manual, ...convention] : convention;
 }
 
 /** Painted-portrait art id for a display name, or null for unregistered speakers. */

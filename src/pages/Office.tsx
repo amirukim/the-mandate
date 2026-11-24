@@ -2,12 +2,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGameStore } from "../stores/game-store";
 import { characterById } from "../data/characters";
 import { CharacterPortrait } from "../components/game/CharacterPortrait";
+import { PaintedScene } from "../components/game/PaintedScene";
 import { Button } from "../components/ui/Button";
 import { Meter } from "../components/ui/Meter";
 import { Panel } from "../components/ui/Panel";
 import { dateLabel, chapterTitle } from "../engine/calendar";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
+import { paintedSceneSrcs } from "../data/art";
 import { cn } from "../utils/cn";
 
 const COUNSELABLE = ["chiefOfStaff", "finance", "economicAdviser", "nationalSecurity", "foreign", "home"] as const;
@@ -92,6 +94,7 @@ export function Office() {
             e.currentTarget.style.display = "none";
           }}
         />
+        <PaintedScene srcs={paintedSceneSrcs("hub")} />
         <div className="absolute inset-0 bg-gradient-to-t from-paper/70 via-transparent to-paper/30" />
 
         {/* dateline */}
