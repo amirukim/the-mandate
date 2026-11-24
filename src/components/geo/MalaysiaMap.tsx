@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { Maximize2 } from "lucide-react";
 import { STATES, type StateDef } from "../../data/states";
 import { GEO_Brunei, GEO_Indonesia, GEO_Malaysia, GEO_Papua_New_Guinea, GEO_Philippines, GEO_Singapore, GEO_Thailand, GEO_East_Timor, GEO_Vietnam, GEO_Taiwan, GEO_China, GEO_VIEWBOX, type GeoRing } from "../../data/geo-paths";
@@ -83,6 +83,7 @@ const ABBR: Record<string, string> = {
 
 export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }: Props) {
   const { t, lang } = useT();
+  const [hoverId, setHoverId] = useState<string | null>(null);
   const toggle = (id: string) => onSelect(selectedId === id ? null : id);
   const keyHandler = (id: string) => (e: KeyboardEvent<SVGGElement>) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -147,6 +148,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
             const x = cx + (c.dx ?? 0);
             const y = cy + (c.dy ?? 0);
             const selected = selectedId === state.id;
+            const hovered = hoverId === state.id;
             const fill = fillFor(state);
             const isTerritory = ["kuala-lumpur", "putrajaya", "labuan"].includes(state.id);
             const abbr = ABBR[state.id] ?? state.name.toUpperCase().slice(0, 3);
@@ -161,16 +163,20 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                 aria-pressed={selected}
                 onClick={handle}
                 onKeyDown={keyHandler(state.id)}
+                onMouseEnter={() => setHoverId(state.id)}
+                onMouseLeave={() => setHoverId(null)}
+                onFocus={() => setHoverId(state.id)}
+                onBlur={() => setHoverId(null)}
                 className="cursor-pointer outline-none"
               >
                 <circle
                   cx={x}
                   cy={y}
-                  r={selected ? 13 : 9}
+                  r={selected ? 13 : hovered ? 11.5 : 9}
                   fill={fill}
-                  fillOpacity={selected ? 0.95 : 0.75}
-                  stroke={selected ? "#e6cd8e" : "#0d1420"}
-                  strokeWidth={selected ? 2.5 : 1.2}
+                  fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
+                  stroke={selected || hovered ? "#e6cd8e" : "#0d1420"}
+                  strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
                   style={{ transition: "r 140ms ease, fill-opacity 140ms ease" }}
                 />
                 {isTerritory ? (
@@ -189,7 +195,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                     {abbr}
                   </text>
                 )}
-                {selected && (
+                {(selected || hovered) && (
                   <text
                     x={x}
                     y={y - 18}

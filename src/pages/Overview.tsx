@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGameStore } from "../stores/game-store";
 import { getEventById } from "../data/events";
-import { governmentSeats, MAJORITY, coalitionById } from "../data/parties";
+import { governmentSeats, MAJORITY, coalitionById, COALITIONS } from "../data/parties";
 import { stateById, type StateDef } from "../data/states";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Panel } from "../components/ui/Panel";
@@ -18,21 +18,34 @@ import { useT } from "../i18n/store";
 import { coalitionText, stateText, eventDisplay } from "../i18n/data";
 import { X } from "lucide-react";
 
+/** How to read each headline figure — threshold-based, never a new number. */
+function verdictKey(value: number, stops: Array<[number, string]>): string {
+  for (const [floor, key] of stops) {
+    if (value >= floor) return key;
+  }
+  return stops[stops.length - 1][1];
+}
+
 /** One line of the situation dossier: label left, figure and track right. */
 function DossierRow({
   label,
   value,
   track,
   tone,
+  verdict,
 }: {
   label: string;
   value: string;
   track?: number;
   tone?: "moss" | "gold" | "brick" | "navy";
+  verdict?: string;
 }) {
   return (
     <div className="px-4 py-3.5 flex items-center justify-between gap-4">
-      <span className="kicker text-[10px]">{label}</span>
+      <span className="min-w-0">
+        <span className="kicker text-[10px] block">{label}</span>
+        {verdict && <span className="block text-[11px] text-gold-text mt-0.5 leading-tight">{verdict}</span>}
+      </span>
       <span className="flex items-center gap-3 min-w-[7.5rem] justify-end">
         {track !== undefined && (
           <span className="meter h-1.5 w-24 overflow-hidden rounded-[1px]" aria-hidden="true">
@@ -67,6 +80,22 @@ function MandateDossier({
   dateText: string;
 }) {
   const { t, tf } = useT();
+  const approvalVerdict = t(
+    verdictKey(approval, [
+      [55, "overview.verdictStrong"],
+      [40, "overview.verdictOk"],
+      [28, "overview.verdictWeak"],
+    ]) as string,
+  );
+  const coalitionVerdict = t(
+    verdictKey(coalition, [
+      [55, "overview.coalitionHolding"],
+      [35, "overview.coalitionStrained"],
+    ]) as string,
+  );
+  const oppositionVerdict = t(opposition >= 60 ? "overview.oppositionHigh" : "overview.oppositionLow");
+  const partners = COALITIONS.filter((c) => c.status === "government");
+
   return (
     <div className="bg-card border border-rule rounded-panel overflow-hidden h-full flex flex-col">
       <div className="px-4 py-3 border-b border-rule flex items-baseline justify-between gap-2">
@@ -74,11 +103,32 @@ function MandateDossier({
         <p className="kicker text-[10px]">{dateText}</p>
       </div>
       <dl className="divide-y divide-rule flex-1">
-        <DossierRow label={t("overview.approval")} value={`${Math.round(approval)}%`} track={approval} tone={approval >= 45 ? "moss" : approval >= 30 ? "gold" : "brick"} />
-        <DossierRow label={t("overview.coalition")} value={`${Math.round(coalition)}`} track={coalition} tone={coalition >= 55 ? "moss" : coalition >= 35 ? "gold" : "brick"} />
+        <DossierRow label={t("overview.approval")} value={`${Math.round(approval)}%`} track={approval} tone={approval >= 45 ? "moss" : approval >= 30 ? "gold" : "brick"} verdict={approvalVerdict} />
+        <DossierRow label={t("overview.coalition")} value={`${Math.round(coalition)}`} track={coalition} tone={coalition >= 55 ? "moss" : coalition >= 35 ? "gold" : "brick"} verdict={coalitionVerdict} />
         <DossierRow label={t("overview.seatsHouse")} value={`${seats}/222`} track={(seats / 222) * 100} tone="navy" />
-        <DossierRow label={t("overview.opposition")} value={`${Math.round(opposition)}`} track={opposition} tone="brick" />
+        <DossierRow label={t("overview.opposition")} value={`${Math.round(opposition)}`} track={opposition} tone="brick" verdict={oppositionVerdict} />
       </dl>
+
+      {/* who the majority actually runs through */}
+      <div className="px-4 py-3 border-t border-rule">
+        <p className="kicker text-[10px] mb-2">{t("overview.partners")}</p>
+        <ul className="flex flex-wrap gap-1.5" aria-label={t("overview.partners")}>
+          {partners.map((c) => (
+            <li key={c.id}>
+              <Link
+                to="/game/parties"
+                className="flex items-center gap-1.5 border border-rule rounded-[2px] px-2 py-0.5 text-xs text-muted hover:text-ink hover:border-gold/60 transition-colors"
+                title={`${c.name} · ${c.seats}`}
+              >
+                <span aria-hidden="true" className="inline-block w-2 h-2 rounded-[1px]" style={{ backgroundColor: c.color }} />
+                <span className="font-semibold">{c.abbr}</span>
+                <span className="tabular">{c.seats}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="px-4 py-3 border-t border-rule flex items-center justify-between gap-3">
         <span className="kicker text-[10px]">{t("overview.deskBriefings")}</span>
         <Link
@@ -153,6 +203,7 @@ export function Overview() {
   const { t, tf, lang } = useT();
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [mapTheatre, setMapTheatre] = useState(false);
+  const [trendKey, setTrendKey] = useState<"approval" | "coalitionStability" | "costOfLivingPressure">("approval");
   if (!game) return null;
 
   const prev = game.history[game.history.length - 2];
@@ -160,6 +211,11 @@ export function Overview() {
   const queued = game.queuedEventIds.map((id) => getEventById(id)).filter(Boolean);
   const state = selectedState ? stateById(selectedState) : null;
   const displayState = state ? stateText(state, lang) : null;
+  const TREND_SERIES = {
+    approval: { key: "approval" as const, label: t("common.approval"), color: "var(--gold)", unit: "%" },
+    coalitionStability: { key: "coalitionStability" as const, label: t("overview.coalition"), color: "var(--navy)" },
+    costOfLivingPressure: { key: "costOfLivingPressure" as const, label: t("overview.costLiving"), color: "var(--brick)" },
+  } as const;
 
   return (
     <div className="page-enter">
@@ -236,12 +292,25 @@ export function Overview() {
             </div>
           </Panel>
 
-          <Panel kicker={t("overview.trendKicker")} title={t("overview.trendTitle")}>
-            <TrendChart
-              history={game.history}
-              series={{ key: "approval", label: t("common.approval"), color: "var(--gold)", unit: "%" }}
-              height={180}
-            />
+          <Panel kicker={t("overview.trendKicker")} title={t("overview.trendTitle")} bodyClassName="min-w-0">
+            <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label={t("overview.trendKicker")}>
+              {(Object.keys(TREND_SERIES) as Array<keyof typeof TREND_SERIES>).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setTrendKey(k)}
+                  aria-pressed={trendKey === k}
+                  className={
+                    trendKey === k
+                      ? "border border-gold/70 bg-surface text-ink rounded-[2px] px-2 py-1 text-xs font-semibold transition-colors"
+                      : "border border-transparent text-muted hover:text-ink hover:bg-surface/60 rounded-[2px] px-2 py-1 text-xs font-semibold transition-colors"
+                  }
+                >
+                  {TREND_SERIES[k].label}
+                </button>
+              ))}
+            </div>
+            <TrendChart history={game.history} series={TREND_SERIES[trendKey]} height={180} />
           </Panel>
         </div>
 
@@ -257,12 +326,16 @@ export function Overview() {
             </div>
           </Panel>
 
-          <Panel kicker={t("overview.moodKicker")} title={t("overview.moodTitle")}>
-            <div className="space-y-4">
-              <Meter label={t("overview.costLiving")} value={game.social.costOfLivingPressure} tone="brick" />
-              <Meter label={t("overview.satisfaction")} value={game.social.satisfaction} tone="gold" />
-              <Meter label={t("overview.cohesion")} value={game.social.cohesion} tone="navy" />
-              <Meter label={t("overview.integrity")} value={game.politics.institutionalIntegrity} tone="moss" />
+          <Panel kicker={t("overview.moodKicker")} title={t("overview.moodTitle")} variant="inset">
+            <div className="divide-y divide-rule">
+              <div className="pb-4 space-y-4">
+                <Meter label={t("overview.costLiving")} value={game.social.costOfLivingPressure} tone="brick" />
+                <Meter label={t("overview.satisfaction")} value={game.social.satisfaction} tone="gold" />
+                <Meter label={t("overview.cohesion")} value={game.social.cohesion} tone="navy" />
+              </div>
+              <div className="pt-4">
+                <Meter label={t("overview.integrity")} value={game.politics.institutionalIntegrity} tone="moss" />
+              </div>
             </div>
           </Panel>
 
