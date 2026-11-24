@@ -157,36 +157,44 @@ function PaintedPortrait({ id, spec }: { id: string; spec: PortraitSpec }) {
       <Hair spec={spec} />
       {(spec.songkok || spec.kopiah) && <Cap spec={spec} />}
 
-      {/* face */}
+      {/* face — restrained engraved-tinted features, no cartoon whites */}
       <g>
+        {/* eye sockets: soft shadow beds */}
+        <ellipse cx="28.1" cy="23.1" rx="2.5" ry="1.5" fill={skin[1]} opacity="0.5" filter={`url(#${u("soft")})`} />
+        <ellipse cx="35.9" cy="23.1" rx="2.5" ry="1.5" fill={skin[1]} opacity="0.5" filter={`url(#${u("soft")})`} />
+        {/* lids: dark almond slits with a glint */}
+        <path d="M26.1 23c1.2-.9 2.9-.9 4-.1l-.4.9c-1-.5-2.3-.5-3.2 0z" fill="#26222a" />
+        <path d="M33.9 22.9c1.2-.8 2.9-.8 4 .1l-.4.9c-1-.5-2.2-.5-3.2 0z" fill="#26222a" />
+        <circle cx="28.2" cy="23.2" r="0.62" fill="#1d1a20" />
+        <circle cx="35.8" cy="23.2" r="0.62" fill="#1d1a20" />
+        <circle cx="28.05" cy="22.9" r="0.2" fill={LINE} />
+        <circle cx="35.65" cy="22.9" r="0.2" fill={LINE} />
+        {/* upper lid lines */}
+        <path d="M26 22c1.3-.8 2.9-.8 4.2 0" stroke="#241f26" strokeOpacity="0.8" strokeWidth="0.7" fill="none" strokeLinecap="round" />
+        <path d="M33.8 22c1.3-.8 2.9-.8 4.2 0" stroke="#241f26" strokeOpacity="0.8" strokeWidth="0.7" fill="none" strokeLinecap="round" />
         {/* brows */}
-        <path d="M26 19.6c1.2-.9 2.8-1.1 4.2-.5" stroke="#20242e" strokeOpacity={age === "older" ? 0.5 : 0.75} strokeWidth="1.1" fill="none" strokeLinecap="round" />
-        <path d="M33.8 19.1c1.4-.6 3-.4 4.2.5" stroke="#20242e" strokeOpacity={age === "older" ? 0.5 : 0.75} strokeWidth="1.1" fill="none" strokeLinecap="round" />
-        {/* eyes */}
-        <ellipse cx="28.1" cy="23.2" rx="2.05" ry="1.35" fill="#f2eee4" />
-        <ellipse cx="35.9" cy="23.2" rx="2.05" ry="1.35" fill="#f2eee4" />
-        <circle cx="28.4" cy="23.3" r="0.95" fill="#2c2a26" />
-        <circle cx="35.6" cy="23.3" r="0.95" fill="#2c2a26" />
-        <circle cx="28.1" cy="22.9" r="0.3" fill="#efe9dc" />
-        <circle cx="35.3" cy="22.9" r="0.3" fill="#efe9dc" />
-        <path d="M26 22.2c1.3-.8 2.9-.8 4.2 0" stroke="#1d2129" strokeOpacity="0.65" strokeWidth="0.8" fill="none" />
-        <path d="M33.8 22.2c1.3-.8 2.9-.8 4.2 0" stroke="#1d2129" strokeOpacity="0.65" strokeWidth="0.8" fill="none" />
+        <path d="M25.8 19.4c1.3-1 3-1.2 4.5-.6" stroke="#26222a" strokeOpacity={age === "older" ? 0.55 : 0.8} strokeWidth="1" fill="none" strokeLinecap="round" />
+        <path d="M33.7 18.9c1.5-.6 3.2-.4 4.5.6" stroke="#26222a" strokeOpacity={age === "older" ? 0.55 : 0.8} strokeWidth="1" fill="none" strokeLinecap="round" />
         {age === "older" && (
-          <g stroke={skin[1]} strokeWidth="0.55" fill="none" opacity="0.85">
-            <path d="M25.6 20.9l1.2 1.9M36.2 20.9l-1.2 1.9" />
+          <g stroke={skin[1]} strokeWidth="0.5" fill="none" opacity="0.9">
+            <path d="M25.4 20.6l1.4 2M36.6 20.6l-1.4 2" />
+            <path d="M30.8 17.6c.8-.2 1.6-.2 2.4 0" strokeOpacity="0.5" />
           </g>
         )}
-        {/* nose */}
-        <path d="M32 24v4.4c0 .9-.5 1.5-1.3 1.8" stroke={skin[1]} strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.9" />
-        <path d="M30 30.6h3" stroke={skin[1]} strokeWidth="0.7" strokeLinecap="round" opacity="0.6" />
+        {/* nose: shadow side + tip line */}
+        <path d="M31.6 23.4v5c0 1-.5 1.6-1.4 1.9" stroke={skin[1]} strokeWidth="0.85" fill="none" strokeLinecap="round" opacity="0.95" />
+        <path d="M30 30.9c1.3.5 2.7.5 4-.2" stroke={skin[1]} strokeWidth="0.75" fill="none" strokeLinecap="round" opacity="0.75" />
+        <path d="M31.3 24.6c-.7 1.5-.7 2.8 0 4" stroke={skin[2]} strokeWidth="0.5" fill="none" opacity="0.55" />
         {/* mouth */}
-        {mouth === "set" && <path d="M28.4 35.6h7.2" stroke="#5d3a3a" strokeWidth="1" strokeLinecap="round" />}
-        {mouth === "firm" && <path d="M28.6 35.4c2.2 1.1 4.6 1.1 6.8 0" stroke="#5d3a3a" strokeWidth="0.9" fill="none" strokeLinecap="round" />}
-        {mouth === "soft" && <path d="M28.8 35c2 1.4 4.4 1.4 6.4 0" stroke="#5d3a3a" strokeWidth="0.85" fill="none" strokeLinecap="round" />}
+        {mouth === "set" && <path d="M28.6 35.5h6.8" stroke="#4d3230" strokeWidth="0.9" strokeLinecap="round" />}
+        {mouth === "firm" && <path d="M28.8 35.3c2.1 1 4.3 1 6.4 0" stroke="#4d3230" strokeWidth="0.85" fill="none" strokeLinecap="round" />}
+        {mouth === "soft" && <path d="M29 34.9c1.9 1.3 4.2 1.3 6.1 0" stroke="#4d3230" strokeWidth="0.8" fill="none" strokeLinecap="round" />}
+        {mouth !== "set" && <path d="M30.6 37.4c.9.4 1.9.4 2.8 0" stroke={skin[1]} strokeWidth="0.5" fill="none" strokeLinecap="round" opacity="0.6" />}
         {spec.facial && <FacialHair kind={spec.facial} />}
-        {/* cheek light */}
-        <ellipse cx="26.4" cy="28.6" rx="2.1" ry="1.3" fill={skin[2]} opacity="0.4" filter={`url(#${u("soft")})`} />
-        {spec.bindi && <circle cx="32" cy="18.6" r="0.9" fill="#b3452e" />}
+        {/* cheek planes */}
+        <ellipse cx="26.6" cy="28.4" rx="2.2" ry="1.4" fill={skin[2]} opacity="0.42" filter={`url(#${u("soft")})`} />
+        <ellipse cx="38" cy="28.6" rx="2" ry="1.4" fill={skin[1]} opacity="0.42" filter={`url(#${u("soft")})`} />
+        {spec.bindi && <circle cx="32" cy="18.4" r="0.85" fill="#b3452e" />}
       </g>
 
       {spec.glasses && <Glasses heavy={spec.glasses.heavy} />}

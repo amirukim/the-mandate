@@ -38,7 +38,7 @@ export function Office() {
           <img
             src="/art/scene-office.svg"
             alt=""
-            className="h-full w-full object-cover object-[center_58%] opacity-70"
+            className="art-warm h-full w-full object-cover object-[center_58%] opacity-70"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}

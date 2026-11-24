@@ -26,7 +26,7 @@ export function Avatar({ name, size = "md", className }: AvatarProps) {
       : size === "lg"
         ? "w-14 h-14 text-base"
         : size === "stage"
-          ? "w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52"
+          ? "h-[min(34vh,280px)] w-[min(34vh,280px)]"
           : size === "xl"
             ? "w-20 h-20 text-xl sm:w-24 sm:h-24 sm:text-2xl"
             : "w-11 h-11 text-sm";

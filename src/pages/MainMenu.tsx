@@ -95,7 +95,7 @@ export function MainMenu() {
             src={MENU_ART}
             alt=""
             onError={() => setArtOk(false)}
-            className="absolute inset-0 h-full w-full object-cover object-bottom"
+            className="art-warm absolute inset-0 h-full w-full object-cover object-bottom"
           />
         ) : (
           <Skyline />

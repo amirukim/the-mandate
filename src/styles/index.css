@@ -19,16 +19,16 @@
 */
 
 :root {
-  --paper: #101722; /* midnight navy, page */
-  --paper-deep: #0b1018; /* recessed wells */
-  --card: #171d27; /* charcoal with a blue cast, panels */
-  --surface: #222a38; /* raised surface / hover */
+  --paper: #17130c; /* warm umber black, page — Suzerain-grade warmth */
+  --paper-deep: #100d08; /* recessed wells */
+  --card: #1e1912; /* oiled dark wood, panels */
+  --surface: #2a2418; /* raised surface / hover */
   --ink: #ece5d5; /* warm ivory */
   --navy: #ece5d5; /* solid light fill (primary buttons, plates) */
   --navy-deep: #d5ccb8; /* light fill hover */
-  --rule: #39414e; /* subtle borders */
-  --rule-strong: #525d6d; /* stronger separators */
-  --muted: #adaaa1; /* muted metadata text */
+  --rule: #453e2e; /* subtle borders */
+  --rule-strong: #5e543e; /* stronger separators */
+  --muted: #b0a693; /* muted metadata text */
   --gold: #c9a96a; /* brighter leaf gold: accents, rules, meters */
   --gold-text: #d9b877; /* gold that clears AA as text */
   --gold-bright: #e6cd8e; /* highlights on dark */
@@ -39,7 +39,7 @@
   --teal: #4d7f86; /* diplomacy / foreign affairs */
   --teal-text: #93c5cb; /* teal that clears AA as text */
   --scheme: dark;
-  --scrim: 6 9 14;
+  --scrim: 12 9 5;
 }
 
 .theme-paper {
@@ -241,7 +241,13 @@ body::after {
     radial-gradient(120% 80% at 50% -10%, rgb(201 169 106 / 0.22) 0%, transparent 55%),
     radial-gradient(90% 60% at 85% 110%, rgb(138 71 78 / 0.24) 0%, transparent 60%),
     radial-gradient(60% 45% at 12% 88%, rgb(77 127 134 / 0.14) 0%, transparent 65%),
-    linear-gradient(180deg, #101722 0%, #0b1018 100%);
+    linear-gradient(180deg, #17130c 0%, #100d08 100%);
+}
+
+/* Suzerain-grade warm grade for illustrated backdrops: pulls the navy art
+   family toward lamplit sepia without repainting a single file. */
+.art-warm {
+  filter: sepia(0.24) saturate(0.9) brightness(0.95) contrast(1.03);
 }
 
 /* Lamp-glow wash painted above an art layer: apply to the absolute inset-0
