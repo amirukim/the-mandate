@@ -3,6 +3,7 @@ import type { GameState, NewsItem } from "../types/game";import type { GameEvent
 import { applyEffects } from "./effects";
 import { economyHeadline, endTurn, type TurnReport } from "./simulation";
 import { selectEventsForTurn } from "./narrative";
+import { ensureMutable } from "./array-guard";
 
 const OUTLET_ROTATION = ["peninsula", "borneo", "sinar"] as const;
 
@@ -36,6 +37,7 @@ export function chooseOption(state: GameState, optionId: string): ChosenOutcome 
 
   option.consequences.forEach((consequence, index) => {
     if (consequence.delayTurns !== undefined) {
+      state.pendingEffects = ensureMutable(state.pendingEffects);
       state.pendingEffects.push({
         id: `${event.id}-${option.id}-${index}`,
         dueTurn: state.turn + consequence.delayTurns,
@@ -61,7 +63,9 @@ export function chooseOption(state: GameState, optionId: string): ChosenOutcome 
     }
   });
 
+  state.news = ensureMutable(state.news);
   state.news.push(...news);
+  state.decisions = ensureMutable(state.decisions);
   state.decisions.push({
     id: event.id,
     turn: state.turn,
@@ -71,6 +75,7 @@ export function chooseOption(state: GameState, optionId: string): ChosenOutcome 
     optionLabel: option.label,
     summary: option.summary,
   });
+  state.firedEvents = ensureMutable(state.firedEvents);
   state.firedEvents.push(event.id);
   state.queuedEventIds = state.queuedEventIds.slice(1);
   return { event, option, notes, news };
@@ -89,6 +94,7 @@ export function advanceMonth(state: GameState): TurnReport {
       body: headline.body,
       category: "economy",
     };
+    state.news = ensureMutable(state.news);
     state.news.push(item);
     report.headlines.push(item);
   }

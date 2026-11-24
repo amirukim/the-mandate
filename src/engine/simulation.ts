@@ -3,6 +3,7 @@ import type { Movement, TurnReport } from "../types/game";
 import { clamp, dateLabel, round1, stateIsFallen } from "./calendar";
 import { applyEffects } from "./effects";
 import { makeRng, type Rng } from "./rng";
+import { ensureMutable } from "./array-guard";
 
 export type { Movement, TurnReport } from "../types/game";
 
@@ -200,6 +201,7 @@ export function endTurn(state: GameState): TurnReport {
   state.turn = nextTurn;
   const after = snapshot(state);
   const newDate = dateLabel(state.turn);
+  state.history = ensureMutable(state.history);
   state.history.push({
     turn: state.turn,
     dateLabel: newDate,
