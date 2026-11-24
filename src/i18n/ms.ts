@@ -116,6 +116,7 @@ export const MS_DICT: Dict = {
     desk: "Meja",
     noneTitle: "Tiada taklimat menunggu",
     noneText: "Bangunan ini tenang dan fail-fail tersusun. Anda boleh menamatkan bulan bila-bila anda sedia; negara tetap bergerak.",
+    proceed: "Seterusnya ke mesyuarat",
   },
   office: {
     title: "Pejabat Perdana Menteri",

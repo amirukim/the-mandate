@@ -115,6 +115,7 @@ export const EN_DICT = {
     desk: "The desk",
     noneTitle: "No briefings await",
     noneText: "The building is quiet and the folders are stacked. You may end the month whenever you are ready; the country will keep moving either way.",
+    proceed: "Proceed to the meeting",
   },
   office: {
     title: "The Prime Minister's Office",
