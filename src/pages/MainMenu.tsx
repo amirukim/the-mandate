@@ -6,11 +6,12 @@ import { useAuthStore } from "../stores/auth-store";
 import { loadLocal } from "../services/save-service";
 import { MENU_ART } from "../data/art";
 import { useT } from "../i18n/store";
+import { cn } from "../utils/cn";
 
 /**
- * Procedural silhouette of the Putrajaya federal district: the Putra dome,
- * minarets, ministry blocks and the boulevard. Drawn, not photographic, so the
- * title screen stays a work of fiction about a real place.
+ * The title screen, cut to Suzerain's measure: one painted key art, one logo,
+ * a short stack of quiet menu items, and nothing else. No cards, no pitch —
+ * the mood does the selling.
  */
 function Skyline() {
   return (
@@ -32,7 +33,7 @@ function Skyline() {
         <rect x="1080" y="196" width="96" height="124" />
       </g>
       {/* mid layer: the domed complex and its minarets */}
-      <g fill="rgb(32 38 49 / 0.95)">
+      <g fill="rgb(32 30 24 / 0.95)">
         <rect x="560" y="236" width="320" height="84" />
         <path d="M640 236c0-44 36-80 80-80s80 36 80 80z" />
         <rect x="716" y="132" width="8" height="30" />
@@ -44,7 +45,7 @@ function Skyline() {
         <rect x="910" y="252" width="60" height="68" />
       </g>
       {/* near layer: boulevard edge */}
-      <g fill="rgb(8 11 17 / 0.98)">
+      <g fill="rgb(8 7 5 / 0.98)">
         <rect x="0" y="278" width="1440" height="42" />
         <rect x="180" y="248" width="120" height="72" />
         <rect x="1140" y="256" width="140" height="64" />
@@ -55,12 +56,6 @@ function Skyline() {
   );
 }
 
-const SECONDARY = [
-  { to: "/campaigns", key: "menu.load" },
-  { to: "/login", key: "menu.signIn" },
-  { to: "/settings", key: "menu.settings" },
-] as const;
-
 export function MainMenu() {
   const continueGame = useGameStore((s) => s.continueGame);
   const closeCampaign = useGameStore((s) => s.closeCampaign);
@@ -69,16 +64,9 @@ export function MainMenu() {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [artOk, setArtOk] = useState(true);
-
-  const hasAutosave = loadLocal(0) !== null;
   const { t } = useT();
 
-  const SCENARIO = [
-    { k: t("menu.scenario"), v: t("menu.scenarioValue") },
-    { k: t("menu.chamber"), v: t("menu.chamberValue") },
-    { k: t("menu.government"), v: t("menu.governmentValue") },
-    { k: t("menu.condition"), v: t("menu.conditionValue") },
-  ];
+  const hasAutosave = loadLocal(0) !== null;
 
   const fade = (delay: number) => ({
     initial: { opacity: 0, y: 14 },
@@ -86,9 +74,35 @@ export function MainMenu() {
     transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const },
   });
 
+  interface Item {
+    label: string;
+    to?: string;
+    onClick?: () => void;
+    accent?: boolean;
+  }
+
+  const items: Item[] = [
+    ...(hasAutosave
+      ? [
+          {
+            label: t("menu.continueCampaign"),
+            accent: true,
+            onClick: () => {
+              closeCampaign();
+              if (continueGame()) navigate("/game/briefing");
+            },
+          },
+        ]
+      : []),
+    { label: t("menu.newCampaign"), to: "/new" },
+    { label: t("menu.load"), to: "/campaigns" },
+    { label: t("menu.signIn"), to: "/login" },
+    { label: t("menu.settings"), to: "/settings" },
+  ];
+
   return (
     <div className="min-h-screen atmosphere text-ink relative overflow-hidden flex flex-col">
-      {/* Illustrated Putrajaya backdrop; the drawn skyline stands in if it fails to load. */}
+      {/* painted key art */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         {artOk ? (
           <img
@@ -104,103 +118,87 @@ export function MainMenu() {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-paper to-transparent" />
       </div>
 
-      {/* top metadata bar */}
-      <motion.header {...fade(0)} className="relative z-10 border-b border-rule/70">
+      {/* quiet top metadata, the Suzerain version line */}
+      <motion.header {...fade(0)} className="relative z-10">
         <div className="max-w-6xl mx-auto px-6 sm:px-10 py-4 flex items-center justify-between gap-4">
           <p className="kicker kicker-gold">{t("menu.kicker")}</p>
           <p className="kicker hidden sm:block">{t("menu.tag")}</p>
         </div>
       </motion.header>
 
-      <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 sm:px-10 pt-14 sm:pt-20">
-        <motion.h1 {...fade(0.08)} className="display font-semibold leading-[0.92] text-[clamp(2.8rem,9vw,6.5rem)]">
+      <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 sm:px-10 flex flex-col justify-center py-10">
+        <motion.h1
+          {...fade(0.08)}
+          className="display font-semibold leading-[0.92] text-[clamp(2.8rem,8.5vw,6rem)]"
+        >
           Malaysia
           <span className="block text-gold-bright italic font-normal tracking-tight">The Mandate</span>
         </motion.h1>
 
-        <motion.div {...fade(0.16)} className="mt-7 max-w-xl">
+        <motion.div {...fade(0.16)} className="mt-6 w-56">
           <div className="rule-gold" />
-          <p className="mt-5 text-[0.95rem] sm:text-base leading-relaxed text-ink/85 max-w-prose">
-            {t("menu.lede")}
-          </p>
         </motion.div>
 
-        {/* scenario card */}
-        <motion.dl {...fade(0.24)} className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-px bg-rule/60 border border-rule/60 max-w-2xl">
-          {SCENARIO.map((row) => (
-            <div key={row.k} className="bg-paper/70 backdrop-blur-[2px] px-3.5 py-3">
-              <dt className="kicker text-[10px]">{row.k}</dt>
-              <dd className="text-sm font-medium mt-1 text-ink">{row.v}</dd>
-            </div>
-          ))}
-        </motion.dl>
-
-        {/* primary actions */}
-        <motion.nav {...fade(0.32)} aria-label="Main menu" className="mt-12 max-w-2xl">
-          <ul className="border-t border-rule">
-            {hasAutosave && (
-              <li className="border-b border-rule">
-                <button
-                  type="button"
-                  onClick={() => {
-                    closeCampaign();
-                    if (continueGame()) navigate("/game/briefing");
-                  }}
-                  className="group w-full text-left py-5 flex items-baseline gap-4 text-gold-bright hover:text-ink transition-colors"
-                >
-                  <span className="tabular text-xs text-muted group-hover:text-gold">01</span>
-                  <span className="display text-2xl sm:text-3xl font-semibold group-hover:translate-x-1 transition-transform">
-                    {t("menu.continueCampaign")}
+        {/* the menu: a short stack of quiet lines */}
+        <motion.nav {...fade(0.28)} aria-label="Main menu" className="mt-10 max-w-md">
+          <ul>
+            {items.map((item) => {
+              const inner = (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "h-px w-0 group-hover:w-7 transition-all duration-200 bg-gold shrink-0",
+                      item.accent && "bg-gold-bright",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "display text-[1.45rem] sm:text-[1.7rem] font-semibold tracking-tight transition-colors",
+                      item.accent ? "text-gold-bright" : "text-ink/90 group-hover:text-gold-bright",
+                    )}
+                  >
+                    {item.label}
                   </span>
-                  <span aria-hidden="true" className="flex-1 border-t border-rule group-hover:border-gold transition-colors translate-y-[-6px]" />
-                </button>
-              </li>
-            )}
-            <li className="border-b border-rule">
-              <Link
-                to="/new"
-                className="group py-5 flex items-baseline gap-4 text-ink hover:text-gold-bright transition-colors"
-              >
-                <span className="tabular text-xs text-muted group-hover:text-gold">02</span>
-                <span className="display text-2xl sm:text-3xl font-semibold group-hover:translate-x-1 transition-transform">
-                  {t("menu.newCampaign")}
-                </span>
-                <span aria-hidden="true" className="flex-1 border-t border-rule group-hover:border-gold transition-colors translate-y-[-6px]" />
-              </Link>
-            </li>
+                </>
+              );
+              const cls =
+                "group flex items-center gap-0 py-2.5 text-left transition-colors focus-visible:outline-none";
+              return (
+                <li key={item.label}>
+                  {item.to ? (
+                    <Link to={item.to} className={cn(cls, "focus-visible:[&>span:first-child]:w-7")}>
+                      {inner}
+                    </Link>
+                  ) : (
+                    <button type="button" onClick={item.onClick} className={cn(cls, "w-full")}>
+                      {inner}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
 
-          <ul className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3">
-            {SECONDARY.map((link) => (
-              <li key={link.to}>
-                <Link
-                  to={link.to}
-                  className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted hover:text-gold-bright transition-colors"
-                >
-                  {t(link.key)}
-                </Link>
-              </li>
-            ))}
-            {user && (
-              <li className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted">
-                <span>
-                  {t("menu.signIn") === "Sign in" ? "Signed in: " : "Telah log masuk: "}
-                  <span className="text-ink normal-case tracking-normal font-medium">{user.name}</span>
-                  {user.provider === "local" && (t("menu.signIn") === "Sign in" ? " (this device)" : " (peranti ini)")}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => logout()}
-                  className="uppercase tracking-[0.14em] text-gold-text hover:text-gold-bright underline underline-offset-4"
-                >
-                  {t("common.signOut")}
-                </button>
-              </li>
-            )}
-          </ul>
+          {user && (
+            <p className="mt-7 text-[11px] uppercase tracking-[0.12em] text-muted">
+              {t("menu.signIn") === "Sign in"
+                ? "Signed in: "
+                : "Telah log masuk: "}
+              <span className="text-ink normal-case tracking-normal font-medium">{user.name}</span>
+              {user.provider === "local" && (t("menu.signIn") === "Sign in" ? " (this device)" : " (peranti ini)")}
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="ml-3 uppercase tracking-[0.14em] text-gold-text hover:text-gold-bright underline underline-offset-4"
+              >
+                {t("common.signOut")}
+              </button>
+            </p>
+          )}
 
           {game && (
-            <p className="mt-6 text-sm text-muted max-w-prose">
+            <p className="mt-4 text-xs text-muted max-w-prose">
               {t("menu.signIn") === "Sign in"
                 ? "A campaign is currently open. Starting or continuing another one keeps the autosave separate per slot."
                 : "Satu kempen sedang terbuka. Memulakan atau menyambung kempen lain mengekalkan auto-simpan berasingan mengikut slot."}
@@ -209,16 +207,11 @@ export function MainMenu() {
         </motion.nav>
       </main>
 
-      <footer className="relative z-10 max-w-6xl w-full mx-auto px-6 sm:px-10 pt-24 pb-8">
-        <div className="border-t border-rule pt-4 flex flex-wrap gap-x-8 gap-y-2 justify-between">
-          <p className="text-[11px] text-muted leading-relaxed max-w-xl">
-            {t("menu.footerFiction")}
-          </p>
-          <p className="text-[11px] text-muted">
-            {t("menu.footerOffline")}
-          </p>
-        </div>
-      </footer>
+      {/* disclaimers: the small print, bottom edges */}
+      <motion.footer {...fade(0.4)} className="relative z-10 max-w-6xl w-full mx-auto px-6 sm:px-10 pb-6">
+        <p className="text-[11px] text-muted leading-relaxed max-w-xl">{t("menu.footerFiction")}</p>
+        <p className="text-[11px] text-muted mt-1">{t("menu.footerOffline")}</p>
+      </motion.footer>
     </div>
   );
 }

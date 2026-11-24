@@ -51,6 +51,7 @@ export const MS_DICT: Dict = {
     sectionsAria: "Bahagian",
     navTitle: "Navigasi",
     exitCampaign: "Keluar ke menu kempen",
+    backToOffice: "Kembali ke pejabat",
     briefingsBadge: "Taklimat menunggu keputusan: %{n}",
   },
   menu: {
@@ -130,6 +131,8 @@ export const MS_DICT: Dict = {
     advice: "Nasihat diterima",
     seekCounsel: "Meminta nasihat",
     seekNote: "Sekali sebulan, bagi setiap penasihat.",
+    hubAria: "Pejabat Perdana Menteri. Segalanya di sini membawa kepada satu keputusan.",
+    hubHint: "Klik apa-apa di atas meja atau dinding.",
     consulted: "Sudah berbincang bulan ini",
     seek: "Minta nasihat",
     adviser: "Penasihat",

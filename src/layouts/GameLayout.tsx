@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Briefcase,
   FileText,
@@ -31,12 +31,19 @@ interface NavItem {
   icon: LucideIcon;
 }
 
+/**
+ * The shell, cut to Suzerain's measure: no sidebar, no rail. A slim HUD line
+ * carries the date, the chapter and the three numbers that matter; every
+ * destination lives one keystroke away in the drawer, and the office scene
+ * itself is the home of navigation.
+ */
 export function GameLayout() {
   const game = useGameStore((s) => s.game);
   const { t, lang } = useT();
   const [menuOpen, setMenuOpen] = useState(false);
   const [online, setOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
     {
@@ -102,6 +109,7 @@ export function GameLayout() {
   const seats = governmentSeats();
   const toneOf = (v: number, watch: number, bad: number): "good" | "watch" | "bad" =>
     v >= watch ? "good" : v >= bad ? "watch" : "bad";
+  const onOffice = location.pathname === "/game/office";
 
   const drawerNav = (
     <nav aria-label={t("nav.navAria")} className="flex flex-col gap-5">
@@ -148,29 +156,17 @@ export function GameLayout() {
         {t("common.skip")}
       </a>
 
-      {/* Slim game top bar: identity, calendar, HUD figures. */}
-      <header className="sticky top-0 z-30 border-b border-rule bg-card/97 backdrop-blur-sm">
-        <div className="flex items-center gap-3 sm:gap-6 px-3 sm:px-5 h-14">
-          <div className="flex items-center gap-2.5 shrink-0">
-            <StarMark />
-            <div className="leading-none hidden sm:block">
-              <p className="display font-semibold text-[13px] tracking-wide">{t("brand.name")}</p>
-              <p className="kicker text-[9px] mt-0.5">{t("brand.sub")}</p>
-            </div>
+      {/* slim HUD line: date, chapter, the three numbers, the drawer */}
+      <header className="sticky top-0 z-30 border-b border-rule/70 bg-paper/85 backdrop-blur-sm">
+        <div className="flex items-center gap-3 sm:gap-5 px-3 sm:px-5 h-11">
+          <StarMark />
+          <div className="flex items-baseline gap-3 min-w-0">
+            <span className="tabular text-[13px] font-medium text-ink whitespace-nowrap">{dateLabel(game.turn, lang)}</span>
+            <span className="kicker hidden md:inline">{chapterTitle(game.chapter, lang)}</span>
           </div>
 
-          <div className="hidden md:flex items-baseline gap-3 border-l border-rule pl-6">
-            <span className="tabular text-sm font-medium text-ink">{dateLabel(game.turn, lang)}</span>
-            <span className="kicker">{chapterTitle(game.chapter, lang)}</span>
-          </div>
-
-          <div className="ml-auto flex items-center gap-3 sm:gap-5">
-            <div className="flex sm:hidden items-baseline gap-2.5" aria-hidden="true">
-              <span className="tabular text-xs font-semibold text-gold-text">{Math.round(approval)}%</span>
-              <span className="text-muted text-[10px]">&middot;</span>
-              <span className="tabular text-xs font-semibold text-moss-text">{Math.round(coalition)}</span>
-            </div>
-            <div className="hidden sm:flex items-center gap-5" aria-label={t("overview.mandate")}>
+          <div className="ml-auto flex items-center gap-4 sm:gap-5">
+            <div className="flex items-center gap-4" aria-label={t("overview.mandate")}>
               <Hud label={t("common.approval")} value={`${Math.round(approval)}%`} tone={toneOf(approval, 45, 30)} />
               <Hud label={t("overview.coalition")} value={`${Math.round(coalition)}`} tone={toneOf(coalition, 55, 35)} />
               <div className="hidden lg:flex items-baseline gap-1.5" title={t("overview.seatsHouse")}>
@@ -184,12 +180,12 @@ export function GameLayout() {
               aria-label={t("nav.briefingsBadge").replace("%{n}", String(queueCount))}
               className={({ isActive }) =>
                 cn(
-                  "relative flex items-center justify-center min-w-[40px] h-10 px-2 border rounded-[2px] transition-colors",
+                  "relative flex items-center justify-center min-w-[36px] h-8 px-2 border rounded-[2px] transition-colors",
                   isActive ? "border-gold text-gold-text" : "border-rule text-muted hover:text-ink hover:border-rule-strong",
                 )
               }
             >
-              <FileText size={16} aria-hidden="true" />
+              <FileText size={15} aria-hidden="true" />
               {queueCount > 0 && (
                 <span className="tabular absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-brick text-ink text-[10px] font-bold rounded-[1px] border border-paper">
                   {queueCount}
@@ -203,60 +199,17 @@ export function GameLayout() {
               aria-expanded={menuOpen}
               aria-controls="game-nav"
               aria-label={t("nav.openNav")}
-              className="lg:hidden flex items-center justify-center min-w-[40px] h-10 border border-rule rounded-[2px] text-ink"
+              className="flex items-center justify-center min-w-[36px] h-8 border border-rule rounded-[2px] text-ink"
             >
-              <Menu size={18} aria-hidden="true" />
+              <Menu size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* Right-edge icon rail: Suzerain's side buttons, not a dashboard sidebar. */}
-      <nav
-        aria-label={t("nav.sectionsAria")}
-        className="hidden lg:flex fixed right-0 top-14 bottom-0 w-14 z-20 flex-col items-center pt-4 pb-3 gap-1 border-l border-rule bg-card overflow-y-auto"
-      >
-        {NAV_SECTIONS.map((section, si) => (
-          <div key={section.label} className="contents">
-            {si > 0 && <span aria-hidden="true" className="w-7 border-t border-rule my-2" />}
-            {section.items.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  title={item.label}
-                  className={({ isActive }) =>
-                    cn(
-                      "group relative flex items-center justify-center w-11 h-11 rounded-[2px] border transition-colors",
-                      isActive
-                        ? "border-gold/60 bg-surface text-gold-bright"
-                        : "border-transparent text-muted hover:text-ink hover:bg-surface/70",
-                    )
-                  }
-                >
-                  <Icon size={18} aria-hidden="true" />
-                  {item.to === "/game/briefing" && queueCount > 0 && (
-                    <span className="tabular absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 flex items-center justify-center bg-brick text-ink text-[9px] font-bold rounded-[1px] border border-card">
-                      {queueCount}
-                    </span>
-                  )}
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute right-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-card border border-rule rounded-[2px] text-[11px] font-semibold uppercase tracking-[0.1em] text-ink whitespace-nowrap shadow-lift opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
-                  >
-                    {item.label}
-                  </span>
-                </NavLink>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
-
-      <div className="flex-1 min-w-0 lg:pr-14">
+      <div className="flex-1 min-w-0">
         {menuOpen && (
-          <div className="lg:hidden fixed inset-0 z-40">
+          <div className="fixed inset-0 z-40">
             <button
               type="button"
               aria-label={t("nav.closeNav")}
@@ -303,7 +256,16 @@ export function GameLayout() {
           </p>
         )}
 
-        <main id="main" className="page-enter flex-1 px-4 sm:px-8 py-8 max-w-6xl w-full mx-auto min-w-0">
+        <main id="main" className="page-enter flex-1 px-4 sm:px-8 py-7 max-w-6xl w-full mx-auto min-w-0">
+          {!onOffice && (
+            <Link
+              to="/game/office"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted hover:text-gold-bright transition-colors mb-5"
+            >
+              <span aria-hidden="true" className="h-px w-4 bg-gold/60" />
+              {t("nav.backToOffice")}
+            </Link>
+          )}
           <Outlet />
         </main>
       </div>
@@ -313,7 +275,7 @@ export function GameLayout() {
 
 function StarMark() {
   return (
-    <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0" aria-hidden="true">
+    <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0" aria-hidden="true">
       <g fill="var(--gold-bright)">
         <rect x="9" y="9" width="14" height="14" />
         <rect x="9" y="9" width="14" height="14" transform="rotate(45 16 16)" />
@@ -323,12 +285,12 @@ function StarMark() {
   );
 }
 
-/** Compact HUD figure in the top bar — a game readout, not a dashboard widget. */
+/** Compact HUD figure in the top line — a game readout, not a dashboard widget. */
 function Hud({ label, value, tone }: { label: string; value: string; tone: "good" | "watch" | "bad" }) {
   const color = tone === "good" ? "text-moss-text" : tone === "watch" ? "text-gold-text" : "text-brick-text";
   return (
     <div className="flex items-baseline gap-1.5" title={label}>
-      <span className="kicker text-[9px]">{label}</span>
+      <span className="kicker text-[9px] hidden sm:inline">{label}</span>
       <span className={cn("tabular text-xs font-semibold", color)}>{value}</span>
     </div>
   );

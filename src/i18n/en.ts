@@ -50,6 +50,7 @@ export const EN_DICT = {
     sectionsAria: "Sections",
     navTitle: "Navigation",
     exitCampaign: "Exit to campaign menu",
+    backToOffice: "Back to the office",
     briefingsBadge: "Briefings awaiting decision: %{n}",
   },
   menu: {
@@ -129,6 +130,8 @@ export const EN_DICT = {
     advice: "Advice received",
     seekCounsel: "Seek counsel",
     seekNote: "Once a month, each adviser.",
+    hubAria: "The Prime Minister's office. Everything here leads to a decision.",
+    hubHint: "Click anything on the desk or the walls.",
     consulted: "Consulted this month",
     seek: "Seek counsel",
     adviser: "Adviser",
@@ -193,8 +196,7 @@ export const EN_DICT = {
     oppositionLow: "Contained",
     oppositionHigh: "Surging",
   },
-  cabinet: {
-    kicker: "Perdana Putra",
+  cabinet: {    kicker: "Perdana Putra",
     title: "Cabinet and the Inner Office",
     lead: "The people who carry the government's files, and the people who decide whether those files arrive at all. Relationships move in small steps: counsel given, promises kept, deadlines respected.",
     cabinet: "The Cabinet",
