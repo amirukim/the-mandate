@@ -102,14 +102,16 @@ export function MainMenu() {
 
   return (
     <div className="min-h-screen atmosphere text-ink relative overflow-hidden flex flex-col">
-      {/* painted key art */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      {/* painted key art, breathing slowly */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         {artOk ? (
-          <img
+          <motion.img
             src={MENU_ART}
             alt=""
             onError={() => setArtOk(false)}
             className="art-warm absolute inset-0 h-full w-full object-cover object-bottom"
+            animate={{ scale: [1, 1.05] }}
+            transition={{ duration: 30, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
           />
         ) : (
           <Skyline />
@@ -126,21 +128,21 @@ export function MainMenu() {
         </div>
       </motion.header>
 
-      <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 sm:px-10 flex flex-col justify-center py-10">
+      <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 sm:px-10 flex flex-col justify-center py-6 min-h-0">
         <motion.h1
           {...fade(0.08)}
-          className="display font-semibold leading-[0.92] text-[clamp(2.8rem,8.5vw,6rem)]"
+          className="display font-semibold leading-[0.92] text-[clamp(2.5rem,7vw,5.2rem)]"
         >
           Malaysia
           <span className="block text-gold-bright italic font-normal tracking-tight">The Mandate</span>
         </motion.h1>
 
-        <motion.div {...fade(0.16)} className="mt-6 w-56">
+        <motion.div {...fade(0.16)} className="mt-5 w-56">
           <div className="rule-gold" />
         </motion.div>
 
         {/* the menu: a short stack of quiet lines */}
-        <motion.nav {...fade(0.28)} aria-label="Main menu" className="mt-10 max-w-md">
+        <motion.nav {...fade(0.28)} aria-label="Main menu" className="mt-8 max-w-md">
           <ul>
             {items.map((item) => {
               const inner = (

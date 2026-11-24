@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Briefcase,
   FileText,
   Flag,
   Gavel,
   Globe,
+  Handshake,
   History,
   Landmark,
   Map as MapIcon,
@@ -32,10 +34,9 @@ interface NavItem {
 }
 
 /**
- * The shell, cut to Suzerain's measure: no sidebar, no rail. A slim HUD line
- * carries the date, the chapter and the three numbers that matter; every
- * destination lives one keystroke away in the drawer, and the office scene
- * itself is the home of navigation.
+ * The shell, cut like a game stage rather than a web page: the frame fills
+ * the viewport and never scrolls — content scrolls inside it — every screen
+ * change cuts through black, and the HUD is a readout line, not a navbar.
  */
 export function GameLayout() {
   const game = useGameStore((s) => s.game);
@@ -112,10 +113,10 @@ export function GameLayout() {
   const onOffice = location.pathname === "/game/office";
 
   const drawerNav = (
-    <nav aria-label={t("nav.navAria")} className="flex flex-col gap-5">
+    <nav aria-label={t("nav.navAria")} className="flex flex-col gap-6">
       {NAV_SECTIONS.map((section) => (
         <div key={section.label}>
-          <p className="kicker px-3 mb-1.5">{section.label}</p>
+          <p className="kicker px-3 mb-2">{section.label}</p>
           <ul>
             {section.items.map((item) => {
               const Icon = item.icon;
@@ -126,14 +127,14 @@ export function GameLayout() {
                     onClick={() => setMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-[2px] border-l-2 transition-colors",
+                        "flex items-center gap-3 px-3 py-3 rounded-[2px] transition-colors font-display text-[15px] font-semibold",
                         isActive
-                          ? "border-gold bg-surface text-ink font-semibold"
-                          : "border-transparent text-muted hover:text-ink hover:bg-surface/60",
+                          ? "bg-surface text-gold-bright"
+                          : "text-ink/80 hover:text-ink hover:bg-surface/60",
                       )
                     }
                   >
-                    <Icon size={15} aria-hidden="true" className="shrink-0" />
+                    <Icon size={18} aria-hidden="true" className="shrink-0 text-gold/80" />
                     <span className="min-w-0 truncate">{item.label}</span>
                     {item.to === "/game/briefing" && queueCount > 0 && (
                       <span className="tabular ml-auto text-[11px] font-bold text-gold-text border border-gold rounded-[2px] px-1">
@@ -151,13 +152,13 @@ export function GameLayout() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-paper">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-paper">
       <a href="#main" className="skip-link">
         {t("common.skip")}
       </a>
 
-      {/* slim HUD line: date, chapter, the three numbers, the drawer */}
-      <header className="sticky top-0 z-30 border-b border-rule/70 bg-paper/85 backdrop-blur-sm">
+      {/* HUD readout line */}
+      <header className="relative z-30 border-b border-[#0a0806] bg-[#14110a]/95">
         <div className="flex items-center gap-3 sm:gap-5 px-3 sm:px-5 h-11">
           <StarMark />
           <div className="flex items-baseline gap-3 min-w-0">
@@ -165,14 +166,11 @@ export function GameLayout() {
             <span className="kicker hidden md:inline">{chapterTitle(game.chapter, lang)}</span>
           </div>
 
-          <div className="ml-auto flex items-center gap-4 sm:gap-5">
-            <div className="flex items-center gap-4" aria-label={t("overview.mandate")}>
-              <Hud label={t("common.approval")} value={`${Math.round(approval)}%`} tone={toneOf(approval, 45, 30)} />
-              <Hud label={t("overview.coalition")} value={`${Math.round(coalition)}`} tone={toneOf(coalition, 55, 35)} />
-              <div className="hidden lg:flex items-baseline gap-1.5" title={t("overview.seatsHouse")}>
-                <span className="kicker text-[9px]">{t("nav.parliament")}</span>
-                <span className="tabular text-xs font-semibold text-ink">{seats}/222</span>
-              </div>
+          <div className="ml-auto flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3.5" aria-label={t("overview.mandate")}>
+              <Hud icon={Users} label={t("common.approval")} value={`${Math.round(approval)}%`} tone={toneOf(approval, 45, 30)} />
+              <Hud icon={Handshake} label={t("overview.coalition")} value={`${Math.round(coalition)}`} tone={toneOf(coalition, 55, 35)} />
+              <Hud icon={Landmark} label={t("nav.parliament")} value={`${seats}/222`} tone="plain" />
             </div>
 
             <NavLink
@@ -207,56 +205,14 @@ export function GameLayout() {
         </div>
       </header>
 
-      <div className="flex-1 min-w-0">
-        {menuOpen && (
-          <div className="fixed inset-0 z-40">
-            <button
-              type="button"
-              aria-label={t("nav.closeNav")}
-              className="absolute inset-0 bg-black/65"
-              onClick={() => setMenuOpen(false)}
-            />
-            <div
-              id="game-nav"
-              className="absolute right-0 top-0 h-full w-[19rem] max-w-[85vw] bg-card border-l border-rule flex flex-col overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-4 py-4 border-b border-rule">
-                <span className="kicker kicker-gold">{t("nav.navTitle")}</span>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  aria-label={t("nav.closeNav")}
-                  className="flex items-center justify-center min-w-[44px] min-h-[44px] border border-rule rounded-[2px]"
-                >
-                  <X size={16} aria-hidden="true" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-3">{drawerNav}</div>
-              <div className="px-4 py-3 border-t border-rule">
-                <p className="tabular text-sm text-ink">{dateLabel(game.turn, lang)}</p>
-                <p className="kicker mt-0.5">{chapterTitle(game.chapter, lang)}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate("/campaigns");
-                }}
-                className="w-full text-sm text-muted hover:text-ink py-3.5 border-t border-rule text-left px-4"
-              >
-                {t("nav.exitCampaign")}
-              </button>
-            </div>
-          </div>
-        )}
-
+      {/* the stage: the frame never scrolls, the report scrolls inside it */}
+      <main id="main" className="relative flex-1 min-h-0 overflow-y-auto">
         {!online && (
           <p role="status" className="bg-paper-deep border-b border-rule text-center text-xs py-1.5 text-muted px-4">
             {t("common.offline")}
           </p>
         )}
-
-        <main id="main" className="page-enter flex-1 px-4 sm:px-8 py-7 max-w-6xl w-full mx-auto min-w-0">
+        <div className="px-4 sm:px-8 py-7 max-w-6xl w-full mx-auto min-w-0">
           {!onOffice && (
             <Link
               to="/game/office"
@@ -267,8 +223,64 @@ export function GameLayout() {
             </Link>
           )}
           <Outlet />
-        </main>
-      </div>
+        </div>
+      </main>
+
+      {/* the frame: floor bar with a gold hairline */}
+      <div aria-hidden="true" className="h-2 bg-[#0a0806] border-t border-gold/25" />
+
+      {/* scene cut: every screen change passes through black */}
+      <motion.div
+        key={location.pathname}
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-[45] bg-[#0a0806]"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      />
+
+      {/* the pause menu */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-40">
+          <button
+            type="button"
+            aria-label={t("nav.closeNav")}
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div
+            id="game-nav"
+            className="absolute right-0 top-0 h-full w-[20rem] max-w-[85vw] bg-[#14110a] border-l border-gold/30 flex flex-col overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-4 py-4 border-b border-rule">
+              <span className="kicker kicker-gold">{t("nav.navTitle")}</span>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                aria-label={t("nav.closeNav")}
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] border border-rule rounded-[2px]"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">{drawerNav}</div>
+            <div className="px-4 py-3 border-t border-rule">
+              <p className="tabular text-sm text-ink">{dateLabel(game.turn, lang)}</p>
+              <p className="kicker mt-0.5">{chapterTitle(game.chapter, lang)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                navigate("/campaigns");
+              }}
+              className="w-full text-sm text-muted hover:text-ink py-3.5 border-t border-rule text-left px-4"
+            >
+              {t("nav.exitCampaign")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -285,12 +297,23 @@ function StarMark() {
   );
 }
 
-/** Compact HUD figure in the top line — a game readout, not a dashboard widget. */
-function Hud({ label, value, tone }: { label: string; value: string; tone: "good" | "watch" | "bad" }) {
-  const color = tone === "good" ? "text-moss-text" : tone === "watch" ? "text-gold-text" : "text-brick-text";
+/** Compact HUD readout: icon + figure, like a game status line. */
+function Hud({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  tone: "good" | "watch" | "bad" | "plain";
+}) {
+  const color =
+    tone === "good" ? "text-moss-text" : tone === "watch" ? "text-gold-text" : tone === "bad" ? "text-brick-text" : "text-ink";
   return (
-    <div className="flex items-baseline gap-1.5" title={label}>
-      <span className="kicker text-[9px] hidden sm:inline">{label}</span>
+    <div className="flex items-center gap-1.5" title={label}>
+      <Icon size={13} aria-hidden="true" className="text-muted shrink-0" />
       <span className={cn("tabular text-xs font-semibold", color)}>{value}</span>
     </div>
   );
