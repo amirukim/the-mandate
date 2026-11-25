@@ -61,7 +61,7 @@ export function Avatar({ name, size = "md", className }: AvatarProps) {
         src={pixel}
         alt=""
         className="absolute inset-0 h-full w-full"
-        style={{ imageRendering: "pixelated" }}
+        style={{ imageRendering: size === "stage" || size === "xl" ? "pixelated" : "auto" }}
       />
       {srcs.length > 0 && <PaintedFile srcs={srcs} />}
     </span>
