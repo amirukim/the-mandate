@@ -93,8 +93,21 @@
       "width": 1440,
       "height": 600,
       "scale": 1,
+      "candidates": ["/art/painted/menu.webp", "/art/painted/menu.png", "/art/painted/menu.jpg"],
       "source": "vector",
-      "licence": "original"
+      "licence": "original",
+      "note": "Vector fallback under the authored pixel key art."
+    },
+    {
+      "id": "keyart.menu.pixel",
+      "kind": "keyart",
+      "src": "/art/pixel/keyart-menu.png",
+      "width": 480,
+      "height": 200,
+      "scale": 3,
+      "source": "authored",
+      "licence": "original",
+      "note": "Authored pixel key art, dusk. Regenerate with node scripts/build-menu-plate.mjs."
     }
   ]
 }

@@ -24,7 +24,7 @@ export function SceneBackground({ art, className }: { art: EnvironmentArt; class
           className="absolute inset-0 h-full w-full object-cover [image-rendering:pixelated]"
         />
       )}
-      <PaintedScene srcs={paintedSceneSrcs(art.painted)} />
+      {art.painted && <PaintedScene srcs={paintedSceneSrcs(art.painted)} />}
     </div>
   );
 }

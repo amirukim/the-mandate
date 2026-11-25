@@ -19,7 +19,8 @@ export type SceneKey = "chamber" | "office" | "treasury" | "ops" | "flood";
 export interface EnvironmentArt {
   pixel?: string;
   vector: string;
-  painted: SceneKey | "hub";
+  /** Painted raster drop-in chain; absent where no painting applies (key art). */
+  painted?: SceneKey | "hub";
   /** Raster width/height for the vector fallback (⅓ of its natural size). */
   width: number;
   height: number;
@@ -32,6 +33,12 @@ export const ENVIRONMENTS = {
     painted: "hub",
     width: 480,
     height: 253,
+  },
+  menuKeyArt: {
+    pixel: "/art/pixel/keyart-menu.png",
+    vector: "/art/menu-putrajaya.svg",
+    width: 480,
+    height: 200,
   },
 } satisfies Record<string, EnvironmentArt>;
 
@@ -59,9 +66,6 @@ export function sceneKeyFor(location: string): SceneKey {
 export function artForScene(location: string): string {
   return SCENE_SVG[sceneKeyFor(location)];
 }
-
-/** Title-screen key art: the Putrajaya federal district at dusk. */
-export const MENU_ART = "/art/menu-putrajaya.svg";
 
 /** Painted-candidate files for a scene key (plus "hub" for the office hub). */
 export function paintedSceneSrcs(key: SceneKey | "hub"): string[] {
