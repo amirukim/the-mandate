@@ -30,6 +30,7 @@ export function Security() {
         <div className="relative px-4 sm:px-8 pt-10 pb-6">
           <p className="kicker kicker-gold">{t("security.kicker")}</p>
           <h1 className="display text-2xl sm:text-3xl font-semibold mt-1.5">{t("security.title")}</h1>
+          <p className="text-sm text-muted leading-relaxed mt-2 max-w-4xl">{t("security.lead")}</p>
           <div className="rule mt-3" />
         </div>
       </header>

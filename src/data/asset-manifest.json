@@ -48,7 +48,8 @@
       "candidates": ["/art/painted/chamber.webp", "/art/painted/chamber.png", "/art/painted/chamber.jpg"],
       "owner": "chamber",
       "source": "vector",
-      "licence": "original"
+      "licence": "original",
+      "note": "Also stands in for the cabinet, meeting and press rooms via sceneKeyFor until dedicated plates are approved (D-03 keeps the press route deferred)."
     },
     {
       "id": "scene.treasury",

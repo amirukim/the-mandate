@@ -9,6 +9,13 @@
  * missing files fall back to the vector art silently.
  */
 
+/**
+ * Venue keys that share a room until their own plates are approved:
+ * `sceneKeyFor` maps the cabinet, meeting and press rooms onto "chamber"
+ * (see the manifest note on scene.chamber). New keys are a presentation
+ * change and an art contract change at once — add them only with a new
+ * registered plate.
+ */
 export type SceneKey = "chamber" | "office" | "treasury" | "ops" | "flood";
 
 /**

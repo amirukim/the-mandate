@@ -31,11 +31,16 @@ interface Props {
   onSelect: (key: DiplomacyKey | null) => void;
 }
 
-const HOME_FILL = "#365a52";
-const HOME_STROKE = "#e6cd8e";
-const LAND_FILL = "#232b37";
-const CONTEXT_FILL = "#1a202a";
-const LAND_STROKE = "#3a4351";
+/** The paper-atlas palette, shared with MalaysiaMap (see ART_BIBLE 5.7). */
+const HOME_FILL = "#f7f4ec";
+const HOME_STROKE = "#1a1e6e";
+const LAND_FILL = "#e3e0d3";
+const LAND_STROKE = "#c9c2ae";
+const FAR_FILL = "#dcd8c8";
+const SELECTED_FILL = "#f7f4ec";
+const SELECTED_STROKE = "#1a1e6e";
+const SEA = "#bfd7ea";
+const LABEL_INK = "#5a7ea6";
 
 function ringPath(ring: GeoRing): string {
   let d = "";
@@ -109,26 +114,19 @@ export function RegionMap({ selected, onSelect }: Props) {
           aria-label="Malaysia and its neighbours"
         >
           <defs>
-            <pattern id="dip-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-              <path d="M48 0H0v48" fill="none" stroke="#2c3441" strokeWidth="0.5" opacity="0.5" />
-            </pattern>
-            <radialGradient id="dip-sea" cx="0.42" cy="0.3" r="0.85">
-              <stop offset="0" stopColor="#141d2a" />
-              <stop offset="1" stopColor="#0c1320" />
-            </radialGradient>
+            {/* the atlas is flat: no grid, no sea gradient */}
           </defs>
 
-          <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#dip-sea)" />
-          <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#dip-grid)" />
+          <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill={SEA} />
 
           {/* context neighbours, real geometry */}
-          <Country rings={GEO_Thailand} fill={CONTEXT_FILL} stroke={LAND_STROKE} strokeWidth={1.2} />
-          <Country rings={GEO_Vietnam} fill={CONTEXT_FILL} stroke={LAND_STROKE} strokeWidth={1.2} />
-          <Country rings={GEO_Philippines} fill={CONTEXT_FILL} stroke={LAND_STROKE} strokeWidth={1.2} />
-          <Country rings={GEO_Brunei} fill="#1f2530" stroke={LAND_STROKE} strokeWidth={1.2} />
-          <Country rings={GEO_Taiwan} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-          <Country rings={GEO_Papua_New_Guinea} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-          <Country rings={GEO_East_Timor} fill="#161c26" stroke="#232b37" strokeWidth={1} />
+          <Country rings={GEO_Thailand} fill={LAND_FILL} stroke={LAND_STROKE} strokeWidth={1.2} />
+          <Country rings={GEO_Vietnam} fill={LAND_FILL} stroke={LAND_STROKE} strokeWidth={1.2} />
+          <Country rings={GEO_Philippines} fill={LAND_FILL} stroke={LAND_STROKE} strokeWidth={1.2} />
+          <Country rings={GEO_Brunei} fill="#efe9dc" stroke={LAND_STROKE} strokeWidth={1.2} />
+          <Country rings={GEO_Taiwan} fill={FAR_FILL} stroke={LAND_STROKE} strokeWidth={1} />
+          <Country rings={GEO_Papua_New_Guinea} fill={FAR_FILL} stroke={LAND_STROKE} strokeWidth={1} />
+          <Country rings={GEO_East_Timor} fill={FAR_FILL} stroke={LAND_STROKE} strokeWidth={1} />
 
           {/* clickable countries on real polygons */}
           {ACTORS.map((actor) => {
@@ -148,19 +146,19 @@ export function RegionMap({ selected, onSelect }: Props) {
               >
                 <Country
                   rings={actor.rings}
-                  fill={isSel ? "#33455c" : LAND_FILL}
-                  stroke={isSel ? HOME_STROKE : LAND_STROKE}
+                  fill={isSel ? SELECTED_FILL : LAND_FILL}
+                  stroke={isSel ? SELECTED_STROKE : LAND_STROKE}
                   strokeWidth={isSel ? 2.5 : 1.4}
                 />
                 <text
                   x={lx}
                   y={ly}
                   textAnchor="middle"
-                  fill="#8b95a3"
+                  fill={isSel ? SELECTED_STROKE : LABEL_INK}
                   fontSize="15"
                   letterSpacing="4"
                   fontFamily="Public Sans, sans-serif"
-                  stroke="#0c1320"
+                  stroke="#f7f4ec"
                   strokeWidth="3"
                   paintOrder="stroke"
                   style={{ pointerEvents: "none" }}
@@ -186,15 +184,15 @@ export function RegionMap({ selected, onSelect }: Props) {
               cx={sgx}
               cy={sgy}
               r={selected === "singapore" ? 8 : 5.5}
-              fill={selected === "singapore" ? "#33455c" : LAND_FILL}
-              stroke={selected === "singapore" ? HOME_STROKE : "#8b95a3"}
+              fill={selected === "singapore" ? SELECTED_FILL : LAND_FILL}
+              stroke={selected === "singapore" ? SELECTED_STROKE : LAND_STROKE}
               strokeWidth={selected === "singapore" ? 2.5 : 1.4}
               style={{ transition: "r 140ms ease" }}
             />
             <text
               x={sgx + 16}
               y={sgy + 4}
-              fill="#8b95a3"
+              fill={LABEL_INK}
               fontSize="12"
               letterSpacing="3"
               fontFamily="Public Sans, sans-serif"
@@ -212,10 +210,10 @@ export function RegionMap({ selected, onSelect }: Props) {
               const [px2, py2] = project(113.0, 2.6);
               return (
                 <>
-                  <text x={px1} y={py1} textAnchor="middle" fill="#e6cd8e" fontSize="15" letterSpacing="4" fontFamily="Public Sans, sans-serif" stroke="#0c1320" strokeWidth="3" paintOrder="stroke" style={{ pointerEvents: "none" }}>
+                  <text x={px1} y={py1} textAnchor="middle" fill={SELECTED_STROKE} fontSize="15" letterSpacing="4" fontFamily="Public Sans, sans-serif" stroke="#f7f4ec" strokeWidth="3" paintOrder="stroke" style={{ pointerEvents: "none" }}>
                     MALAYSIA
                   </text>
-                  <text x={px2} y={py2} textAnchor="middle" fill="#e6cd8e" fontSize="14" letterSpacing="4" fontFamily="Public Sans, sans-serif" stroke="#0c1320" strokeWidth="3" paintOrder="stroke" style={{ pointerEvents: "none" }}>
+                  <text x={px2} y={py2} textAnchor="middle" fill={SELECTED_STROKE} fontSize="14" letterSpacing="4" fontFamily="Public Sans, sans-serif" stroke="#f7f4ec" strokeWidth="3" paintOrder="stroke" style={{ pointerEvents: "none" }}>
                     MALAYSIA
                   </text>
                 </>
@@ -231,7 +229,7 @@ export function RegionMap({ selected, onSelect }: Props) {
                 key={c.label}
                 x={x}
                 y={y}
-                fill="#525d6d"
+                fill={LABEL_INK}
                 fontSize={c.small ? 12 : 14}
                 letterSpacing="4"
                 fontFamily="Public Sans, sans-serif"
@@ -243,7 +241,7 @@ export function RegionMap({ selected, onSelect }: Props) {
           })}
 
           {/* sea labels */}
-          <g fill="#465062" fontFamily="Public Sans, sans-serif" fontSize="14" letterSpacing="5">
+          <g fill={LABEL_INK} fontFamily="Public Sans, sans-serif" fontSize="14" letterSpacing="5">
             {(() => {
               const [sx, sy] = project(114.5, 13.5);
               const [mx, my] = project(97.4, 4.5);
@@ -259,10 +257,10 @@ export function RegionMap({ selected, onSelect }: Props) {
           </g>
 
           {/* compass */}
-          <g stroke="#c9a96a" strokeOpacity="0.6" fill="none" transform={`translate(${GEO_VIEWBOX.width - 78} 64)`}>
+          <g stroke="#c69b54" strokeOpacity="0.6" fill="none" transform={`translate(${GEO_VIEWBOX.width - 78} 64)`}>
             <circle r="24" />
             <path d="M0 -24v48M-24 0h48" />
-            <path d="M0 -22l-6 11h12z" fill="#c9a96a" stroke="none" />
+            <path d="M0 -22l-6 11h12z" fill="#c69b54" stroke="none" />
           </g>
         </svg>
 

@@ -1,9 +1,10 @@
 import { useGameStore } from "../stores/game-store";
 import { CHARACTERS } from "../data/characters";
-import { PageHeader } from "../components/ui/PageHeader";
 import { Meter } from "../components/ui/Meter";
 import { CharacterPortrait } from "../components/game/CharacterPortrait";
 import { PartyFlag } from "../components/ui/PartyFlag";
+import { PixelScene } from "../components/game/PixelScene";
+import { prefersReducedMotion } from "../hooks/usePortalOverlay";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
 import { cn } from "../utils/cn";
@@ -86,25 +87,39 @@ export function Cabinet() {
   const { t } = useT();
   if (!game) return null;
 
+  // room hotspots: each chip walks to its section of the dossier below
+  const SPOTS: Array<{ id: string; label: string; dot: string }> = [
+    { id: "cabinet-table", label: t("cabinet.spotTable"), dot: "bg-gold" },
+    { id: "inner-office", label: t("cabinet.spotInner"), dot: "bg-ink/50" },
+    { id: "coalition-bench", label: t("cabinet.spotBench"), dot: "bg-brick" },
+  ];
+  const jumpTo = (id: string) => {
+    const reduced = prefersReducedMotion();
+    document.getElementById(id)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  };
+
   const cabinetIds = CHARACTERS.filter((c) => c.cabinet).map((c) => c.id);
   const adviserIds = CHARACTERS.filter(
     (c) => !c.cabinet && !(COALITION_FIGURES as readonly string[]).includes(c.id),
   ).map((c) => c.id);
 
-  const sections: Array<{ label: string; note: string; ids: string[]; tier: Tier }> = [
+  const sections: Array<{ id: string; label: string; note: string; ids: string[]; tier: Tier }> = [
     {
+      id: "cabinet-table",
       label: t("cabinet.cabinet"),
       note: t("cabinet.cabinetNote"),
       ids: cabinetIds,
       tier: "cabinet",
     },
     {
+      id: "inner-office",
       label: t("cabinet.inner"),
       note: t("cabinet.innerNote"),
       ids: adviserIds,
       tier: "adviser",
     },
     {
+      id: "coalition-bench",
       label: t("cabinet.coalition"),
       note: t("cabinet.coalitionNote"),
       ids: [...COALITION_FIGURES],
@@ -114,15 +129,36 @@ export function Cabinet() {
 
   return (
     <div className="page-enter">
-      <PageHeader
-        dense
-        kicker={t("cabinet.kicker")}
-        title={t("cabinet.title")}
-        lead={t("cabinet.lead")}
-      />
+      {/* the room: the cabinet meets in the chamber's meeting wing */}
+      <header className="relative -mx-4 sm:-mx-8 -mt-8 mb-8 border-b border-rule overflow-hidden">
+        <div className="absolute inset-0 glow-art" aria-hidden="true">
+          <PixelScene src="/art/scene-chamber.svg" width={480} height={140} className="art-warm opacity-70 object-[center_45%]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-paper via-paper/85 to-paper/55" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper to-transparent" />
+        </div>
+        <div className="relative px-4 sm:px-8 pt-10 pb-6">
+          <p className="kicker kicker-gold">{t("cabinet.kicker")}</p>
+          <h1 className="display text-2xl sm:text-3xl font-semibold mt-1.5">{t("cabinet.title")}</h1>
+          <p className="text-sm text-muted leading-relaxed mt-2 max-w-4xl">{t("cabinet.lead")}</p>
+          <div className="mt-4 flex flex-wrap gap-2" role="navigation" aria-label={t("cabinet.title")}>
+            {SPOTS.map((spot) => (
+              <button
+                key={spot.id}
+                type="button"
+                onClick={() => jumpTo(spot.id)}
+                className="group flex items-center gap-2 border border-gold/50 bg-card/80 rounded-[2px] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-text transition-colors hover:bg-gold hover:text-paper hover:border-gold"
+              >
+                <span aria-hidden="true" className={cn("w-1.5 h-1.5 rounded-[1px]", spot.dot)} />
+                {spot.label}
+              </button>
+            ))}
+          </div>
+          <div className="rule mt-4" />
+        </div>
+      </header>
 
       {sections.map((section) => (
-        <section key={section.label} aria-label={section.label} className="mt-10 first:mt-0">
+        <section key={section.id} id={section.id} aria-label={section.label} className="mt-10 first:mt-0 scroll-mt-6">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <h2 className="kicker kicker-gold">{section.label}</h2>
             <p className="text-xs text-muted">{section.note}</p>
