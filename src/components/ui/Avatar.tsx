@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { portraitFiles, portraitArtId, PortraitArt } from "../../data/portraits";
+import { portraitFiles, portraitArtId } from "../../data/portraits";
+import { pixelPortraitDataUrl } from "../../data/pixel-portraits";
 import { cn } from "../../utils/cn";
 
 interface AvatarProps {
@@ -28,12 +29,12 @@ function PaintedFile({ srcs }: { srcs: string[] }) {
  * Character identity plate. Resolution order:
  *   1. Painted raster files (public/portraits/<id>.webp|png|jpg or a manual
  *      PORTRAITS entry) — tried in order, missing files fall through.
- *   2. The character's painted SVG portrait.
- *   3. The anonymous engraved bust — never bare initials.
+ *   2. The 32×32 pixel bust (the shipped presentation, deliberate style).
+ * Unknown speakers get the anonymous pixel figure — never bare initials.
  */
 export function Avatar({ name, size = "md", className }: AvatarProps) {
   const srcs = portraitFiles(name);
-  const artId = portraitArtId(name) ?? "generic";
+  const pixel = pixelPortraitDataUrl(portraitArtId(name) ?? "generic");
   const sizeClass =
     size === "sm"
       ? "w-8 h-8 text-[11px]"
@@ -55,8 +56,13 @@ export function Avatar({ name, size = "md", className }: AvatarProps) {
         className,
       )}
     >
-      {/* the painted SVG sits under any raster file; a 404 chain reveals it */}
-      <PortraitArt id={artId} />
+      {/* the pixel bust sits under any raster file; a 404 chain reveals it */}
+      <img
+        src={pixel}
+        alt=""
+        className="absolute inset-0 h-full w-full"
+        style={{ imageRendering: "pixelated" }}
+      />
       {srcs.length > 0 && <PaintedFile srcs={srcs} />}
     </span>
   );
