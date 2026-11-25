@@ -11,6 +11,32 @@
 
 export type SceneKey = "chamber" | "office" | "treasury" | "ops" | "flood";
 
+/**
+ * A room's full art stack. The authored pixel plate is used directly at native
+ * size (no rasterisation); the vector illustration underneath is the fallback
+ * that must always exist; the painted key is the raster drop-in chain.
+ */
+export interface EnvironmentArt {
+  pixel?: string;
+  vector: string;
+  painted: SceneKey | "hub";
+  /** Raster width/height for the vector fallback (⅓ of its natural size). */
+  width: number;
+  height: number;
+}
+
+export const ENVIRONMENTS = {
+  officeHub: {
+    pixel: "/art/pixel/env-office-hub.png",
+    vector: "/art/scene-hub.svg",
+    painted: "hub",
+    width: 480,
+    height: 253,
+  },
+} satisfies Record<string, EnvironmentArt>;
+
+export type EnvironmentId = keyof typeof ENVIRONMENTS;
+
 const SCENE_SVG: Record<SceneKey, string> = {
   office: "/art/scene-office.svg",
   chamber: "/art/scene-chamber.svg",

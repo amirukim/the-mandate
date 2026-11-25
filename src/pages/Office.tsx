@@ -2,16 +2,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGameStore } from "../stores/game-store";
 import { characterById } from "../data/characters";
 import { CharacterPortrait } from "../components/game/CharacterPortrait";
-import { PaintedScene } from "../components/game/PaintedScene";
-import { PixelScene } from "../components/game/PixelScene";
+import { GameScene, SceneLayer } from "../components/game/GameScene";
+import { InteractiveHotspot } from "../components/game/InteractiveHotspot";
 import { Button } from "../components/ui/Button";
 import { Meter } from "../components/ui/Meter";
 import { Panel } from "../components/ui/Panel";
 import { dateLabel, chapterTitle } from "../engine/calendar";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
-import { paintedSceneSrcs } from "../data/art";
-import { cn } from "../utils/cn";
+import { ENVIRONMENTS } from "../data/art";
 
 const COUNSELABLE = ["chiefOfStaff", "finance", "economicAdviser", "nationalSecurity", "foreign", "home"] as const;
 
@@ -34,8 +33,6 @@ interface Hotspot {
   w: number;
   h: number;
 }
-
-const pct = (v: number, base: number) => `${(v / base) * 100}%`;
 
 const HOTSPOTS: Hotspot[] = [
   { labelKey: "nav.briefing", to: "/game/briefing", x: 640, y: 422, w: 126, h: 58 },
@@ -82,76 +79,85 @@ export function Office() {
   return (
     <div className="page-enter">
       {/* the office as the menu: painted room, live hotspots */}
-      <div
-        className="relative -mx-4 sm:-mx-8 -mt-8 -mb-1 h-[min(68vh,660px)] min-h-[420px] border-b border-rule overflow-hidden"
-        role="group"
-        aria-label={t("office.hubAria")}
-      >
-        <PixelScene src="/art/scene-hub.svg" width={480} height={253} className="art-warm" />
-        <PaintedScene srcs={paintedSceneSrcs("hub")} />
-        <div className="absolute inset-0 bg-gradient-to-t from-paper/70 via-transparent to-paper/30" />
+      {/* the dateline: state time above the room, readable on every plate */}
+      <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+        <p className="kicker kicker-gold">Perdana Putra &middot; {dateLabel(game.turn, lang)}</p>
+        <p className="kicker text-muted">{chapterTitle(game.chapter, lang)}</p>
+      </div>
 
-        {/* dateline */}
-        <div className="absolute top-4 left-4 sm:top-6 sm:left-7">
-          <p className="kicker kicker-gold">Perdana Putra &middot; {dateLabel(game.turn, lang)}</p>
-          <p className="kicker mt-0.5">{chapterTitle(game.chapter, lang)}</p>
-        </div>
+      <GameScene
+        art={ENVIRONMENTS.officeHub}
+        label={t("office.hubAria")}
+        className="-mx-4 sm:-mx-8 -mt-2 -mb-1 aspect-[1440/760]"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-paper/35 via-transparent to-paper/10" />
 
         {/* hint */}
-        <p className="absolute bottom-3 left-4 sm:left-7 kicker text-[9px]">{t("office.hubHint")}</p>
+        <p className="pointer-events-none absolute bottom-3 left-4 sm:left-7 kicker text-[9px] hidden sm:block">
+          <span className="inline-block rounded-[2px] border border-rule/70 bg-paper/85 px-2 py-1">
+            {t("office.hubHint")}
+          </span>
+        </p>
 
-        {/* the hotspots */}
-        {HOTSPOTS.map((h) => {
-          const isClock = h.action === "endMonth";
-          const label = isClock && queued > 0 ? tf("overview.awaiting", { n: queued }) : t(h.labelKey);
-          return (
-            <button
-              key={h.labelKey}
-              type="button"
-              onClick={() => runHotspot(h)}
-              disabled={isClock && queued > 0}
-              title={label}
-              aria-label={label}
-              className={cn(
-                "group absolute rounded-[2px] outline-none",
-                isClock && queued > 0 && "cursor-not-allowed",
-              )}
-              style={{
-                left: pct(h.x, 1440),
-                top: pct(h.y, 760),
-                width: pct(h.w, 1440),
-                height: pct(h.h, 760),
-                minWidth: 40,
-                minHeight: 32,
-              }}
-            >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "absolute inset-0 rounded-[2px] border transition-all",
-                  isClock && queued > 0
-                    ? "border-transparent"
-                    : "border-transparent group-hover:border-gold/80 group-hover:bg-gold/10 group-focus-visible:border-gold group-focus-visible:bg-gold/10",
-                )}
+        {/* the hotspots, aligned to the visible art crop */}
+        <SceneLayer art={ENVIRONMENTS.officeHub} className="hidden sm:block">
+          {HOTSPOTS.map((h) => {
+            const isClock = h.action === "endMonth";
+            const disabled = isClock && queued > 0;
+            const label = disabled ? tf("overview.awaiting", { n: queued }) : t(h.labelKey);
+            return (
+              <InteractiveHotspot
+                key={h.labelKey}
+                label={label}
+                x={h.x}
+                y={h.y}
+                w={h.w}
+                h={h.h}
+                baseWidth={1440}
+                baseHeight={760}
+                onActivate={() => runHotspot(h)}
+                disabled={disabled}
+                badge={h.labelKey === "nav.briefing" ? queued : undefined}
               />
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-7 whitespace-nowrap rounded-[2px] border border-gold/50 bg-card px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink opacity-0 transition-opacity",
-                  "group-hover:opacity-100 group-focus-visible:opacity-100",
-                  isClock && queued > 0 && "text-brick-text border-brick/50",
+            );
+          })}
+        </SceneLayer>
+      </GameScene>
+
+      {/* phones: the room is a plate, the destinations are a list */}
+      <div className="sm:hidden mt-4">
+        <ul className="grid grid-cols-2 gap-2">
+          {HOTSPOTS.map((h) => {
+            const isClock = h.action === "endMonth";
+            const disabled = isClock && queued > 0;
+            const label = disabled ? tf("overview.awaiting", { n: queued }) : t(h.labelKey);
+            const inner = (
+              <>
+                <span className="min-w-0">{label}</span>
+                {h.labelKey === "nav.briefing" && queued > 0 && (
+                  <span className="tabular shrink-0 min-w-[20px] h-[20px] px-1 flex items-center justify-center bg-brick text-on-brick text-[11px] font-bold rounded-[1px]">
+                    {queued}
+                  </span>
                 )}
-              >
-                {label}
-              </span>
-              {h.labelKey === "nav.briefing" && queued > 0 && (
-                <span className="tabular absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-brick text-ink text-[10px] font-bold rounded-[1px] border border-paper">
-                  {queued}
-                </span>
-              )}
-            </button>
-          );
-        })}
+              </>
+            );
+            const cls =
+              "flex items-center justify-between gap-2 min-h-[44px] w-full px-3 py-2 rounded-panel border border-rule bg-card text-sm font-semibold text-ink text-left";
+            return (
+              <li key={h.labelKey}>
+                {isClock ? (
+                  <button type="button" className={cls} onClick={() => runHotspot(h)} disabled={disabled}>
+                    {inner}
+                  </button>
+                ) : (
+                  <Link to={h.to!} className={cls}>
+                    {inner}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
       {/* the morning note + the last word you were given */}
