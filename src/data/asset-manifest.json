@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "env.officeHub",
+      "kind": "environment",
+      "src": "/art/scene-hub.svg",
+      "width": 1440,
+      "height": 760,
+      "scale": 1,
+      "candidates": ["/art/painted/hub.webp", "/art/painted/hub.png", "/art/painted/hub.jpg"],
+      "owner": "office",
+      "source": "vector",
+      "licence": "original",
+      "note": "Vector fallback under the authored pixel plate."
+    },
+    {
+      "id": "env.officeHub.pixel",
+      "kind": "environment",
+      "src": "/art/pixel/env-office-hub.png",
+      "width": 480,
+      "height": 253,
+      "scale": 3,
+      "owner": "office",
+      "source": "authored",
+      "licence": "original",
+      "note": "Authored pixel plate. Regenerate with node scripts/build-pixel-plate.mjs."
+    },
+    {
+      "id": "scene.office",
+      "kind": "scene",
+      "src": "/art/scene-office.svg",
+      "width": 1440,
+      "height": 420,
+      "scale": 1,
+      "candidates": ["/art/painted/office.webp", "/art/painted/office.png", "/art/painted/office.jpg"],
+      "owner": "office",
+      "source": "vector",
+      "licence": "original"
+    },
+    {
+      "id": "scene.chamber",
+      "kind": "scene",
+      "src": "/art/scene-chamber.svg",
+      "width": 1440,
+      "height": 420,
+      "scale": 1,
+      "candidates": ["/art/painted/chamber.webp", "/art/painted/chamber.png", "/art/painted/chamber.jpg"],
+      "owner": "chamber",
+      "source": "vector",
+      "licence": "original"
+    },
+    {
+      "id": "scene.treasury",
+      "kind": "scene",
+      "src": "/art/scene-treasury.svg",
+      "width": 1440,
+      "height": 420,
+      "scale": 1,
+      "candidates": ["/art/painted/treasury.webp", "/art/painted/treasury.png", "/art/painted/treasury.jpg"],
+      "owner": "treasury",
+      "source": "vector",
+      "licence": "original"
+    },
+    {
+      "id": "scene.ops",
+      "kind": "scene",
+      "src": "/art/scene-ops.svg",
+      "width": 1440,
+      "height": 420,
+      "scale": 1,
+      "candidates": ["/art/painted/ops.webp", "/art/painted/ops.png", "/art/painted/ops.jpg"],
+      "owner": "ops",
+      "source": "vector",
+      "licence": "original"
+    },
+    {
+      "id": "scene.flood",
+      "kind": "scene",
+      "src": "/art/scene-flood.svg",
+      "width": 1440,
+      "height": 420,
+      "scale": 1,
+      "candidates": ["/art/painted/flood.webp", "/art/painted/flood.png", "/art/painted/flood.jpg"],
+      "owner": "flood",
+      "source": "vector",
+      "licence": "original"
+    },
+    {
+      "id": "keyart.menu",
+      "kind": "keyart",
+      "src": "/art/menu-putrajaya.svg",
+      "width": 1440,
+      "height": 600,
+      "scale": 1,
+      "source": "vector",
+      "licence": "original"
+    }
+  ]
+}

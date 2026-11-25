@@ -9,6 +9,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "tsx scripts/run-selfcheck.ts",
+    "check:assets": "node scripts/check-assets.mjs",
+    "build:plate": "node scripts/build-pixel-plate.mjs",
+    "build": "tsc --noEmit && node scripts/check-assets.mjs && vite build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
