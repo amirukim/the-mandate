@@ -9,27 +9,32 @@ import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../src/styles/index.css", import.meta.url), "utf8");
 
-// pull a rule block by selector string or regex
+// pull rule blocks by selector string or regex; all matches merge (a selector
+// may be split across several blocks in the file)
 function block(selector) {
-  const start = typeof selector === "string" ? css.indexOf(selector) : (css.match(selector)?.index ?? -1);
-  if (start < 0) throw new Error(`selector not found: ${selector}`);
-  const open = css.indexOf("{", start);
-  let depth = 1;
-  let i = open + 1;
-  while (depth > 0 && i < css.length) {
-    if (css[i] === "{") depth++;
-    if (css[i] === "}") depth--;
-    i++;
-  }
-  const body = css.slice(open + 1, i - 1);
+  const source = typeof selector === "string" ? selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : selector.source;
+  const matches = [...css.matchAll(new RegExp(source + "\\s*\\{", "g"))];
+  if (matches.length === 0) throw new Error(`selector not found: ${selector}`);
   const tokens = {};
-  for (const m of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)) tokens[m[1]] = m[2];
+  for (const match of matches) {
+    const start = match.index;
+    const open = css.indexOf("{", start);
+    let depth = 1;
+    let i = open + 1;
+    while (depth > 0 && i < css.length) {
+      if (css[i] === "{") depth++;
+      if (css[i] === "}") depth--;
+      i++;
+    }
+    const body = css.slice(open + 1, i - 1);
+    for (const m of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)) tokens[m[1]] = m[2];
+  }
   return tokens;
 }
 
-const paper = block(":root");
+const paper = block(":root"); // both :root blocks merge: palette + iPad shell
 // match the rule, not the comment that names it
-const night = block(/\.theme-night\s*\{/);
+const night = block(/\.theme-night/);
 
 function lum(hex) {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) =>
@@ -63,6 +68,9 @@ const PAIRS = [
   ["chrome (both): chrome-good on chrome", paper, "chrome-good", "chrome", 4.5],
   ["chrome (both): chrome-bad on chrome", paper, "chrome-bad", "chrome", 4.5],
   ["newsprint: ink on paper", paper, "ink", "paper", 4.5],
+  ["ipad shell: ipad-ink on ipad-screen", paper, "ipad-ink", "ipad-screen", 4.5],
+  ["ipad shell: ipad-dim on ipad-screen", paper, "ipad-dim", "ipad-screen", 4.5],
+  ["ipad shell: chrome-ink on ipad-bezel", paper, "chrome-ink", "ipad-bezel", 4.5],
 ];
 
 let failures = 0;

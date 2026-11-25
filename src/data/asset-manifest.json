@@ -8,7 +8,11 @@
       "width": 1440,
       "height": 760,
       "scale": 1,
-      "candidates": ["/art/painted/hub.webp", "/art/painted/hub.png", "/art/painted/hub.jpg"],
+      "candidates": [
+        "/art/painted/hub.webp",
+        "/art/painted/hub.png",
+        "/art/painted/hub.jpg"
+      ],
       "owner": "office",
       "source": "vector",
       "licence": "original",
@@ -33,7 +37,11 @@
       "width": 1440,
       "height": 420,
       "scale": 1,
-      "candidates": ["/art/painted/office.webp", "/art/painted/office.png", "/art/painted/office.jpg"],
+      "candidates": [
+        "/art/painted/office.webp",
+        "/art/painted/office.png",
+        "/art/painted/office.jpg"
+      ],
       "owner": "office",
       "source": "vector",
       "licence": "original"
@@ -45,7 +53,11 @@
       "width": 1440,
       "height": 420,
       "scale": 1,
-      "candidates": ["/art/painted/chamber.webp", "/art/painted/chamber.png", "/art/painted/chamber.jpg"],
+      "candidates": [
+        "/art/painted/chamber.webp",
+        "/art/painted/chamber.png",
+        "/art/painted/chamber.jpg"
+      ],
       "owner": "chamber",
       "source": "vector",
       "licence": "original",
@@ -58,7 +70,11 @@
       "width": 1440,
       "height": 420,
       "scale": 1,
-      "candidates": ["/art/painted/treasury.webp", "/art/painted/treasury.png", "/art/painted/treasury.jpg"],
+      "candidates": [
+        "/art/painted/treasury.webp",
+        "/art/painted/treasury.png",
+        "/art/painted/treasury.jpg"
+      ],
       "owner": "treasury",
       "source": "vector",
       "licence": "original"
@@ -70,7 +86,11 @@
       "width": 1440,
       "height": 420,
       "scale": 1,
-      "candidates": ["/art/painted/ops.webp", "/art/painted/ops.png", "/art/painted/ops.jpg"],
+      "candidates": [
+        "/art/painted/ops.webp",
+        "/art/painted/ops.png",
+        "/art/painted/ops.jpg"
+      ],
       "owner": "ops",
       "source": "vector",
       "licence": "original"
@@ -82,7 +102,11 @@
       "width": 1440,
       "height": 420,
       "scale": 1,
-      "candidates": ["/art/painted/flood.webp", "/art/painted/flood.png", "/art/painted/flood.jpg"],
+      "candidates": [
+        "/art/painted/flood.webp",
+        "/art/painted/flood.png",
+        "/art/painted/flood.jpg"
+      ],
       "owner": "flood",
       "source": "vector",
       "licence": "original"
@@ -94,7 +118,11 @@
       "width": 1440,
       "height": 600,
       "scale": 1,
-      "candidates": ["/art/painted/menu.webp", "/art/painted/menu.png", "/art/painted/menu.jpg"],
+      "candidates": [
+        "/art/painted/menu.webp",
+        "/art/painted/menu.png",
+        "/art/painted/menu.jpg"
+      ],
       "source": "vector",
       "licence": "original",
       "note": "Vector fallback under the authored pixel key art."
@@ -109,6 +137,182 @@
       "source": "authored",
       "licence": "original",
       "note": "Authored pixel key art, dusk. Regenerate with node scripts/build-menu-plate.mjs."
+    },
+    {
+      "id": "icon.app.briefing",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-briefing.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.cabinet",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-cabinet.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.parliament",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-parliament.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.economy",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-economy.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.overview",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-overview.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.states",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-states.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.diplomacy",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-diplomacy.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.security",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-security.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.news",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-news.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.history",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-history.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.saves",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-saves.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.settings",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-settings.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.parties",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-parties.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.policy",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-policy.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.budget",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-budget.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
+    },
+    {
+      "id": "icon.app.messages",
+      "kind": "icon",
+      "src": "/art/pixel/icons/icon-messages.png",
+      "width": 32,
+      "height": 32,
+      "scale": 2,
+      "source": "authored",
+      "licence": "original",
+      "note": "iPad home-screen app icon."
     }
   ]
 }

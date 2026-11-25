@@ -22,7 +22,7 @@ export function NewGame() {
   function submit(event: FormEvent) {
     event.preventDefault();
     newGame(playerName, campaignName, difficulty);
-    navigate("/game/briefing");
+    navigate("/game/home");
   }
 
   return (

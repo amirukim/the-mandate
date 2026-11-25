@@ -45,7 +45,7 @@ export function CampaignSelect() {
           <div className="mt-8">
             <Button
               onClick={() => {
-                if (loadFromSave(0)) navigate("/game/briefing");
+                if (loadFromSave(0)) navigate("/game/home");
               }}
             >
               {t("campaigns.continueAutosave")}
@@ -83,7 +83,7 @@ export function CampaignSelect() {
                         </div>
                         <Button
                           onClick={() => {
-                            if (loadFromSave(save.slot)) navigate("/game/briefing");
+                            if (loadFromSave(save.slot)) navigate("/game/home");
                           }}
                         >
                           {t("campaigns.load")}

@@ -9,6 +9,8 @@ import { NewGame } from "./pages/NewGame";
 import { Login, Register } from "./pages/Auth";
 import { CampaignSelect } from "./pages/CampaignSelect";
 import { Office } from "./pages/Office";
+import { HomeScreen } from "./components/ipad/HomeScreen";
+import { Messages } from "./pages/Messages";
 import { Briefing } from "./pages/Briefing";
 import { Summary } from "./pages/Summary";
 import { Cabinet } from "./pages/Cabinet";
@@ -62,7 +64,9 @@ export default function App() {
               </RequireCampaign>
             }
           >
-            <Route index element={<Navigate to="/game/office" replace />} />
+            <Route index element={<Navigate to="/game/home" replace />} />
+            <Route path="home" element={<HomeScreen />} />
+            <Route path="messages" element={<Messages />} />
             <Route path="office" element={<Office />} />
             <Route path="briefing" element={<Briefing />} />
             <Route path="summary" element={<Summary />} />

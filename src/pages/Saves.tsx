@@ -128,7 +128,7 @@ export function Saves() {
             <Button
               size="sm"
               onClick={() => {
-                if (loadFromSave(0)) navigate("/game/briefing");
+                if (loadFromSave(0)) navigate("/game/home");
               }}
             >
               {t("saves.loadAutosave")}
@@ -160,7 +160,7 @@ export function Saves() {
                         <Button
                           size="sm"
                           onClick={() => {
-                            if (loadFromSave(slot)) navigate("/game/briefing");
+                            if (loadFromSave(slot)) navigate("/game/home");
                           }}
                         >
                           {t("saves.load")}

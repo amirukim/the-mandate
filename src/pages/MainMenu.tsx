@@ -47,7 +47,7 @@ export function MainMenu() {
             accent: true,
             onClick: () => {
               closeCampaign();
-              if (continueGame()) navigate("/game/briefing");
+              if (continueGame()) navigate("/game/home");
             },
           },
         ]

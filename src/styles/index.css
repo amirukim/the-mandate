@@ -1,5 +1,6 @@
 ﻿@import "@fontsource-variable/fraunces";
 @import "@fontsource-variable/public-sans";
+@import "@fontsource/silkscreen/400.css";
 @import "tailwindcss";
 
 /*
@@ -110,11 +111,26 @@
   --color-chrome-good: var(--chrome-good);
   --color-chrome-bad: var(--chrome-bad);
   --color-on-brick: var(--on-brick);
+  --color-ipad-bezel: var(--ipad-bezel);
+  --color-ipad-screen: var(--ipad-screen);
+  --color-ipad-ink: var(--ipad-ink);
+  --color-ipad-dim: var(--ipad-dim);
+
+  --font-pixel: "Silkscreen", "Courier New", monospace;
 
   --radius-control: 2px;
   --radius-panel: 3px;
 
   --shadow-lift: 0 14px 34px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.35);
+}
+
+/* iPad shell tokens: a Midnight slab with warm-paper app surfaces. Kept in the
+   audit (scripts/audit-contrast.mjs) alongside the document palette. */
+:root {
+  --ipad-bezel: #10151d;
+  --ipad-screen: #17202b;
+  --ipad-ink: #e9dfc9;
+  --ipad-dim: #b9ae97;
 }
 
 html {
@@ -401,4 +417,93 @@ body::after {
 /* Nameplate ornament: a double rule under the masthead. */
 .nameplate-rule {
   border-top: 3px double var(--ink);
+}
+
+/* ------------------------------------------------------------------ */
+/* iPad shell (v2, decisions D-06/D-07). The game runs inside an iPad  */
+/* frame on desktop pointers; phones and tablets are full-bleed. The   */
+/* pixel font is scoped to chrome labels and numerals via .font-pixel. */
+/* ------------------------------------------------------------------ */
+
+.font-pixel {
+  font-family: var(--font-pixel);
+  letter-spacing: 0.04em;
+}
+
+.ipad-backdrop {
+  background: radial-gradient(120% 90% at 50% 8%, #223146 0%, #10151d 58%, #0a0e14 100%);
+}
+
+.ipad-device {
+  width: 1024px;
+  height: 768px;
+  align-self: center;
+  border: 12px solid var(--ipad-bezel);
+  border-radius: 36px;
+  box-shadow:
+    0 46px 110px rgb(0 0 0 / 0.6),
+    0 0 0 1.5px rgb(255 255 255 / 0.05),
+    inset 0 0 0 1.5px rgb(255 255 255 / 0.05);
+}
+
+.ipad-camera {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #0a0e14;
+  box-shadow: inset 0 0 2px rgb(120 160 200 / 0.5);
+}
+
+/* full-bleed: narrow viewports and touch devices have no bezel */
+@media (max-width: 1099px), (pointer: coarse) {
+  .ipad-backdrop {
+    background: var(--ipad-screen);
+    display: block;
+  }
+  .ipad-device {
+    width: 100%;
+    height: 100dvh;
+    align-self: stretch;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .ipad-camera {
+    display: none;
+  }
+}
+
+/* app open/close: scale + fade within 300ms; instant under reduced motion */
+.app-surface {
+  animation: app-open 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes app-open {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-surface {
+    animation: none;
+  }
+}
+
+/* pixel icon rendering for the wallpaper and icon sheets */
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* the wallpaper drift: one property, slow, stilled under reduced motion */
+@keyframes home-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
 }
