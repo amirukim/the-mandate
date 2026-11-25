@@ -300,6 +300,19 @@ body::after {
   --teal-text: #9fcbd3;
 }
 
+/* Documents are paper in every theme: a .doc scope re-pins the surface and
+   text tokens, so a newsprint clipping keeps its cream sheet and dark ink even
+   inside the dark theatre (newsprint, dossiers, letters). */
+.doc {
+  --paper: #e9dfc9;
+  --paper-deep: #ded3b8;
+  --card: #f1e9d6;
+  --ink: #1d1f25;
+  --muted: #5f5a4d;
+  --rule: #cfc2a6;
+  --rule-strong: #ab9c7e;
+}
+
 /* Lamp-glow wash painted above an art layer: apply to the absolute inset-0
    art wrapper inside a header (its ::after stacks above the image + scrims,
    below the content layer that follows the wrapper). */

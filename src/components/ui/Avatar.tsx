@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { portraitFiles, portraitArtId } from "../../data/portraits";
-import { pixelPortraitDataUrl } from "../../data/pixel-portraits";
+import { pixelPortraitDataUrl, type Expression } from "../../data/pixel-portraits";
 import { cn } from "../../utils/cn";
 
 interface AvatarProps {
   name: string;
   size?: "sm" | "md" | "lg" | "xl" | "stage";
   className?: string;
+  /** Expression frame for the pixel bust (painted files ignore it). */
+  expression?: Expression;
+  /** Character id override, so art lookup can bypass the name entirely. */
+  artId?: string;
 }
 
 /** Cycles a list of candidate files; hides itself once they are exhausted. */
@@ -32,9 +36,10 @@ function PaintedFile({ srcs }: { srcs: string[] }) {
  *   2. The 32×32 pixel bust (the shipped presentation, deliberate style).
  * Unknown speakers get the anonymous pixel figure — never bare initials.
  */
-export function Avatar({ name, size = "md", className }: AvatarProps) {
-  const srcs = portraitFiles(name);
-  const pixel = pixelPortraitDataUrl(portraitArtId(name) ?? "generic");
+export function Avatar({ name, size = "md", className, expression = "neutral", artId }: AvatarProps) {
+  const id = artId ?? portraitArtId(name);
+  const srcs = portraitFiles(id ?? name);
+  const pixel = pixelPortraitDataUrl(id ?? "generic", expression);
   const sizeClass =
     size === "sm"
       ? "w-8 h-8 text-[11px]"

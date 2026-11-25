@@ -46,14 +46,14 @@ export function NewspaperArticle({ item, className }: { item: WireItem; classNam
   };
 
   return (
-    <article className={cn("bg-card/80 border border-rule rounded-panel p-4 text-[#1d1f25]", className)}>
+    <article className={cn("doc bg-paper border border-rule rounded-panel p-4 text-ink shadow-lift", className)}>
       <div className="flex items-center gap-2.5">
         <span aria-hidden="true" className={cn("h-3 w-0.5 shrink-0", style.bar)} />
         <p className={cn("text-[13px] leading-none", style.face)}>{style.name}</p>
       </div>
       <div className="rule mt-2.5" />
       <h3 className="display text-base font-semibold leading-snug mt-2.5">{item.headline}</h3>
-      {item.body && <p className="text-sm text-[#5b564b] mt-1.5 leading-relaxed">{item.body}</p>}
+      {item.body && <p className="text-sm text-ink/70 mt-1.5 leading-relaxed">{item.body}</p>}
     </article>
   );
 }

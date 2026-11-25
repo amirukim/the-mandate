@@ -53,7 +53,7 @@ class Grid {
   }
 }
 
-function draw(spec: PixelSpec): (string | null)[][] {
+function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | null)[][] {
   const g = new Grid();
   const [skin, skinSh, skinHi] = spec.skin;
   const a = spec.attire;
@@ -239,6 +239,9 @@ function draw(spec: PixelSpec): (string | null)[][] {
     g.rect(30, 38, 4, 1, skinHi);
   }
 
+  // expression pass — drawn over the authored face, never random (see cast.ts)
+  if (expression !== "neutral") applyExpression(g, expression, skin);
+
   if (spec.facial) {
     const grey = spec.facial.includes("grey");
     const fc = grey ? "#a7aca4" : "#232833";
@@ -284,8 +287,8 @@ function draw(spec: PixelSpec): (string | null)[][] {
 
 const cache = new Map<string, string>();
 
-function render(spec: PixelSpec): string {
-  const cells = draw(spec);
+function render(spec: PixelSpec, expression: Expression = "neutral"): string {
+  const cells = draw(spec, expression);
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -302,14 +305,52 @@ function render(spec: PixelSpec): string {
   return canvas.toDataURL("image/png");
 }
 
-/** Cached pixel bust for a character id; unknown ids get the anonymous figure. */
-export function pixelPortraitDataUrl(id: string): string {
-  const hit = cache.get(id);
+/** Cached pixel bust for a character id; unknown ids get the anonymous figure.
+ *  `expression` variants are cached per id+expression; the default call keeps
+ *  the plain authored face and the original cache key. */
+export function pixelPortraitDataUrl(id: string, expression: Expression = "neutral"): string {
+  const key = expression === "neutral" ? id : `${id}:${expression}`;
+  const hit = cache.get(key);
   if (hit !== undefined) return hit;
   const spec = SPECS[id] ?? GENERIC;
-  const url = render(spec);
-  cache.set(id, url);
+  const url = render(spec, expression);
+  cache.set(key, url);
   return url;
+}
+
+/**
+ * Expression frames for the theatre. A character's resting face is authored in
+ * SPECS; these four overlays redraw brows and mouth on top of it. Selection is
+ * rule-driven (features/narrative/cast.ts), never random.
+ */
+export type Expression = "neutral" | "concerned" | "pleased" | "stern";
+
+const MOUTH = "#4d3230";
+
+function applyExpression(g: Grid, expression: Expression, skin: string) {
+  const brow = "#26222a";
+  // clear the authored mouth before redrawing it (face skin underneath)
+  g.rect(27, 35, 11, 5, skin);
+  if (expression === "pleased") {
+    // corners up, gentle closed smile
+    g.rect(28, 37, 8, 1, MOUTH);
+    g.set(27, 36, MOUTH);
+    g.set(36, 36, MOUTH);
+  } else if (expression === "concerned") {
+    // inner brow tips lifted, mouth pulled flat and small
+    g.set(29, 19, brow);
+    g.set(30, 19, brow);
+    g.set(33, 19, brow);
+    g.set(34, 19, brow);
+    g.rect(29, 37, 6, 1, MOUTH);
+    g.set(28, 38, MOUTH);
+    g.set(35, 38, MOUTH);
+  } else {
+    // stern: brows pressed flat and low, mouth a straight line
+    g.rect(25, 22, 5, 1, brow);
+    g.rect(34, 22, 5, 1, brow);
+    g.rect(28, 37, 8, 1, MOUTH);
+  }
 }
 
 /* ------------------------------------------------------------------ */
