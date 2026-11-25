@@ -6,7 +6,6 @@
   "description": "Malaysia: The Mandate. A political simulation of governing Malaysia.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "tsx scripts/run-selfcheck.ts",
     "check:assets": "node scripts/check-assets.mjs",

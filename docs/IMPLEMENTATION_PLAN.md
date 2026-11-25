@@ -216,6 +216,12 @@ The critical path is **art production**, not code. Code extraction is predictabl
 | D-03 | Press Room needs a new `/game/press` route | **Resolved** — deferred to Phase 6, as planned |
 | D-04 | Jalur ribbon in the HUD: remove (world-only flag) vs retain 2 px | **Resolved** — HUD carries a 2px antique-gold rule; flag stays world-only (menu lapel, room standard) |
 | D-05 | Manifest validator joins `npm test` or ships as `npm run check:assets` | **Resolved** — `check:assets` stays standalone and also runs inside `npm run build` (engine self-check untouched) |
+| D-06 | Pixel font for iPad chrome (Silkscreen via @fontsource), labels/numerals only | **Resolved (v2)** — approved; narrative stays Fraunces, body ≥ 14px |
+| D-07 | Office plate doubles as the iPad home-screen wallpaper | **Resolved (v2)** — approved, with a room-view toggle back to the full-bleed hub |
+| D-08 | Save v2: additive optional fields, `SAVE_VERSION 2`, `migrateSave` v1→v2 | **Resolved (v2)** — approved; v1 fixture stays in the self-checks |
+| D-09 | New additive routes `/game/policy`, `/game/budget`, `/game/press` | **Resolved (v2)** — approved; policy/budget land with their apps, press ships last with content |
+| D-10 | Playwright as a devDependency for screenshots | **Resolved (v2)** — approved; dev-only, never shipped |
+| D-11 | Natural Earth admin-1 state polygons | **Resolved (v2)** — approved; public domain, provenance recorded in the manifest and geo source |
 
 ---
 
