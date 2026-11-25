@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGameStore } from "../stores/game-store";
+import { DocumentViewer } from "../components/ui/DocumentViewer";
 import { OUTLETS } from "../components/news/NewsList";
 import type { NewsCategory, NewsItem, OutletId } from "../types/game";
 import { shortDateLabel } from "../engine/calendar";
@@ -38,7 +39,7 @@ function FrontPage({ items, outlet, onOpen }: FrontPageProps) {
   const paperNote = outlet ? t(OUTLETS[outlet].noteKey) : t("news.deskNote");
 
   return (
-    <article className="newspaper px-5 sm:px-10 py-7 sm:py-9">
+    <DocumentViewer>
       {/* honesty strip */}
       <p className="kicker text-[9px] text-center">{t("news.honesty")}</p>
 
@@ -108,7 +109,7 @@ function FrontPage({ items, outlet, onOpen }: FrontPageProps) {
         <span className="kicker text-[9px]">{paperName} · {t("news.fictionTag")}</span>
         <span className="kicker text-[9px] tabular">{t("news.pageOf")}</span>
       </footer>
-    </article>
+    </DocumentViewer>
   );
 }
 
@@ -124,7 +125,7 @@ function ArticleView({ item, siblings, onBack, onOpen }: ArticleProps) {
   const { t, lang, tf } = useT();
   const more = siblings.filter((s) => s.id !== item.id).slice(0, 5);
   return (
-    <article className="newspaper px-5 sm:px-10 py-7 sm:py-9">
+    <DocumentViewer>
       <header className="text-center">
         <button
           type="button"
@@ -183,7 +184,7 @@ function ArticleView({ item, siblings, onBack, onOpen }: ArticleProps) {
           </ul>
         </aside>
       )}
-    </article>
+    </DocumentViewer>
   );
 }
 
@@ -235,12 +236,12 @@ export function News() {
       </div>
 
       {items.length === 0 ? (
-        <div className="newspaper px-6 py-10 text-center">
+        <DocumentViewer className="text-center">
           <p className="display text-xl font-semibold">{t("news.pressesIdle")}</p>
           <p className="text-sm text-muted mt-2 max-w-prose mx-auto">
             {t("news.pressesIdleText")}
           </p>
-        </div>
+        </DocumentViewer>
       ) : open ? (
         <ArticleView
           item={open}

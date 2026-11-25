@@ -382,6 +382,11 @@ export const MS_DICT: Dict = {
     chapter1: "Bab I: Seratus Hari Pertama",
     chapterOnward: "Bab II dan seterusnya: %{n}",
     decisionsAria: "Keputusan Bab %{n}",
+    filterAria: "Tapis rekod mengikut bab",
+    allChapters: "Semua bab",
+    chapterTab: "Bab %{n}",
+    recordTag: "Buku minit kerajaan persekutuan (rekod rekaan)",
+    recordEnd: "Tamat rekod. Entri seterusnya terserah anda.",
   },
   summary: {
     notClosed: "Bulan ini belum ditutup",

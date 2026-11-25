@@ -380,6 +380,11 @@ export const EN_DICT = {
     chapter1: "Chapter I: The First Hundred Days",
     chapterOnward: "Chapter II onward: %{n}",
     decisionsAria: "Chapter %{n} decisions",
+    filterAria: "Filter the record by chapter",
+    allChapters: "All chapters",
+    chapterTab: "Ch. %{n}",
+    recordTag: "Minute book of the federal government (a fictional record)",
+    recordEnd: "End of the record. The next entry is yours to write.",
   },
   summary: {
     notClosed: "The month is not yet closed",
