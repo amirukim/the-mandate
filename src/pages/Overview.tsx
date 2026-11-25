@@ -8,6 +8,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Panel } from "../components/ui/Panel";
 import { Meter } from "../components/ui/Meter";
 import { Stat } from "../components/ui/Stat";
+import { PoliticalIndicators, type PoliticalIndicator } from "../components/ui/PoliticalIndicators";
 import { PartyFlag } from "../components/ui/PartyFlag";
 import { TrendChart } from "../components/charts/TrendChart";
 import { NewsList } from "../components/news/NewsList";
@@ -24,43 +25,6 @@ function verdictKey(value: number, stops: Array<[number, string]>): string {
     if (value >= floor) return key;
   }
   return stops[stops.length - 1][1];
-}
-
-/** One line of the situation dossier: label left, figure and track right. */
-function DossierRow({
-  label,
-  value,
-  track,
-  tone,
-  verdict,
-}: {
-  label: string;
-  value: string;
-  track?: number;
-  tone?: "moss" | "gold" | "brick" | "navy";
-  verdict?: string;
-}) {
-  return (
-    <div className="px-4 py-3.5 flex items-center justify-between gap-4">
-      <span className="min-w-0">
-        <span className="kicker text-[10px] block">{label}</span>
-        {verdict && <span className="block text-[11px] text-gold-text mt-0.5 leading-tight">{verdict}</span>}
-      </span>
-      <span className="flex items-center gap-3 min-w-[7.5rem] justify-end">
-        {track !== undefined && (
-          <span className="meter h-1.5 w-24 overflow-hidden rounded-[1px]" aria-hidden="true">
-            <span
-              className={`block h-full ${
-                tone === "moss" ? "bg-moss" : tone === "brick" ? "bg-brick" : tone === "navy" ? "bg-navy" : "bg-gold"
-              }`}
-              style={{ width: `${Math.max(2, Math.min(100, track))}%` }}
-            />
-          </span>
-        )}
-        <span className="tabular text-base font-semibold whitespace-nowrap">{value}</span>
-      </span>
-    </div>
-  );
 }
 
 /** The national situation, as a briefing sheet rather than a card grid. */
@@ -96,18 +60,38 @@ function MandateDossier({
   const oppositionVerdict = t(opposition >= 60 ? "overview.oppositionHigh" : "overview.oppositionLow");
   const partners = COALITIONS.filter((c) => c.status === "government");
 
+  const items: PoliticalIndicator[] = [
+    {
+      label: t("overview.approval"),
+      value: `${Math.round(approval)}%`,
+      track: approval,
+      tone: approval >= 45 ? "moss" : approval >= 30 ? "gold" : "brick",
+      detail: approvalVerdict,
+    },
+    {
+      label: t("overview.coalition"),
+      value: `${Math.round(coalition)}`,
+      track: coalition,
+      tone: coalition >= 55 ? "moss" : coalition >= 35 ? "gold" : "brick",
+      detail: coalitionVerdict,
+    },
+    { label: t("overview.seatsHouse"), value: `${seats}/222`, track: (seats / 222) * 100, tone: "navy" },
+    {
+      label: t("overview.opposition"),
+      value: `${Math.round(opposition)}`,
+      track: opposition,
+      tone: "brick",
+      detail: oppositionVerdict,
+    },
+  ];
+
   return (
     <div className="bg-card border border-rule rounded-panel overflow-hidden h-full flex flex-col">
       <div className="px-4 py-3 border-b border-rule flex items-baseline justify-between gap-2">
         <p className="kicker kicker-gold">{t("overview.mandate")}</p>
         <p className="kicker text-[10px]">{dateText}</p>
       </div>
-      <dl className="divide-y divide-rule flex-1">
-        <DossierRow label={t("overview.approval")} value={`${Math.round(approval)}%`} track={approval} tone={approval >= 45 ? "moss" : approval >= 30 ? "gold" : "brick"} verdict={approvalVerdict} />
-        <DossierRow label={t("overview.coalition")} value={`${Math.round(coalition)}`} track={coalition} tone={coalition >= 55 ? "moss" : coalition >= 35 ? "gold" : "brick"} verdict={coalitionVerdict} />
-        <DossierRow label={t("overview.seatsHouse")} value={`${seats}/222`} track={(seats / 222) * 100} tone="navy" />
-        <DossierRow label={t("overview.opposition")} value={`${Math.round(opposition)}`} track={opposition} tone="brick" verdict={oppositionVerdict} />
-      </dl>
+      <PoliticalIndicators variant="dossier" items={items} ariaLabel={t("overview.mandate")} className="flex-1" />
 
       {/* who the majority actually runs through */}
       <div className="px-4 py-3 border-t border-rule">
@@ -177,8 +161,11 @@ function StateFile({ state, lang, onClear }: { state: StateDef; lang: "en" | "ms
           </div>
           <div className="py-2.5 flex items-baseline justify-between gap-3">
             <dt className="kicker text-[10px]">{t("overview.alignment")}</dt>
-            <dd className="text-sm font-semibold text-right" style={{ color: bloc?.color }}>
-              {blocDisplay ? blocDisplay.name : t("overview.federalGov")}
+            <dd className="text-sm font-semibold text-right flex items-center justify-end gap-1.5">
+              {bloc && (
+                <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: bloc.color }} />
+              )}
+              <span>{blocDisplay ? blocDisplay.name : t("overview.federalGov")}</span>
             </dd>
           </div>
         </dl>

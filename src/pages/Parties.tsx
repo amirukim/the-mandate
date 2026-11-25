@@ -29,20 +29,19 @@ export function Parties() {
               className="bg-card border border-rule rounded-panel overflow-hidden"
               aria-label={`${display.name}, ${display.seats} ${lang === "ms" ? "kerusi" : "seats"}, ${display.status}`}
             >
-              <header className="px-4 pt-4 pb-3 border-b border-rule" style={{ borderTop: `3px solid ${display.color}` }}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <PartyFlag coalitionId={c.id} size={30} className="mt-0.5" title={`${display.name} ${t("parties.standard")}`} />
-                    <h2 className="display text-lg font-semibold leading-tight">{display.name}</h2>
-                  </div>
-                  <span className="tabular text-sm font-semibold shrink-0" style={{ color: display.color }}>
-                    {tf("parties.seats", { n: display.seats })}
-                  </span>
+              <header className="px-4 pt-4 pb-3 border-b border-rule flex items-center gap-3" style={{ borderTop: `3px solid ${display.color}` }}>
+                <PartyFlag coalitionId={c.id} size={44} className="shrink-0" title={`${display.name} ${t("parties.standard")}`} />
+                <div className="min-w-0">
+                  <h2 className="display text-lg font-semibold leading-tight">{display.name}</h2>
+                  <p className="kicker mt-0.5">
+                    {display.status === "government" ? t("parties.statusGov") : display.status === "opposition" ? t("parties.statusOpp") : t("parties.statusKing")} ·{" "}
+                    {display.leader}
+                  </p>
                 </div>
-                <p className="kicker mt-0.5">
-                  {display.status === "government" ? t("parties.statusGov") : display.status === "opposition" ? t("parties.statusOpp") : t("parties.statusKing")} ·{" "}
-                  {display.leader}
-                </p>
+                <span className="tabular text-sm font-semibold shrink-0 ml-auto flex items-center gap-1.5">
+                  <span aria-hidden="true" className="inline-block w-2 h-2 rounded-[1px]" style={{ backgroundColor: display.color }} />
+                  {tf("parties.seats", { n: display.seats })}
+                </span>
               </header>
               <div className="px-4 py-3">
                 <p className="text-sm font-medium">{display.stance}</p>

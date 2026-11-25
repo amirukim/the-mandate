@@ -3,7 +3,7 @@ import { useGameStore } from "../stores/game-store";
 import { COALITIONS, MAJORITY, TOTAL_SEATS } from "../data/parties";
 import { Panel } from "../components/ui/Panel";
 import { PartyFlag } from "../components/ui/PartyFlag";
-import { Meter } from "../components/ui/Meter";
+import { PoliticalIndicators } from "../components/ui/PoliticalIndicators";
 import { Stat } from "../components/ui/Stat";
 import { ParliamentChart } from "../components/charts/ParliamentChart";
 import { PixelScene } from "../components/game/PixelScene";
@@ -82,7 +82,8 @@ export function Parliament() {
             <Panel kicker={selectedDisplay.abbr} title={selectedDisplay.name}>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <PartyFlag coalitionId={selected.id} size={26} />
-                <span className="kicker" style={{ color: selected.color }}>
+                <span className="kicker flex items-center gap-1.5">
+                  <span aria-hidden="true" className="inline-block w-2 h-2 rounded-[1px]" style={{ backgroundColor: selected.color }} />
                   {selectedDisplay.status === "government"
                     ? t("parties.statusGov")
                     : selectedDisplay.status === "opposition"
@@ -108,11 +109,30 @@ export function Parliament() {
 
         <div className="lg:col-span-2 space-y-6 min-w-0">
           <Panel kicker={lang === "ms" ? "Kekuatan bangku" : "Bench strength"} title={lang === "ms" ? "Angka yang penting" : "Numbers that matter"}>
-            <div className="space-y-4">
-              <Meter label={t("overview.coalition")} value={game.politics.coalitionStability} tone="gold" hint={lang === "ms" ? "Disiplin dalaman merentas PH, BN, GPS dan GRS." : "Internal discipline across PH, BN, GPS and GRS."} />
-              <Meter label={t("overview.opposition")} value={game.politics.oppositionStrength} tone="brick" hint={lang === "ms" ? "Kohesi PN dan momentum nasionalnya." : "PN's cohesion and national momentum."} />
-              <Meter label={t("overview.integrity")} value={game.politics.institutionalIntegrity} tone="moss" hint={lang === "ms" ? "Seberapa bersih tangan mesin ini bulan ini." : "How clean the machine's hands look this month."} />
-            </div>
+            <PoliticalIndicators
+              variant="meters"
+              aria-label={lang === "ms" ? "Angka yang penting" : "Numbers that matter"}
+              items={[
+                {
+                  label: t("overview.coalition"),
+                  value: `${Math.round(game.politics.coalitionStability)}`,
+                  tone: "gold",
+                  detail: lang === "ms" ? "Disiplin dalaman merentas PH, BN, GPS dan GRS." : "Internal discipline across PH, BN, GPS and GRS.",
+                },
+                {
+                  label: t("overview.opposition"),
+                  value: `${Math.round(game.politics.oppositionStrength)}`,
+                  tone: "brick",
+                  detail: lang === "ms" ? "Kohesi PN dan momentum nasionalnya." : "PN's cohesion and national momentum.",
+                },
+                {
+                  label: t("overview.integrity"),
+                  value: `${Math.round(game.politics.institutionalIntegrity)}`,
+                  tone: "moss",
+                  detail: lang === "ms" ? "Seberapa bersih tangan mesin ini bulan ini." : "How clean the machine's hands look this month.",
+                },
+              ]}
+            />
 
             {/* who the majority actually runs through */}
             <p className="kicker text-[10px] mt-5 mb-2">{t("parliament.partners")}</p>

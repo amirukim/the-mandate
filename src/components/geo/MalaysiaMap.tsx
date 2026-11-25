@@ -12,7 +12,8 @@ import { cn } from "../../utils/cn";
  * rasterized to ⅓ scale and upscaled crisp. Each federated
  * state is an interactive token placed at its real-world centroid; the state
  * shapes themselves are not drawn (admin-1 polygons are a separate dataset)
- * — the token carries colour, focus and the state file.
+ * — hover and selection light a stepped ground tint under the token, and the
+ * token itself carries colour, focus and the state file.
  */
 
 interface Props {
@@ -32,9 +33,9 @@ const CENTROIDS: Record<string, { lon: number; lat: number; dx?: number; dy?: nu
   kelantan: { lon: 102.15, lat: 5.5 },
   terengganu: { lon: 103.1, lat: 4.8 },
   pahang: { lon: 102.6, lat: 3.7 },
-  selangor: { lon: 101.45, lat: 3.45 },
-  "kuala-lumpur": { lon: 101.69, lat: 3.14 },
-  putrajaya: { lon: 101.68, lat: 2.93, dx: 22, dy: 6 },
+  selangor: { lon: 101.45, lat: 3.45, dx: -26 },
+  "kuala-lumpur": { lon: 101.69, lat: 3.14, dx: 26 },
+  putrajaya: { lon: 101.68, lat: 2.93, dx: 30, dy: 16 },
   "negeri-sembilan": { lon: 102.15, lat: 2.75 },
   melaka: { lon: 102.35, lat: 2.25 },
   johor: { lon: 103.3, lat: 1.95 },
@@ -70,9 +71,12 @@ function Country({ rings, fill, stroke, strokeWidth, opacity }: { rings: GeoRing
   );
 }
 
+/** Federal territories and unaligned seats: the neutral stone tone. */
+const NEUTRAL_FILL = "#8a8478";
+
 function fillFor(state: StateDef): string {
-  if (state.ruling === "federal") return "#8a8478";
-  return coalitionById(state.ruling)?.color ?? "#8a8478";
+  if (state.ruling === "federal") return NEUTRAL_FILL;
+  return coalitionById(state.ruling)?.color ?? NEUTRAL_FILL;
 }
 
 const ABBR: Record<string, string> = {
@@ -174,6 +178,9 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
   };
 
   const sea = expanded ? "#a9c4dd" : "#bfd7ea";
+  // the hovered or selected token renders last, so SVG stacking never buries
+  // it under a dense neighbour (Selangor/KL/Putrajaya)
+  const activeId = selectedId ?? hoverId;
 
   return (
     <section
@@ -228,7 +235,9 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
           )}
 
           {/* state tokens at real centroids */}
-          {STATES.map((state) => {
+          {STATES.slice()
+          .sort((a, b) => Number(b.id === activeId) - Number(a.id === activeId))
+          .map((state) => {
             const c = CENTROIDS[state.id];
             if (!c) return null;
             const [cx, cy] = project(c.lon, c.lat);
@@ -256,6 +265,16 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                 onBlur={() => setHoverId(null)}
                 className="cursor-pointer outline-none"
               >
+                {/* the state's area lights up: a stepped, pixel-grid tint under
+                    the token. Admin-1 polygons are a separate dataset (see the
+                    header note), so the highlight marks ground, not coastline. */}
+                {(selected || hovered) && (
+                  <g fill={fill} opacity={0.26} pointerEvents="none">
+                    <rect x={x - 21} y={y - 21} width={42} height={42} />
+                    <rect x={x - 29} y={y - 11} width={58} height={22} />
+                    <rect x={x - 11} y={y - 29} width={22} height={58} />
+                  </g>
+                )}
                 {/* the token: a pixel square, snapped to the grid */}
                 {(() => {
                   const size = selected ? 30 : hovered ? 26 : 20;
@@ -325,9 +344,9 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
       <div className="px-4 py-3 border-t border-rule flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <p className="kicker kicker-gold">{t("overview.mapTitle")}</p>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5" aria-label={t("overview.mapTitle")}>
-          <LegendSwatch label={t("overview.legendGov")} color="#5578a5" />
-          <LegendSwatch label={t("overview.legendOpp")} color="#4e7d6e" />
-          <LegendSwatch label={t("overview.legendOther")} color="#8a8478" />
+          <LegendSwatch label={t("overview.legendGov")} color={coalitionById("ph")?.color ?? NEUTRAL_FILL} />
+          <LegendSwatch label={t("overview.legendOpp")} color={coalitionById("pn")?.color ?? NEUTRAL_FILL} />
+          <LegendSwatch label={t("overview.legendOther")} color={NEUTRAL_FILL} />
           <p className="text-xs text-muted">{t("overview.mapHint")}</p>
           {!expanded && onExpand && (
             <button
