@@ -2,6 +2,7 @@ import { useGameStore } from "../stores/game-store";
 import { Panel } from "../components/ui/Panel";
 import { Stat } from "../components/ui/Stat";
 import { TrendChart } from "../components/charts/TrendChart";
+import { PixelScene } from "../components/game/PixelScene";
 import { useT } from "../i18n/store";
 
 /** The economic abstract: one ledger band of figures, then the four lines. */
@@ -25,14 +26,7 @@ export function Economy() {
       {/* Illustrated masthead: the Treasury briefing room. */}
       <header className="relative -mx-4 sm:-mx-8 -mt-8 mb-6 border-b border-rule overflow-hidden">
         <div className="absolute inset-0 glow-art" aria-hidden="true">
-          <img
-            src="/art/scene-treasury.svg"
-            alt=""
-            className="art-warm h-full w-full object-cover object-[center_45%] opacity-70"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
+          <PixelScene src="/art/scene-treasury.svg" width={480} height={140} className="art-warm opacity-70 object-[center_45%]" />
           <div className="absolute inset-0 bg-gradient-to-r from-paper via-paper/85 to-paper/55" />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper to-transparent" />
         </div>

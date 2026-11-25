@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { Maximize2 } from "lucide-react";
 import { STATES, type StateDef } from "../../data/states";
 import { GEO_Brunei, GEO_Indonesia, GEO_Malaysia, GEO_Papua_New_Guinea, GEO_Philippines, GEO_Singapore, GEO_Thailand, GEO_East_Timor, GEO_Vietnam, GEO_Taiwan, GEO_China, GEO_VIEWBOX, type GeoRing } from "../../data/geo-paths";
@@ -8,7 +8,8 @@ import { cn } from "../../utils/cn";
 
 /**
  * Real geography (Natural Earth 1:50m, public domain) of Malaysia and its
- * immediate neighbours, rendered as quantized SVG paths. Each federated
+ * immediate neighbours, rendered as a pixel-art chart: the static layer is
+ * rasterized to ⅓ scale and upscaled crisp. Each federated
  * state is an interactive token placed at its real-world centroid; the state
  * shapes themselves are not drawn (admin-1 polygons are a separate dataset)
  * — the token carries colour, focus and the state file.
@@ -81,9 +82,71 @@ const ABBR: Record<string, string> = {
   labuan: "LBN",
 };
 
+/* The static layer — sea, neighbours, the federation — serialized once and
+   rasterized to ⅓ scale, then upscaled with pixelated rendering. */
+let staticPixelUrl: string | null = null;
+
+function staticMapSvgString(): string {
+  const { width, height } = GEO_VIEWBOX;
+  const country = (rings: GeoRing[], fill: string, stroke: string, sw: number) =>
+    `<g fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round">${rings
+      .map((r) => `<path d="${ringPath(r)}"/>`)
+      .join("")}</g>`;
+  const mid = "#1a202a";
+  const far = "#161c26";
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">` +
+    `<rect width="${width}" height="${height}" fill="#0d1420"/>` +
+    country(GEO_Thailand, mid, "#2c3441", 1.2) +
+    country(GEO_Indonesia, mid, "#2c3441", 1.2) +
+    country(GEO_Vietnam, mid, "#2c3441", 1.2) +
+    country(GEO_Philippines, mid, "#2c3441", 1.2) +
+    country(GEO_Brunei, "#1f2530", "#3a4351", 1.2) +
+    country(GEO_Singapore, "#1f2530", "#3a4351", 1) +
+    country(GEO_China, far, "#232b37", 1) +
+    country(GEO_Taiwan, far, "#232b37", 1) +
+    country(GEO_Papua_New_Guinea, far, "#232b37", 1) +
+    country(GEO_East_Timor, far, "#232b37", 1) +
+    country(GEO_Malaysia, "#2a3f3c", "#c9a96a", 2) +
+    "</svg>"
+  );
+}
+
+function useStaticPixelMap(): string | null {
+  const [url, setUrl] = useState<string | null>(staticPixelUrl);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (url || failed) return;
+    const { width, height } = GEO_VIEWBOX;
+    const w = Math.round(width / 3);
+    const h = Math.round(height / 3);
+    const blob = new Blob([staticMapSvgString()], { type: "image/svg+xml" });
+    const objectUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, w, h);
+      staticPixelUrl = canvas.toDataURL("image/png");
+      URL.revokeObjectURL(objectUrl);
+      setUrl(staticPixelUrl);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      setFailed(true);
+    };
+    img.src = objectUrl;
+  }, [url, failed]);
+  return failed ? null : url;
+}
+
 export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }: Props) {
   const { t, lang } = useT();
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const staticMapUrl = useStaticPixelMap();
   const toggle = (id: string) => onSelect(selectedId === id ? null : id);
   const keyHandler = (id: string) => (e: KeyboardEvent<SVGGElement>) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -110,35 +173,41 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
           role="group"
           aria-label={lang === "ms" ? "Negeri-negeri persekutuan" : "States of the federation"}
         >
-          <defs>
-            <pattern id="sea-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-              <path d="M48 0H0v48" fill="none" stroke="#2c3441" strokeWidth="0.5" opacity="0.5" />
-            </pattern>
-            <radialGradient id="sea-glow" cx="0.5" cy="0.35" r="0.8">
-              <stop offset="0" stopColor="#16202e" />
-              <stop offset="1" stopColor={sea} />
-            </radialGradient>
-          </defs>
+          {staticMapUrl ? (
+            <image href={staticMapUrl} x={0} y={0} width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} />
+          ) : (
+            <>
+              <defs>
+                <pattern id="sea-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+                  <path d="M48 0H0v48" fill="none" stroke="#2c3441" strokeWidth="0.5" opacity="0.5" />
+                </pattern>
+                <radialGradient id="sea-glow" cx="0.5" cy="0.35" r="0.8">
+                  <stop offset="0" stopColor="#16202e" />
+                  <stop offset="1" stopColor={sea} />
+                </radialGradient>
+              </defs>
 
-          <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-glow)" />
-          <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-grid)" />
+              <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-glow)" />
+              <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-grid)" />
 
-          {/* neighbours and context, real geometry */}
-          <Country rings={GEO_Thailand} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-          <Country rings={GEO_Indonesia} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-          <Country rings={GEO_Vietnam} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-          <Country rings={GEO_Philippines} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-          <Country rings={GEO_Brunei} fill="#1f2530" stroke="#3a4351" strokeWidth={1.2} />
-          <Country rings={GEO_Singapore} fill="#1f2530" stroke="#3a4351" strokeWidth={1} />
-          <Country rings={GEO_China} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-          <Country rings={GEO_Taiwan} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-          <Country rings={GEO_Papua_New_Guinea} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-          <Country rings={GEO_East_Timor} fill="#161c26" stroke="#232b37" strokeWidth={1} />
+              {/* neighbours and context, real geometry */}
+              <Country rings={GEO_Thailand} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
+              <Country rings={GEO_Indonesia} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
+              <Country rings={GEO_Vietnam} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
+              <Country rings={GEO_Philippines} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
+              <Country rings={GEO_Brunei} fill="#1f2530" stroke="#3a4351" strokeWidth={1.2} />
+              <Country rings={GEO_Singapore} fill="#1f2530" stroke="#3a4351" strokeWidth={1} />
+              <Country rings={GEO_China} fill="#161c26" stroke="#232b37" strokeWidth={1} />
+              <Country rings={GEO_Taiwan} fill="#161c26" stroke="#232b37" strokeWidth={1} />
+              <Country rings={GEO_Papua_New_Guinea} fill="#161c26" stroke="#232b37" strokeWidth={1} />
+              <Country rings={GEO_East_Timor} fill="#161c26" stroke="#232b37" strokeWidth={1} />
 
-          {/* the federation: real coastline, gold-lined */}
-          <g strokeLinejoin="round">
-            <Country rings={GEO_Malaysia} fill={selectedId ? "#20303c" : "#2a3f3c"} stroke="#c9a96a" strokeWidth={2} />
-          </g>
+              {/* the federation: real coastline, gold-lined */}
+              <g strokeLinejoin="round">
+                <Country rings={GEO_Malaysia} fill="#2a3f3c" stroke="#c9a96a" strokeWidth={2} />
+              </g>
+            </>
+          )}
 
           {/* state tokens at real centroids */}
           {STATES.map((state) => {
@@ -169,18 +238,26 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                 onBlur={() => setHoverId(null)}
                 className="cursor-pointer outline-none"
               >
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={selected ? 13 : hovered ? 11.5 : 9}
-                  fill={fill}
-                  fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
-                  stroke={selected || hovered ? "#e6cd8e" : "#0d1420"}
-                  strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
-                  style={{ transition: "r 140ms ease, fill-opacity 140ms ease" }}
-                />
+                {/* the token: a pixel square, snapped to the grid */}
+                {(() => {
+                  const size = selected ? 30 : hovered ? 26 : 20;
+                  const half = size / 2;
+                  return (
+                    <rect
+                      x={x - half}
+                      y={y - half}
+                      width={size}
+                      height={size}
+                      fill={fill}
+                      fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
+                      stroke={selected || hovered ? "#e6cd8e" : "#0d1420"}
+                      strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
+                      style={{ transition: "fill-opacity 140ms ease" }}
+                    />
+                  );
+                })()}
                 {isTerritory ? (
-                  <circle cx={x} cy={y} r={2.4} fill="#e6cd8e" />
+                  <rect x={x - 3} y={y - 3} width={6} height={6} fill="#e6cd8e" />
                 ) : (
                   <text
                     x={x}

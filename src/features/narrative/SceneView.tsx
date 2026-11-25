@@ -7,6 +7,7 @@ import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/Button";
 import { NewspaperArticle } from "../../components/game/NewspaperArticle";
 import { PaintedScene } from "../../components/game/PaintedScene";
+import { PixelScene } from "../../components/game/PixelScene";
 import { artForScene, paintedSceneSrcs, sceneKeyFor } from "../../data/art";
 import { usePortalOverlay, trapTab, prefersReducedMotion } from "../../hooks/usePortalOverlay";
 import { useGameStore } from "../../stores/game-store";
@@ -127,16 +128,9 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
       exit={{ opacity: 0 }}
       transition={{ duration: reduced ? 0 : 0.35 }}
     >
-      {/* stage backdrop: the illustration, dimmed, warmed and vignetted */}
+      {/* stage backdrop: the illustration, pixelated, dimmed and vignetted */}
       <div className="absolute inset-0" aria-hidden="true">
-        <img
-          src={artForScene(display.location)}
-          alt=""
-          className="art-warm h-full w-full object-cover opacity-75"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
+        <PixelScene src={artForScene(display.location)} width={480} height={140} className="art-warm opacity-75" />
         <PaintedScene srcs={paintedSceneSrcs(sceneKeyFor(display.location))} className="opacity-75" />
         <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,transparent_40%,rgba(10,8,5,0.88)_100%)]" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0f0c08]/70 via-[#0f0c08]/30 to-transparent" />

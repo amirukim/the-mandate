@@ -3,6 +3,7 @@ import { useGameStore } from "../stores/game-store";
 import { characterById } from "../data/characters";
 import { CharacterPortrait } from "../components/game/CharacterPortrait";
 import { PaintedScene } from "../components/game/PaintedScene";
+import { PixelScene } from "../components/game/PixelScene";
 import { Button } from "../components/ui/Button";
 import { Meter } from "../components/ui/Meter";
 import { Panel } from "../components/ui/Panel";
@@ -86,14 +87,7 @@ export function Office() {
         role="group"
         aria-label={t("office.hubAria")}
       >
-        <img
-          src="/art/scene-hub.svg"
-          alt=""
-          className="art-warm absolute inset-0 h-full w-full object-cover"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
+        <PixelScene src="/art/scene-hub.svg" width={480} height={253} className="art-warm" />
         <PaintedScene srcs={paintedSceneSrcs("hub")} />
         <div className="absolute inset-0 bg-gradient-to-t from-paper/70 via-transparent to-paper/30" />
 

@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGameStore } from "../stores/game-store";
 import { useAuthStore } from "../stores/auth-store";
 import { loadLocal } from "../services/save-service";
 import { MENU_ART } from "../data/art";
+import { PixelScene } from "../components/game/PixelScene";
 import { useT } from "../i18n/store";
 import { cn } from "../utils/cn";
 
@@ -63,7 +63,6 @@ export function MainMenu() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const [artOk, setArtOk] = useState(true);
   const { t } = useT();
 
   const hasAutosave = loadLocal(0) !== null;
@@ -102,20 +101,16 @@ export function MainMenu() {
 
   return (
     <div className="min-h-screen atmosphere text-ink relative overflow-hidden flex flex-col">
-      {/* painted key art, breathing slowly */}
+      {/* painted key art, breathing slowly — now in pixels */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {artOk ? (
-          <motion.img
-            src={MENU_ART}
-            alt=""
-            onError={() => setArtOk(false)}
-            className="art-warm absolute inset-0 h-full w-full object-cover object-bottom"
-            animate={{ scale: [1, 1.05] }}
-            transition={{ duration: 30, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
-          />
-        ) : (
-          <Skyline />
-        )}
+        <Skyline />
+        <motion.div
+          className="absolute inset-0"
+          animate={{ scale: [1, 1.05] }}
+          transition={{ duration: 30, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
+        >
+          <PixelScene src={MENU_ART} width={480} height={200} className="art-warm" />
+        </motion.div>
         <div className="absolute inset-0 bg-gradient-to-r from-paper via-paper/70 to-paper/20" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-paper to-transparent" />
       </div>
