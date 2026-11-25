@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import type { Difficulty, GameState, SaveSlotId } from "../types/game";
+import type { Difficulty, Effect, GameState, SaveSlotId } from "../types/game";
+import { applyEffects } from "../engine/effects";
 import { createCampaignMeta, createInitialState } from "../data/initial-state";
 import { beginTurn, advanceMonth, chooseOption, currentEvent, type ChosenOutcome } from "../engine/turn-flow";
 import { seekCounsel } from "../engine/relationships";
@@ -8,6 +9,7 @@ import type { TurnReport } from "../engine/simulation";
 import { saveLocal, loadLocal } from "../services/save-service";
 import { getLang } from "../i18n/store";
 import { outcomeDisplay, reportDisplay, eventDisplay, counselVoice } from "../i18n/data";
+import type { AvatarCustomisation } from "../data/pixel-portraits";
 
 interface LastCounsel {
   characterId: string;
@@ -20,7 +22,7 @@ interface GameStore {
   lastReport: TurnReport | null;
   lastCounsel: LastCounsel | null;
 
-  newGame(playerName: string, campaignName: string, difficulty: Difficulty): void;
+  newGame(playerName: string, campaignName: string, difficulty: Difficulty, avatar?: AvatarCustomisation): void;
   continueGame(): boolean;
   loadFromSave(slot: SaveSlotId): boolean;
   makeDecision(optionId: string): void;
@@ -41,9 +43,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lastReport: null,
   lastCounsel: null,
 
-  newGame(playerName, campaignName, difficulty) {
+  newGame(playerName, campaignName, difficulty, avatar) {
     const meta = createCampaignMeta(playerName, campaignName, difficulty);
     const game = createInitialState(meta);
+    if (avatar) {
+      // the PM's dossier: customisation lives in the optional v2 slice, and
+      // the prior career nudges the opening ledger once, here at creation.
+      game.avatar = avatar;
+      if (avatar.priorCareer) {
+        game.flags = { ...game.flags, "avatar.career": avatar.priorCareer };
+        const NUDGE: Record<string, Effect[]> = {
+          civilService: [{ target: "politics.institutionalIntegrity", delta: 2 }],
+          military: [{ target: "security.militaryReadiness", delta: 3 }],
+          business: [{ target: "economy.fdi", delta: 3 }],
+          activism: [{ target: "politics.approval", delta: 2 }],
+          academia: [{ target: "social.education", delta: 2 }],
+        };
+        try {
+          applyEffects(game, NUDGE[avatar.priorCareer] ?? []);
+        } catch {
+          /* a hostile nudge never blocks creation */
+        }
+      }
+      for (const trait of avatar.traits ?? []) {
+        game.flags = { ...game.flags, [`avatar.trait.${trait}`]: true };
+      }
+    }
     beginTurn(game);
     persist(game, 0);
     set({ game, chosen: null, lastReport: null, lastCounsel: null });

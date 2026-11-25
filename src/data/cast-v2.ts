@@ -1,5 +1,13 @@
 import type { CharacterDef } from "./characters";
 
+/** Coalition leaders carry their party's standard (id → coalition id). */
+export const FIGURE_COALITION: Record<string, string> = {
+  gpsPremier: "gps",
+  bnChair: "bn",
+  borneoMinister: "grs",
+  oppositionLeader: "pn",
+};
+
 /**
  * Supporting cast for the v2 chapters (decision C-6). Additive: none of these
  * sit in the cabinet, and a migrated v1 save simply gains default

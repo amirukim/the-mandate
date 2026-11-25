@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { Avatar } from "../ui/Avatar";
+import { PartyFlag } from "../ui/PartyFlag";
+import { FIGURE_COALITION } from "../../data/cast-v2";
 import { prefersReducedMotion } from "../../hooks/usePortalOverlay";
 import { cn } from "../../utils/cn";
 import type { Expression } from "../../data/pixel-portraits";
@@ -15,12 +17,14 @@ interface CharacterSpriteProps {
 }
 
 /**
- * The stage figure: bust plus nameplate, one composition. The bust breathes
- * very slowly so the figure is alive without stealing the beat panel's
- * attention; the whole thing stills under reduced motion.
+ * The stage figure: bust plus nameplate, one composition. Coalition leaders
+ * wear their party's standard on the nameplate. The bust breathes very slowly
+ * so the figure is alive without stealing the beat panel's attention; the
+ * whole thing stills under reduced motion.
  */
 export function CharacterSprite({ speaker, role, characterId, expression = "neutral", className }: CharacterSpriteProps) {
   const reduced = prefersReducedMotion();
+  const coalitionId = characterId ? FIGURE_COALITION[characterId] : undefined;
   return (
     <div className={cn("flex flex-col items-center gap-2.5", className)}>
       <div className="relative">
@@ -40,7 +44,10 @@ export function CharacterSprite({ speaker, role, characterId, expression = "neut
         </motion.div>
       </div>
       <div className="text-center bg-card/80 border border-gold/30 rounded-[2px] px-3 py-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-bright">{speaker}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-bright flex items-center justify-center gap-1.5">
+          {coalitionId && <PartyFlag coalitionId={coalitionId} size={14} className="shrink-0" />}
+          {speaker}
+        </p>
         <p className="kicker text-[10px] mt-0.5">{role}</p>
       </div>
     </div>

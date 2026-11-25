@@ -10,6 +10,7 @@ import { BriefingPanel } from "./panels/BriefingPanel";
 import { DialoguePanel } from "./panels/DialoguePanel";
 import { DecisionPanel } from "./panels/DecisionPanel";
 import { ConsequencePanel } from "./panels/ConsequencePanel";
+import { EffectToasts } from "../../components/ui/EffectToasts";
 import { castOf, expressionForOutcome } from "./cast";
 import { useTypewriter } from "./useTypewriter";
 
@@ -90,7 +91,10 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
     >
       <AnimatePresence mode="wait" initial={false}>
         {chosen !== null ? (
-          <ConsequencePanel key="reaction" chosen={chosen} onContinue={onContinue} />
+          <>
+            <EffectToasts chosen={chosen} />
+            <ConsequencePanel key="reaction" chosen={chosen} onContinue={onContinue} />
+          </>
         ) : phase === "briefing" ? (
           <BriefingPanel
             key="briefing"

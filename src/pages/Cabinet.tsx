@@ -1,7 +1,7 @@
 import { useGameStore } from "../stores/game-store";
 import { CHARACTERS } from "../data/characters";
 import { Meter } from "../components/ui/Meter";
-import { CharacterPortrait } from "../components/game/CharacterPortrait";
+import { PixelSprite } from "../components/game/PixelSprite";
 import { PartyFlag } from "../components/ui/PartyFlag";
 import { PixelScene } from "../components/game/PixelScene";
 import { prefersReducedMotion } from "../hooks/usePortalOverlay";
@@ -53,7 +53,10 @@ function CharacterCard({ id, tier }: CharacterCardProps) {
         TIER_META[tier].accent,
       )}
     >
-      <CharacterPortrait characterId={id} size="xl" className="shrink-0 self-start" />
+      <div className="shrink-0 self-start flex flex-col items-center gap-1.5">
+        <PixelSprite characterId={id} mode="idle" scale={2} className="rounded-[2px] bg-navy/90 border border-rule" />
+        <span className="kicker text-[8px] text-muted">48 × 64</span>
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           {tier === "coalition" && FIGURE_PARTY[id] && (

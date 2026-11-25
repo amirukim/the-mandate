@@ -1,18 +1,18 @@
-/**
- * Pixel portrait engine — 64×64 busts, rendered to canvas and scaled with
+﻿/**
+ * Pixel portrait engine â€” 64Ã—64 busts, rendered to canvas and scaled with
  * image-rendering: pixelated on large surfaces (smooth 2D downscale on small
  * ones, so the cast strip stays legible). Deliberate art direction, not a
  * placeholder: limited palettes, directional shading, readable faces.
  *
  * pixelPortraitDataUrl(id) is cached per id. Unknown ids return the anonymous
  * figure, never null. Raster files (public/portraits/<id>.*) still override
- * these when present — see data/portraits.tsx.
+ * these when present â€” see data/portraits.tsx.
  */
 
 const W = 64;
 const H = 64;
 
-/** Darken a hex colour toward black by factor f (0..1) — derives shading
+/** Darken a hex colour toward black by factor f (0..1) â€” derives shading
  *  tones from the authored palette without adding spec fields. */
 function shade(hex: string, f: number): string {
   const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).map((c) => Math.round(c * (1 - f)));
@@ -42,13 +42,27 @@ interface PixelSpec {
 }
 
 class Grid {
-  readonly cells: (string | null)[][] = Array.from({ length: H }, () => Array<string | null>(W).fill(null));
+  readonly w: number;
+  readonly h: number;
+  readonly cells: (string | null)[][];
+
+  constructor(w: number = W, h: number = H) {
+    this.w = w;
+    this.h = h;
+    this.cells = Array.from({ length: h }, () => Array<string | null>(w).fill(null));
+  }
   set(x: number, y: number, c: string | null) {
-    if (x < 0 || x >= W || y < 0 || y >= H) return;
+    if (x < 0 || y < 0 || x >= this.w || y >= this.h) return;
     this.cells[y][x] = c;
   }
   rect(x: number, y: number, w: number, h: number, c: string) {
     for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) this.set(xx, yy, c);
+  }
+  hline(x: number, y: number, w: number, c: string) {
+    this.rect(x, y, w, 1, c);
+  }
+  vline(x: number, y: number, h: number, c: string) {
+    this.rect(x, y, 1, h, c);
   }
   ellipse(cx: number, cy: number, rx: number, ry: number, c: string) {
     for (let yy = cy - ry; yy <= cy + ry; yy++) {
@@ -62,7 +76,7 @@ class Grid {
   /** Symmetric pair around the centre line. */
   mirror(x: number, y: number, w: number, h: number, c: string) {
     this.rect(x, y, w, h, c);
-    this.rect(W - x - w, y, w, h, c);
+    this.rect(this.w - x - w, y, w, h, c);
   }
 }
 
@@ -151,7 +165,7 @@ function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | nu
   g.rect(42, 26, 3, 6, skin);
   g.set(43, 28, skinSh); g.set(43, 29, skinSh);
 
-  // hair — mass first, then a curved carve for the hairline, then light
+  // hair â€” mass first, then a curved carve for the hairline, then light
   const h = spec.hair;
   if (h) {
     const { c, hi } = h;
@@ -255,7 +269,7 @@ function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | nu
     g.rect(43, 10, 2, 6, shade(spec.kopiah, 0.25));
   }
 
-  // brows — tapered, a step down toward the temple
+  // brows â€” tapered, a step down toward the temple
   const brow = spec.older ? skinSh : "#26222a";
   g.rect(24, 21, 6, 1, brow);
   g.set(30, 21, brow); g.set(30, 20, brow);
@@ -307,7 +321,7 @@ function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | nu
     g.rect(30, 38, 4, 1, skinHi);
   }
 
-  // expression pass — drawn over the authored face, never random (see cast.ts)
+  // expression pass â€” drawn over the authored face, never random (see cast.ts)
   if (expression !== "neutral") applyExpression(g, expression, skin);
 
   if (spec.facial) {
@@ -393,6 +407,11 @@ export function pixelPortraitDataUrl(id: string, expression: Expression = "neutr
   return url;
 }
 
+/** The authored spec table by character id (sprites read the same source). */
+export function specById(id: string): PixelSpec {
+  return SPECS[id] ?? GENERIC;
+}
+
 /**
  * Expression frames for the theatre. A character's resting face is authored in
  * SPECS; these four overlays redraw brows and mouth on top of it. Selection is
@@ -429,8 +448,397 @@ function applyExpression(g: Grid, expression: Expression, skin: string) {
 }
 
 /* ------------------------------------------------------------------ */
-/* The ten figures                                                     */
+/* Full-body sprites (v2, plan C/D): 48x64, same specs and palette     */
 /* ------------------------------------------------------------------ */
+
+export const SPRITE_W = 48;
+export const SPRITE_H = 64;
+export type SpritePose = "stand" | "walk";
+export type SpriteBlink = boolean;
+
+export interface SpriteFrameOpts {
+  pose?: SpritePose;
+  /** Walk frame 0-3 (contact / pass / contact / pass, mirrored). */
+  frame?: number;
+  blink?: boolean;
+}
+
+/** Compact face at sprite scale: same spec fields, same expression mapping. */
+function drawSpriteHead(
+  g: Grid,
+  spec: PixelSpec,
+  expression: Expression,
+  cx: number,
+  top: number,
+  blink: boolean,
+) {
+  const [skin, skinSh, skinHi] = spec.skin;
+  const hy = top + 8; // head centre
+  // shade crescent, then the lit face
+  g.ellipse(cx + 1.5, hy, 7, 7, skinSh);
+  g.ellipse(cx, hy, 7, 7, skin);
+  g.ellipse(cx, hy + 3, 6, 5, skin);
+  // left light plane
+  g.vline(cx - 5, hy - 4, 7, skinHi);
+  g.set(cx - 5, hy - 5, skinHi);
+  // ears
+  g.rect(cx - 8, hy, 2, 3, skin);
+  g.set(cx - 8, hy + 1, skinSh);
+  g.rect(cx + 6, hy, 2, 3, skin);
+  g.set(cx + 7, hy + 1, skinSh);
+
+  // hair / headwear (mini silhouettes of the bust styles)
+  const h = spec.hair;
+  if (h) {
+    const { c, hi } = h;
+    const hairSh = shade(c, 0.3);
+    switch (h.style) {
+      case "bob":
+        g.ellipse(cx, hy - 1, 8, 6, c);
+        g.rect(cx - 8, hy, 3, 8, c);
+        g.rect(cx + 5, hy, 3, 8, c);
+        g.ellipse(cx, hy + 1, 6, 5, skin);
+        g.rect(cx + 6, hy + 1, 2, 6, hairSh);
+        g.set(cx - 4, hy - 5, hi);
+        g.set(cx + 3, hy - 5, hi);
+        break;
+      case "receding":
+        g.ellipse(cx, hy - 3, 7, 5, c);
+        g.ellipse(cx, hy + 1, 6, 5, skin);
+        g.rect(cx + 4, hy - 4, 2, 6, hairSh);
+        g.set(cx - 3, hy - 6, hi);
+        break;
+      case "tied":
+        g.ellipse(cx, hy - 2, 7, 6, c);
+        g.ellipse(cx, hy + 1, 6, 5, skin);
+        g.rect(cx - 8, hy - 1, 2, 5, c);
+        g.rect(cx + 6, hy - 1, 2, 5, c);
+        g.rect(cx - 2, top - 1, 4, 2, c);
+        g.rect(cx + 5, hy + 1, 2, 6, hairSh);
+        g.set(cx - 3, hy - 5, hi);
+        break;
+      case "sidepart":
+        g.ellipse(cx, hy - 2, 7, 5, c);
+        g.ellipse(cx, hy + 1, 6, 5, skin);
+        g.rect(cx - 6, hy - 4, 4, 3, c);
+        g.rect(cx + 5, hy - 3, 2, 7, hairSh);
+        g.set(cx - 4, hy - 6, hi); g.set(cx - 3, hy - 5, hi);
+        break;
+      case "curls":
+        for (const [dx, dy, r] of [[-5, -4, 3], [0, -6, 4], [5, -3, 3], [-7, 0, 2], [7, 0, 2]] as const) {
+          g.ellipse(cx + dx, hy + dy, r, r - 1, c);
+        }
+        g.ellipse(cx, hy + 1, 6, 5, skin);
+        g.set(cx - 1, hy - 7, hi);
+        g.set(cx + 6, hy + 1, hairSh);
+        break;
+      case "combed":
+      case "white":
+        g.ellipse(cx, hy - 3, 7, 5, c);
+        g.ellipse(cx, hy + 1, 6, 5, skin);
+        g.rect(cx + 5, hy - 4, 2, 7, hairSh);
+        g.set(cx - 4, hy - 6, hi); g.set(cx - 3, hy - 5, tint(c, 0.35));
+        break;
+      case "short":
+      default:
+        g.ellipse(cx, hy - 3, 7, 5, c);
+        g.ellipse(cx, hy + 1, 6, 5, skin);
+        g.rect(cx + 4, hy - 4, 2, 7, hairSh);
+        g.set(cx - 4, hy - 6, hi); g.set(cx + 3, hy - 6, hi);
+        break;
+    }
+  }
+  if (spec.hijab) {
+    g.ellipse(cx, hy, 9, 8, spec.hijab.c);
+    g.rect(cx - 9, hy + 2, 3, 12, spec.hijab.c);
+    g.rect(cx + 6, hy + 2, 3, 12, spec.hijab.c);
+    g.rect(cx - 9, hy + 2, 1, 12, spec.hijab.hi);
+    g.ellipse(cx, hy + 1, 6, 5, skin);
+    g.rect(cx + 6, hy + 3, 2, 9, shade(spec.hijab.c, 0.2));
+    g.set(cx - 3, hy - 7, tint(spec.hijab.c, 0.3));
+  }
+  if (spec.songkok) {
+    px_ellipseTop(g, cx, top + 3, 8, 4, spec.songkok);
+    g.hline(cx - 7, top + 6, 15, "#c9a96a");
+    g.rect(cx + 4, top + 4, 2, 5, shade(spec.songkok, 0.25));
+    g.set(cx - 4, top + 4, tint(spec.songkok, 0.25));
+  }
+  if (spec.kopiah) {
+    px_ellipseTop(g, cx, top + 3, 8, 4, spec.kopiah);
+    g.hline(cx - 7, top + 6, 15, "#8f8a7c");
+    g.rect(cx + 4, top + 4, 2, 5, shade(spec.kopiah, 0.25));
+  }
+  if (spec.bindi) g.rect(cx, hy - 4, 1, 2, "#b3452e");
+
+  // brows — tapered
+  const brow = spec.older ? skinSh : "#26222a";
+  const by = hy - 3;
+  g.rect(cx - 5, by, 3, 1, brow);
+  g.set(cx - 2, by, brow);
+  g.rect(cx + 2, by, 3, 1, brow);
+  g.set(cx + 1, by, brow);
+
+  // eyes — sclera, iris, glint; blink swaps to lids
+  const ey = hy + 1;
+  if (blink) {
+    g.hline(cx - 4, ey, 3, "#241f26");
+    g.hline(cx + 2, ey, 3, "#241f26");
+  } else {
+    g.ellipse(cx - 3, ey, 2, 1, "#f6f2e8");
+    g.ellipse(cx + 3, ey, 2, 1, "#f6f2e8");
+    g.set(cx - 3, ey, "#23303e");
+    g.set(cx + 3, ey, "#23303e");
+    g.set(cx - 3, ey - 1, "#4d5f72");
+    g.set(cx + 3, ey - 1, "#4d5f72");
+    g.hline(cx - 4, ey - 1, 3, "#241f26");
+    g.hline(cx + 2, ey - 1, 3, "#241f26");
+  }
+
+  // nose
+  g.vline(cx, ey + 1, 3, skinSh);
+  g.set(cx - 1, ey + 4, skinSh);
+  g.set(cx + 1, ey + 4, skinSh);
+
+  // cheeks
+  g.set(cx - 5, ey + 3, skinHi);
+  g.set(cx + 6, ey + 3, skinSh);
+
+  // mouth per expression (sprite-scale mapping of the bust expressions)
+  const my = hy + 8;
+  if (expression === "pleased") {
+    g.hline(cx - 3, my, 7, MOUTH);
+    g.set(cx - 4, my - 1, MOUTH);
+    g.set(cx + 3, my - 1, MOUTH);
+  } else if (expression === "concerned") {
+    g.set(cx - 2, by - 1, brow);
+    g.set(cx + 2, by - 1, brow);
+    g.hline(cx - 2, my, 5, MOUTH);
+    g.set(cx - 3, my + 1, MOUTH);
+    g.set(cx + 2, my + 1, MOUTH);
+  } else if (expression === "stern") {
+    g.hline(cx - 4, by + 1, 3, brow);
+    g.hline(cx + 2, by + 1, 3, brow);
+    g.hline(cx - 3, my, 7, MOUTH);
+  } else if ((spec.mouth ?? "firm") === "soft") {
+    g.hline(cx - 3, my, 6, MOUTH);
+    g.set(cx - 4, my - 1, MOUTH);
+  } else {
+    g.hline(cx - 3, my, 7, MOUTH);
+  }
+
+  if (spec.facial) {
+    const fc = spec.facial.includes("grey") ? "#a7aca4" : "#232833";
+    if (spec.facial.startsWith("moustache")) {
+      g.hline(cx - 5, my - 2, 11, fc);
+    } else {
+      g.rect(cx - 6, my, 12, 4, fc);
+      g.rect(cx - 4, my + 4, 8, 2, fc);
+      g.hline(cx - 2, my + 1, 5, skinSh);
+    }
+  }
+  if (spec.glasses) {
+    const f = "#39414c";
+    g.rect(cx - 6, ey - 2, 6, 1, f);
+    g.rect(cx - 6, ey + 1, 6, 1, f);
+    g.rect(cx - 6, ey - 1, 1, 2, f);
+    g.rect(cx - 1, ey - 1, 1, 2, f);
+    g.rect(cx + 1, ey - 2, 6, 1, f);
+    g.rect(cx + 1, ey + 1, 6, 1, f);
+    g.rect(cx + 6, ey - 1, 1, 2, f);
+    g.rect(cx, ey - 1, 1, 1, f);
+    g.rect(cx - 10, ey - 1, 4, 1, f);
+    g.rect(cx + 7, ey - 1, 4, 1, f);
+    g.set(cx - 5, ey - 2, "#d7e2ec");
+    g.set(cx + 3, ey - 2, "#d7e2ec");
+  }
+  if (spec.earrings) {
+    g.set(cx - 8, hy + 3, "#e6cd8e");
+    g.set(cx + 8, hy + 3, "#e6cd8e");
+  }
+  // rim light catch
+  g.set(cx - 5, hy - 6, skinHi);
+}
+
+function px_ellipseTop(g: Grid, cx: number, cy: number, rx: number, ry: number, c: string) {
+  for (let yy = cy - ry; yy <= cy; yy++) {
+    const dy = (yy - cy) / ry;
+    const half = Math.round(rx * Math.sqrt(Math.max(0, 1 - dy * dy)));
+    g.hline(cx - half, yy, half * 2 + 1, c);
+  }
+}
+
+/** Full-body 48x64 sprite: head from the spec, body from the attire, pose
+ *  frames for idle/walk, blink and the four expressions. Same spec source as
+ *  the busts, so the two never drift. */
+export function drawSprite(
+  spec: PixelSpec,
+  expression: Expression,
+  opts: SpriteFrameOpts = {},
+): (string | null)[][] {
+  const g = new Grid(SPRITE_W, SPRITE_H);
+  const [skin] = spec.skin;
+  const a = spec.attire;
+  const pose = opts.pose ?? "stand";
+  const frame = opts.frame ?? 0;
+  const cx = 24;
+
+  // floor shadow
+  g.ellipse(cx, 60, 12, 2, "rgba(0,0,0,0.28)");
+
+  // legs first (behind the coat hem)
+  const legY = 46;
+  const legH = 14;
+  const shoe = shade(a.c, 0.45);
+  if (pose === "walk") {
+    const swing = frame === 0 ? -2 : frame === 2 ? 2 : 0;
+    const bent = frame === 1 || frame === 3;
+    const leftX = 17 + (frame === 0 ? -3 : frame === 2 ? 2 : 0);
+    const rightX = 26 + (frame === 0 ? 2 : frame === 2 ? -3 : 0);
+    g.rect(leftX, legY, 5, bent ? legH - 2 : legH, a.c);
+    g.rect(rightX, legY, 5, legH, a.c);
+    g.rect(leftX, legY + legH - (bent ? 4 : 2), 5, 2, shoe);
+    g.rect(rightX, legY + legH - 2, 5, 2, shoe);
+    void swing;
+  } else {
+    g.rect(17, legY, 5, legH, a.c);
+    g.rect(26, legY, 5, legH, a.c);
+    g.rect(17, legY + legH - 2, 5, 2, shoe);
+    g.rect(26, legY + legH - 2, 5, 2, shoe);
+  }
+
+  // torso: shoulders widening to the hips
+  for (let y = 30; y < legY; y++) {
+    const t = (y - 30) / (legY - 30);
+    const half = 6 + Math.round(t * 7);
+    g.rect(cx - half, y, half * 2, 1, a.c);
+  }
+  g.rect(18, 28, 12, 3, a.c);
+  // key light left, shade right
+  g.vline(cx - 7, 32, 10, tint(a.c, 0.18));
+  g.rect(cx + 9, 34, 3, 10, shade(a.c, 0.2));
+  // collar furniture per kind
+  if (a.kind === "suit") {
+    g.rect(cx - 2, 30, 4, 16, a.shirt);
+    g.vline(cx + 1, 30, 16, shade(a.shirt, 0.18));
+    if (a.tie) {
+      g.rect(cx - 1, 30, 2, 2, a.tie);
+      g.rect(cx - 1, 32, 2, 9, a.tie);
+      g.rect(cx - 1, 41, 2, 3, shade(a.tie, 0.22));
+    }
+    g.rect(cx - 5, 30, 3, 3, a.trim);
+    g.rect(cx - 6, 33, 3, 4, a.trim);
+    g.rect(cx + 2, 30, 3, 3, a.trim);
+    g.rect(cx + 3, 33, 3, 4, a.trim);
+    if (a.accent) g.rect(cx + 7, 44, 3, 2, a.accent);
+  } else if (a.kind === "open") {
+    g.rect(cx - 5, 30, 10, 16, a.shirt);
+    g.vline(cx + 2, 30, 16, shade(a.shirt, 0.15));
+    g.rect(cx - 6, 30, 2, 16, a.trim);
+    g.rect(cx + 4, 30, 2, 16, a.trim);
+  } else {
+    g.rect(cx - 5, 30, 10, 16, a.shirt);
+    g.vline(cx, 32, 14, shade(a.shirt, 0.14));
+    g.rect(cx - 1, 30, 3, 2, a.accent ?? a.trim);
+  }
+  // belt
+  g.rect(cx - 8, 44, 16, 3, shade(a.c, 0.4));
+  g.set(cx - 7, 45, C_BELT_BUCKLE);
+  g.set(cx + 6, 45, C_BELT_BUCKLE);
+
+  // arms
+  const idleIn = opts.pose === "stand" && opts.frame === 1 ? 1 : 0;
+  const armSwing = pose === "walk" ? (frame === 0 ? 1 : frame === 2 ? -1 : 0) : 0;
+  const leftArmX = cx - 11 + idleIn - armSwing;
+  const rightArmX = cx + 8 + idleIn + armSwing;
+  const armY = 32;
+  g.rect(leftArmX, armY, 3, 12, shade(a.c, 0.12));
+  g.rect(rightArmX, armY, 3, 12, shade(a.c, 0.12));
+  g.rect(leftArmX, armY + 12, 3, 3, skin);
+  g.rect(rightArmX, armY + 12, 3, 3, skin);
+
+  // head
+  drawSpriteHead(g, spec, expression, cx, 6, Boolean(opts.blink));
+  return g.cells;
+}
+
+const C_BELT_BUCKLE = "#c69b54";
+
+/** The PM avatar customisation, as chosen at New Game. */
+export interface AvatarCustomisation {
+  skin?: string;
+  hair?: string;
+  headwear?: "none" | "songkok" | "kopiah" | "tudung";
+  attire?: string;
+  glasses?: boolean;
+  homeState?: string;
+  /** Drives one-time opening nudges and gates avatar-specific dialogue. */
+  priorCareer?: "civilService" | "military" | "business" | "activism" | "academia";
+  /** Free-form trait tags; dialogue conditions gate on `avatar.trait.<tag>`. */
+  traits?: string[];
+}
+
+/** Build a PixelSpec from the PM avatar customisation (decision D-08 slice). */
+export function specFromAvatar(avatar: AvatarCustomisation): PixelSpec {
+  const skin = AVATAR_SKINS.find((s) => s[0] === avatar.skin) ?? AVATAR_SKINS[0];
+  const hair = AVATAR_HAIRS.find((h) => h.id === avatar.hair) ?? AVATAR_HAIRS[0];
+  const attire = AVATAR_ATTIRE.find((t) => t.id === avatar.attire) ?? AVATAR_ATTIRE[0];
+  const spec: PixelSpec = {
+    skin: [...skin],
+    bg: ["#1b2434", "#10141d"],
+    attire: { ...attire },
+    mouth: "firm",
+  };
+  if (avatar.headwear === "songkok") spec.songkok = "#10151d";
+  if (avatar.headwear === "kopiah") spec.kopiah = "#d9d2c0";
+  if (avatar.headwear === "tudung") {
+    spec.hijab = { c: hair.c, hi: tint(hair.c, 0.3) };
+  } else {
+    spec.hair = { c: hair.c, hi: hair.hi, style: hair.style };
+  }
+  if (avatar.glasses) spec.glasses = true;
+  return spec;
+}
+
+/** Six authored skin ramps for the PM avatar. */
+export const AVATAR_SKINS: [string, string, string][] = [
+  ["#c99a76", "#8f6247", "#e6bd98"],
+  ["#b5825a", "#7d5539", "#dcae84"],
+  ["#a9744c", "#74502f", "#cc9871"],
+  ["#d0a276", "#96684a", "#ecd0a8"],
+  ["#c19a72", "#87613f", "#dfb894"],
+  ["#9c6b45", "#6b472a", "#c0916a"],
+];
+
+/** Hair options for the PM avatar (id, colour ramp, bust style). */
+export const AVATAR_HAIRS: Array<{ id: string; c: string; hi: string; style: NonNullable<PixelSpec["hair"]>["style"] }> = [
+  { id: "shortDark", c: "#1d222c", hi: "#4d5a6e", style: "short" },
+  { id: "combedGrey", c: "#e5e2da", hi: "#f7f5ef", style: "white" },
+  { id: "sidepart", c: "#2a2f38", hi: "#8b93a1", style: "sidepart" },
+  { id: "tied", c: "#191d24", hi: "#3f4a5a", style: "tied" },
+  { id: "curls", c: "#262b30", hi: "#6e747c", style: "curls" },
+  { id: "bald", c: "#c49a72", hi: "#e2ba92", style: "receding" },
+];
+
+/** Attire options for the PM avatar. */
+export const AVATAR_ATTIRE: Array<{ id: string; kind: PixelSpec["attire"]["kind"]; c: string; trim: string; shirt: string; tie?: string; accent?: string }> = [
+  { id: "suitNavy", kind: "suit", c: "#2a3140", trim: "#4a5468", shirt: "#e9e2d2", tie: "#8a6c1f", accent: "#c9a96a" },
+  { id: "suitGrey", kind: "suit", c: "#3a3f4a", trim: "#5a6070", shirt: "#dde2e8", tie: "#6e3440", accent: "#c9a96a" },
+  { id: "batik", kind: "open", c: "#223026", trim: "#3f5a48", shirt: "#c6cdc2" },
+  { id: "mandarin", kind: "mandarin", c: "#1f232c", trim: "#c9a96a", shirt: "#d9d2c0", accent: "#e6cd8e" },
+];
+
+const avatarCache = new Map<string, string>();
+
+/** Bust data URL for a customised PM avatar, cached by the customisation. */
+export function pmAvatarDataUrl(avatar: AvatarCustomisation, expression: Expression = "neutral"): string {
+  const key = JSON.stringify(avatar) + (expression === "neutral" ? "" : `:${expression}`);
+  const hit = avatarCache.get(key);
+  if (hit !== undefined) return hit;
+  const url = render(specFromAvatar(avatar), expression);
+  avatarCache.set(key, url);
+  return url;
+}
+
 
 const SPECS: Record<string, PixelSpec> = {
   chiefOfStaff: {
