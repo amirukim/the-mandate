@@ -26,6 +26,7 @@ const H = 253;
 const C = {
   // Wall and floor: warm paper, lit from the window side.
   wall: "#e6d9be",
+  wallLt: "#efe6d0",
   wallShade: "#cfc0a2",
   panel: "#bfae8d",
   floor: "#a98a60",
@@ -67,7 +68,6 @@ const C = {
 const flagOnly = new Set([C.flagRed, C.flagWhite, C.flagBlue, C.flagGold]);
 const used = new Set();
 
-
 const px = new PixelCanvas(W, H);
 
 /* Room shell                                                          */
@@ -75,10 +75,19 @@ const px = new PixelCanvas(W, H);
 
 px.rect(0, 0, W, H, C.wall);
 
+// Crown line: a shadow, a bead, and a lit fillet under the ceiling.
+px.rect(0, 0, W, 2, C.wallShade);
+px.hline(0, 2, W, C.panel);
+px.hline(0, 3, W, C.wallLt);
+px.hline(0, 4, W, C.wall);
+
 // Daylight falls from the window band; the far right of the room cools off.
 px.rect(0, 0, 12, H, C.wallShade);
 px.rect(448, 0, 32, H, C.wallShade);
 px.rect(440, 0, 8, H, C.wall);
+
+// The wall catches the window's light: a flat, stepped band to the right.
+px.rect(326, 16, 116, 96, C.wallLt);
 
 // Panel joints: a shadow line with a lit edge, as on a real panelled wall.
 for (const x of [33, 127, 353, 443]) {
@@ -103,11 +112,17 @@ for (const x of [24, 61, 99, 150, 196, 245, 292, 338, 385, 429, 464]) {
 px.rect(158, 229, 164, 7, C.floorLt);
 px.rect(174, 236, 132, 5, C.floorLt);
 
-// The carpet, seen as its near edge sweeping under the viewer.
+// The carpet: a bordered rug with a medallion, sweeping under the viewer.
 px.ellipse(240, 258, 170, 20, C.ink);
-px.ellipse(240, 258, 166, 18, C.gold);
-px.ellipse(240, 258, 161, 16, C.navy);
-px.ellipse(240, 258, 150, 12, C.navyMid);
+px.ellipse(240, 258, 164, 18, C.gold);
+px.ellipse(240, 258, 156, 16, C.navy);
+px.ellipse(240, 258, 146, 14, C.navyMid);
+px.ellipse(240, 258, 122, 11, C.gold);
+px.ellipse(240, 258, 114, 9, C.navy);
+// medallion ticks on the visible border arc
+for (const x of [180, 240, 300]) px.rect(x, 243, 4, 2, C.goldLt);
+px.rect(136, 246, 3, 2, C.goldLt);
+px.rect(341, 246, 3, 2, C.goldLt);
 
 /* ------------------------------------------------------------------ */
 /* Tall window with the Putrajaya skyline                              */
@@ -166,6 +181,21 @@ px.rect(146, 127, 176, 5, C.paperDeep);
 px.hline(146, 127, 176, C.paperLt);
 px.hline(146, 131, 176, C.wallShade);
 px.hline(150, 133, 168, C.wallShade);
+
+// Drapes framing the window: hung from the cornice, over the frame edges.
+px.rect(142, 5, 7, 131, C.walnut);
+px.rect(142, 5, 2, 131, C.walnutLt);
+px.vline(146, 8, 128, C.walnutDk);
+px.hline(142, 5, 7, C.walnutDk);
+px.rect(318, 5, 7, 131, C.walnut);
+px.rect(318, 5, 2, 131, C.walnutLt);
+px.vline(322, 8, 128, C.walnutDk);
+px.hline(318, 5, 7, C.walnutDk);
+// tiebacks: a brass band pinching each panel at the sill line
+px.rect(142, 118, 7, 3, C.gold);
+px.hline(142, 118, 7, C.goldLt);
+px.rect(318, 118, 7, 3, C.gold);
+px.hline(318, 118, 7, C.goldLt);
 
 /* ------------------------------------------------------------------ */
 /* Wall clock — end the month                                          */
@@ -389,6 +419,33 @@ px.rect(397, 189, 3, 9, C.gold);
 px.hline(388, 185, 6, C.wallShade);
 px.rect(404, 211, 2, 6, C.steelDk);
 px.rect(379, 211, 2, 6, C.steelDk);
+// riveted corners and hinges
+for (const [x, y] of [[379, 181], [406, 181], [379, 218], [406, 218]]) px.set(x, y, C.steelDk);
+px.rect(374, 186, 2, 8, C.steelDk);
+px.rect(408, 186, 2, 8, C.steelDk);
+px.set(374, 186, C.paperDeep); px.set(409, 186, C.paperDeep);
+
+/* ------------------------------------------------------------------ */
+/* A potted palm on the floor, left of the visitor chair               */
+/* ------------------------------------------------------------------ */
+
+// planter: brass pot on a dark foot
+px.rect(74, 206, 18, 20, C.gold);
+px.rect(74, 206, 18, 2, C.goldLt);
+px.vline(76, 206, 20, C.goldLt);
+px.vline(90, 206, 20, C.walnutDk);
+px.rect(76, 226, 14, 2, C.walnutDk);
+// fronds: a stepped crown with a dark underside
+px.rect(80, 196, 2, 10, C.mossDk);
+px.rect(70, 192, 14, 2, C.moss);
+px.rect(76, 186, 16, 2, C.moss);
+px.rect(84, 190, 14, 2, C.moss);
+px.rect(64, 198, 10, 2, C.mossDk);
+px.rect(90, 198, 12, 2, C.mossDk);
+px.rect(74, 181, 10, 2, C.moss);
+px.set(76, 180, C.moss);
+px.set(72, 192, C.moss);
+px.set(88, 186, C.mossDk);
 
 /* ------------------------------------------------------------------ */
 /* The desk                                                            */
@@ -413,13 +470,19 @@ px.hline(158, 170, 59, C.paperDeep);
 px.frame(158, 170, 59, 51, C.walnutDk);
 px.hline(159, 186, 57, C.walnutDk);
 px.hline(159, 202, 57, C.walnutDk);
-px.rect(184, 176, 6, 3, C.navy);
-px.rect(184, 192, 6, 3, C.navy);
-px.rect(184, 208, 6, 3, C.navy);
-// desk top
+// brass pulls with a dark setting
+for (const y of [176, 192, 208]) {
+  px.rect(183, y, 8, 3, C.walnutDk);
+  px.rect(184, y, 6, 3, C.gold);
+  px.set(185, y, C.goldLt);
+}
+// desk top: grain streaks and a brass edging above the dark arris
 px.rect(133, 156, 214, 10, C.walnut);
 px.hline(133, 156, 214, C.walnutLt);
 px.hline(133, 157, 214, C.paperDeep);
+px.hline(150, 160, 118, C.walnut);
+px.hline(276, 161, 62, C.walnut);
+px.hline(133, 164, 214, C.gold);
 px.hline(133, 165, 214, C.walnutDk);
 px.vline(133, 156, 10, C.walnutLt);
 px.vline(346, 156, 10, C.walnutDk);
@@ -436,6 +499,10 @@ px.hline(144, 142, 8, C.mossDk);
 px.hline(141, 146, 19, C.gold);
 px.vline(143, 143, 4, C.mossDk);
 px.rect(149, 140, 3, 2, C.goldLt);
+// green glass catches the window: a light streak and a dark edge
+px.hline(146, 143, 7, C.mossDk);
+px.set(144, 141, C.goldLt);
+px.set(150, 141, C.goldLt);
 
 // leather journal (history)
 px.rect(180, 150, 26, 6, C.burg);

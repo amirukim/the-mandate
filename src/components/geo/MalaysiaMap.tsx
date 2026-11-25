@@ -96,22 +96,28 @@ function staticMapSvgString(): string {
     `<g fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round">${rings
       .map((r) => `<path d="${ringPath(r)}"/>`)
       .join("")}</g>`;
-  const mid = "#e3e0d3";
-  const far = "#dcd8c8";
+  // each neighbour its own paper tone, so the region reads as atlas plates
+  const thailand = "#e3e0d3";
+  const indonesia = "#e0dcc9";
+  const vietnam = "#e6e2d6";
+  const philippines = "#ded9c4";
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">` +
     `<rect width="${width}" height="${height}" fill="#bfd7ea"/>` +
-    country(GEO_Thailand, mid, "#c9c2ae", 1.2) +
-    country(GEO_Indonesia, mid, "#c9c2ae", 1.2) +
-    country(GEO_Vietnam, mid, "#c9c2ae", 1.2) +
-    country(GEO_Philippines, mid, "#c9c2ae", 1.2) +
-    country(GEO_Brunei, "#efe9dc", "#c9c2ae", 1.2) +
-    country(GEO_Singapore, "#efe9dc", "#c9c2ae", 1) +
-    country(GEO_China, far, "#c9c2ae", 1) +
-    country(GEO_Taiwan, far, "#c9c2ae", 1) +
-    country(GEO_Papua_New_Guinea, far, "#c9c2ae", 1) +
-    country(GEO_East_Timor, far, "#c9c2ae", 1) +
-    country(GEO_Malaysia, "#f7f4ec", "#1a1e6e", 2.5) +
+    // shore halo: two flat, lighter bands radiating from the federation
+    country(GEO_Malaysia, "none", "#cfe3f2", 26) +
+    country(GEO_Malaysia, "none", "#d8eaf6", 12) +
+    country(GEO_Thailand, thailand, "#c9c2ae", 2.4) +
+    country(GEO_Indonesia, indonesia, "#c9c2ae", 2.4) +
+    country(GEO_Vietnam, vietnam, "#c9c2ae", 2.4) +
+    country(GEO_Philippines, philippines, "#c9c2ae", 2.4) +
+    country(GEO_Brunei, "#efe9dc", "#c9c2ae", 2.2) +
+    country(GEO_Singapore, "#efe9dc", "#c9c2ae", 2) +
+    country(GEO_China, "#dcd8c8", "#c9c2ae", 2) +
+    country(GEO_Taiwan, "#dcd8c8", "#c9c2ae", 2) +
+    country(GEO_Papua_New_Guinea, "#dcd8c8", "#c9c2ae", 2) +
+    country(GEO_East_Timor, "#dcd8c8", "#c9c2ae", 2) +
+    country(GEO_Malaysia, "#f7f4ec", "#1a1e6e", 4) +
     "</svg>"
   );
 }
@@ -215,21 +221,25 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
               <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-glow)" />
               <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-grid)" />
 
+              {/* shore halo: two flat, lighter bands radiating from the federation */}
+              <Country rings={GEO_Malaysia} fill="none" stroke="#cfe3f2" strokeWidth={26} />
+              <Country rings={GEO_Malaysia} fill="none" stroke="#d8eaf6" strokeWidth={12} />
+
               {/* neighbours and context, real geometry */}
-              <Country rings={GEO_Thailand} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
-              <Country rings={GEO_Indonesia} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
-              <Country rings={GEO_Vietnam} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
-              <Country rings={GEO_Philippines} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
-              <Country rings={GEO_Brunei} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={1.2} />
-              <Country rings={GEO_Singapore} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={1} />
-              <Country rings={GEO_China} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
-              <Country rings={GEO_Taiwan} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
-              <Country rings={GEO_Papua_New_Guinea} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
-              <Country rings={GEO_East_Timor} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
+              <Country rings={GEO_Thailand} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={2.4} />
+              <Country rings={GEO_Indonesia} fill="#e0dcc9" stroke="#c9c2ae" strokeWidth={2.4} />
+              <Country rings={GEO_Vietnam} fill="#e6e2d6" stroke="#c9c2ae" strokeWidth={2.4} />
+              <Country rings={GEO_Philippines} fill="#ded9c4" stroke="#c9c2ae" strokeWidth={2.4} />
+              <Country rings={GEO_Brunei} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={2.2} />
+              <Country rings={GEO_Singapore} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={2} />
+              <Country rings={GEO_China} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
+              <Country rings={GEO_Taiwan} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
+              <Country rings={GEO_Papua_New_Guinea} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
+              <Country rings={GEO_East_Timor} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
 
               {/* the federation: real coastline, canton-lined */}
               <g strokeLinejoin="round">
-                <Country rings={GEO_Malaysia} fill="#f7f4ec" stroke="#1a1e6e" strokeWidth={2.5} />
+                <Country rings={GEO_Malaysia} fill="#f7f4ec" stroke="#1a1e6e" strokeWidth={4} />
               </g>
             </>
           )}
@@ -275,22 +285,31 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                     <rect x={x - 11} y={y - 29} width={22} height={58} />
                   </g>
                 )}
-                {/* the token: a pixel square, snapped to the grid */}
+                {/* the token: a pixel square on a paper gap ring, snapped to the grid */}
                 {(() => {
                   const size = selected ? 30 : hovered ? 26 : 20;
                   const half = size / 2;
                   return (
-                    <rect
-                      x={x - half}
-                      y={y - half}
-                      width={size}
-                      height={size}
-                      fill={fill}
-                      fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
-                      stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
-                      strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
-                      style={{ transition: "fill-opacity 140ms ease" }}
-                    />
+                    <>
+                      <rect
+                        x={x - half - 2}
+                        y={y - half - 2}
+                        width={size + 4}
+                        height={size + 4}
+                        fill="#f7f4ec"
+                      />
+                      <rect
+                        x={x - half}
+                        y={y - half}
+                        width={size}
+                        height={size}
+                        fill={fill}
+                        fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
+                        stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
+                        strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
+                        style={{ transition: "fill-opacity 140ms ease" }}
+                      />
+                    </>
                   );
                 })()}
                 {isTerritory ? (

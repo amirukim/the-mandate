@@ -12,6 +12,19 @@
 const W = 64;
 const H = 64;
 
+/** Darken a hex colour toward black by factor f (0..1) — derives shading
+ *  tones from the authored palette without adding spec fields. */
+function shade(hex: string, f: number): string {
+  const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).map((c) => Math.round(c * (1 - f)));
+  return `#${v.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Lighten toward white by factor f. */
+function tint(hex: string, f: number): string {
+  const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).map((c) => Math.round(c + (255 - c) * f));
+  return `#${v.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+
 interface PixelSpec {
   skin: [string, string, string];
   bg: [string, string];
@@ -70,106 +83,147 @@ function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | nu
     g.rect(32 - half, y, half * 2, 1, a.c);
   }
   g.rect(20, 44, 24, 4, a.c);
-  // left-light on the coat
-  g.rect(12, 52, 2, 8, "#4a3826");
+  // key light falls from the left: lit shoulder, shaded right
+  g.rect(22, 50, 4, 10, tint(a.c, 0.18));
+  g.set(21, 48, tint(a.c, 0.14)); g.set(22, 60, tint(a.c, 0.12));
+  g.rect(49, 54, 3, 8, shade(a.c, 0.22));
+  g.rect(46, 48, 2, 4, shade(a.c, 0.14));
 
   // collar per kind
   if (a.kind === "suit") {
-    g.rect(26, 46, 5, 6, a.trim);
-    g.rect(33, 46, 5, 6, a.trim);
-    g.rect(30, 47, 4, 17, a.shirt);
-    if (a.tie) { g.rect(31, 48, 2, 4, a.tie); g.rect(30, 51, 4, 3, a.tie); g.rect(31, 54, 2, 8, a.tie); }
-    if (a.accent) g.rect(40, 54, 4, 2, a.accent);
+    // shirt band with a placket shadow
+    g.rect(30, 46, 4, 18, a.shirt);
+    g.rect(33, 46, 1, 18, shade(a.shirt, 0.18));
+    // tie: knot, blade, tip
+    if (a.tie) {
+      g.rect(31, 46, 2, 2, a.tie);
+      g.rect(30, 48, 3, 2, shade(a.tie, 0.12));
+      g.rect(31, 50, 2, 7, a.tie);
+      g.rect(31, 57, 2, 4, shade(a.tie, 0.22));
+    }
+    // lapels: stepped, falling outward from the collar
+    g.rect(27, 46, 3, 3, a.trim);
+    g.rect(26, 49, 3, 4, a.trim);
+    g.rect(25, 53, 3, 4, shade(a.trim, 0.16));
+    g.rect(34, 46, 3, 3, a.trim);
+    g.rect(35, 49, 3, 4, a.trim);
+    g.rect(36, 53, 3, 4, shade(a.trim, 0.16));
+    if (a.accent) g.rect(40, 55, 4, 2, a.accent);
   } else if (a.kind === "open") {
     g.rect(28, 46, 8, 14, a.shirt);
     g.set(28, 46, a.trim); g.set(29, 47, a.trim); g.set(27, 48, a.trim);
     g.rect(35, 46, 8, 14, a.shirt);
     g.set(35, 46, a.trim); g.set(36, 47, a.trim); g.set(37, 48, a.trim);
+    // placket line and cloth folds
+    g.rect(34, 47, 1, 12, shade(a.shirt, 0.14));
+    g.set(29, 52, shade(a.shirt, 0.1)); g.set(30, 57, shade(a.shirt, 0.1));
   } else {
     g.rect(26, 46, 12, 18, a.shirt);
     g.rect(25, 46, 2, 18, a.c);
     g.rect(37, 46, 2, 18, a.c);
-    g.rect(30, 47, 4, 2, a.accent ?? a.trim);
+    // mandarian collar shadow + placket with a single top button
+    g.rect(26, 46, 12, 2, shade(a.shirt, 0.16));
+    g.rect(32, 48, 1, 16, shade(a.shirt, 0.12));
+    g.rect(31, 47, 3, 2, a.accent ?? a.trim);
   }
 
-  // neck
+  // neck: jaw shadow above, throat light below
   g.rect(27, 39, 10, 7, skinSh);
-  g.rect(27, 39, 10, 2, skinSh);
+  g.rect(29, 41, 6, 5, skin);
+  g.rect(29, 41, 6, 2, tint(skin, 0.08));
 
-  // head
+  // head: shade crescent first, then the lit face leaves a tapered shadow
+  g.ellipse(34, 26, 12, 14, skinSh);
+  g.ellipse(33, 30, 11, 10, skinSh);
   g.ellipse(32, 26, 12, 14, skin);
-  // jaw taper shadow
-  g.ellipse(32, 30, 10, 9, skin);
-  // right-side plane shadow
-  g.rect(39, 18, 4, 16, skinSh);
-  g.rect(41, 22, 2, 8, skinSh);
-  // left light
-  g.rect(22, 16, 2, 14, skinHi);
-  g.set(24, 14, skinHi);
-  // ears
-  g.rect(19, 26, 3, 6, skinSh);
-  g.rect(42, 26, 3, 6, skinSh);
+  g.ellipse(31, 30, 10, 9, skin);
+  // right-edge core shadow along the jaw
+  g.rect(40, 24, 2, 9, skinSh);
+  g.set(41, 30, skinSh); g.set(40, 33, skinSh);
+  // left light plane
+  g.rect(22, 17, 2, 15, skinHi);
+  g.set(23, 15, skinHi); g.set(24, 14, skinHi);
+  // forehead sheen
+  g.rect(27, 16, 6, 1, tint(skin, 0.12));
+  // ears with inner shadow
+  g.rect(19, 26, 3, 6, skin);
+  g.set(20, 28, skinSh); g.set(20, 29, skinSh);
+  g.rect(42, 26, 3, 6, skin);
+  g.set(43, 28, skinSh); g.set(43, 29, skinSh);
 
-  // hair
+  // hair — mass first, then a curved carve for the hairline, then light
   const h = spec.hair;
   if (h) {
     const { c, hi } = h;
+    const hairSh = shade(c, 0.3);
     switch (h.style) {
       case "bob":
         g.ellipse(32, 20, 15, 13, c);
-        g.rect(19, 22, 5, 18, c);
-        g.rect(40, 22, 5, 18, c);
-        g.rect(21, 16, 22, 4, c);
-        g.rect(23, 18, 18, 3, skin);
-        g.rect(22, 20, 20, 3, skin);
-        g.set(24, 12, hi); g.set(25, 13, hi); g.set(40, 16, hi); g.set(41, 17, hi);
+        g.rect(18, 22, 6, 17, c);
+        g.rect(40, 22, 6, 17, c);
+        g.ellipse(32, 26, 10, 9, skin);
+        // right-side shade plane and side falloff
+        g.rect(41, 24, 4, 14, hairSh);
+        g.rect(19, 24, 3, 14, shade(c, 0.12));
+        // highlight strands along the crown
+        g.set(25, 11, hi); g.set(26, 12, hi); g.set(27, 12, hi);
+        g.set(39, 13, hi); g.set(40, 14, hi);
+        g.set(18, 30, hi);
         break;
       case "receding":
         g.ellipse(32, 17, 13, 9, c);
-        g.rect(20, 16, 24, 4, skin);
-        g.rect(22, 20, 20, 2, skin);
-        g.set(24, 10, hi); g.set(25, 11, hi);
+        g.ellipse(32, 25, 11, 10, skin);
+        g.rect(41, 14, 3, 10, hairSh);
+        g.set(24, 10, hi); g.set(25, 11, hi); g.set(26, 11, hi);
+        g.set(38, 12, hi);
         break;
       case "tied":
         g.ellipse(32, 18, 14, 11, c);
-        g.rect(19, 18, 4, 12, c);
-        g.rect(41, 18, 4, 12, c);
-        g.rect(24, 16, 16, 4, skin);
+        g.ellipse(32, 25, 11, 10, skin);
+        g.rect(18, 20, 4, 14, c);
+        g.rect(42, 20, 4, 14, c);
         g.ellipse(32, 6, 5, 4, c);
-        g.set(30, 4, hi); g.set(21, 13, hi);
+        g.set(31, 3, hi);
+        g.rect(43, 22, 2, 11, hairSh);
+        g.set(21, 14, hi); g.set(22, 15, hi);
         break;
       case "sidepart":
         g.ellipse(32, 17, 14, 10, c);
-        g.rect(20, 17, 10, 4, c);
-        g.rect(20, 20, 24, 3, skin);
-        g.set(25, 8, hi); g.set(26, 9, hi); g.set(27, 10, hi);
+        g.ellipse(32, 25, 11, 10, skin);
+        g.rect(19, 16, 8, 6, c);
+        g.rect(42, 15, 3, 12, hairSh);
+        g.set(24, 8, hi); g.set(25, 9, hi); g.set(26, 9, hi); g.set(27, 10, hi);
         g.set(44, 14, c); g.set(45, 15, c);
         break;
       case "curls":
         for (const [cx, cy, r] of [[22, 13, 6], [30, 10, 7], [40, 12, 6], [18, 19, 5], [46, 19, 5]] as const) {
           g.ellipse(cx, cy, r, r - 1, c);
         }
-        g.rect(22, 18, 20, 4, skin);
-        g.set(28, 8, hi); g.set(38, 10, hi);
+        g.ellipse(32, 25, 10, 9, skin);
+        g.set(30, 6, hi); g.set(38, 8, hi); g.set(17, 17, hi);
+        g.set(45, 17, hairSh);
         break;
       case "combed":
         g.ellipse(32, 16, 14, 10, c);
-        g.rect(21, 17, 22, 3, skin);
-        g.rect(18, 18, 4, 4, c); g.rect(42, 18, 4, 4, c);
-        g.set(23, 9, hi); g.set(24, 10, hi); g.set(25, 11, hi);
+        g.ellipse(32, 24, 11, 10, skin);
+        g.rect(17, 17, 4, 5, c); g.rect(43, 17, 4, 5, c);
+        g.rect(43, 14, 3, 10, hairSh);
+        g.set(22, 9, hi); g.set(23, 10, hi); g.set(24, 10, hi); g.set(25, 11, hi);
         break;
       case "white":
         g.ellipse(32, 16, 14, 10, c);
-        g.rect(18, 18, 4, 5, c); g.rect(42, 18, 4, 5, c);
-        g.rect(21, 17, 22, 3, skin);
-        g.set(23, 9, hi); g.set(40, 10, hi);
+        g.ellipse(32, 24, 11, 10, skin);
+        g.rect(17, 17, 4, 6, c); g.rect(43, 17, 4, 6, c);
+        g.rect(43, 14, 3, 10, shade(c, 0.14));
+        g.set(22, 9, hi); g.set(40, 10, hi); g.set(24, 10, tint(c, 0.4));
         break;
       case "short":
       default:
         g.ellipse(32, 15, 14, 11, c);
-        g.rect(20, 18, 24, 3, skin);
-        g.rect(18, 19, 3, 4, c); g.rect(43, 19, 3, 4, c);
-        g.set(23, 8, hi); g.set(24, 9, hi); g.set(41, 11, hi);
+        g.ellipse(32, 24, 11, 10, skin);
+        g.rect(17, 18, 4, 5, c); g.rect(43, 18, 4, 5, c);
+        g.rect(42, 13, 3, 11, hairSh);
+        g.set(22, 8, hi); g.set(23, 9, hi); g.set(41, 11, hi); g.set(42, 12, hi);
         break;
     }
   }
@@ -182,45 +236,59 @@ function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | nu
     g.ellipse(32, 26, 13, 12, skin);
     g.rect(21, 16, 22, 5, spec.hijab.c);
     g.rect(15, 48, 34, 4, spec.hijab.c);
+    g.rect(43, 26, 2, 22, shade(spec.hijab.c, 0.2));
+    g.set(26, 8, tint(spec.hijab.c, 0.3)); g.set(27, 9, tint(spec.hijab.c, 0.3));
   }
   if (spec.songkok) {
     g.ellipse(32, 12, 14, 7, spec.songkok);
     g.rect(18, 8, 28, 4, spec.songkok);
     g.rect(18, 11, 28, 2, "#c9a96a");
     g.rect(22, 8, 6, 1, "#2b323e");
+    g.rect(43, 10, 2, 6, shade(spec.songkok, 0.25));
+    g.set(24, 9, tint(spec.songkok, 0.25));
   }
   if (spec.kopiah) {
     g.ellipse(32, 12, 14, 7, spec.kopiah);
     g.rect(18, 8, 28, 4, spec.kopiah);
     g.rect(18, 11, 28, 2, "#8f8a7c");
     for (const x of [26, 32, 38]) g.rect(x, 8, 1, 4, "#8f8a7c");
+    g.rect(43, 10, 2, 6, shade(spec.kopiah, 0.25));
   }
 
-  // brows — 2px tall, gently curved
+  // brows — tapered, a step down toward the temple
   const brow = spec.older ? skinSh : "#26222a";
-  g.rect(24, 21, 7, 1, brow);
-  g.rect(25, 20, 5, 1, brow);
+  g.rect(24, 21, 6, 1, brow);
+  g.set(30, 21, brow); g.set(30, 20, brow);
+  g.rect(25, 20, 4, 1, shade(brow, 0.1));
   g.rect(33, 20, 5, 1, brow);
-  g.rect(34, 21, 7, 1, brow);
+  g.set(33, 21, brow);
+  g.rect(34, 21, 6, 1, brow);
+  g.rect(35, 20, 4, 1, shade(brow, 0.1));
 
-  // eyes: sclera, iris, glint, lid
-  g.ellipse(27, 25, 3, 2, "#f2eee4");
-  g.ellipse(37, 25, 3, 2, "#f2eee4");
-  g.rect(27, 25, 2, 2, "#1d1a20");
-  g.rect(37, 25, 2, 2, "#1d1a20");
-  g.set(27, 25, "#c9c2b4"); g.set(37, 25, "#c9c2b4");
+  // eyes: sclera, iris, pupil, glint, lids
+  g.ellipse(27, 25, 3, 2, "#f6f2e8");
+  g.ellipse(37, 25, 3, 2, "#f6f2e8");
+  g.rect(26, 24, 2, 2, "#23303e");
+  g.rect(36, 24, 2, 2, "#23303e");
+  g.rect(26, 25, 2, 1, "#12171d");
+  g.rect(36, 25, 2, 1, "#12171d");
+  g.set(27, 24, "#4d5f72");
+  g.set(37, 24, "#4d5f72");
   g.rect(24, 23, 7, 1, "#241f26");
   g.rect(34, 23, 7, 1, "#241f26");
+  g.set(25, 27, skinSh);
+  g.set(39, 27, skinSh);
   if (spec.older) {
     g.set(23, 22, skinSh); g.set(24, 22, skinSh);
     g.set(41, 22, skinSh); g.set(40, 22, skinSh);
     g.set(31, 19, skinSh); g.set(32, 19, skinSh);
   }
 
-  // nose
-  g.rect(31, 27, 1, 6, skinSh);
-  g.rect(32, 30, 1, 3, skinHi);
-  g.rect(29, 33, 5, 1, skinSh);
+  // nose: side plane, tip light, nostrils
+  g.rect(31, 26, 1, 7, skinSh);
+  g.rect(32, 30, 1, 2, skinHi);
+  g.set(30, 33, skinSh);
+  g.set(33, 33, skinSh);
 
   // cheeks
   g.ellipse(24, 30, 3, 2, skinHi);
@@ -258,18 +326,26 @@ function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | nu
   }
 
   if (spec.glasses) {
+    // outline-only frames: the refined eyes stay visible through the lenses
     const f = "#39414c";
-    g.rect(22, 22, 10, 7, f);
-    g.rect(32, 22, 10, 7, f);
-    g.rect(23, 23, 8, 5, "#8ea0b5");
-    g.rect(33, 23, 8, 5, "#8ea0b5");
-    g.rect(31, 24, 2, 1, f);
+    // left lens
+    g.rect(22, 22, 10, 1, f);
+    g.rect(22, 28, 10, 1, f);
+    g.rect(22, 23, 1, 5, f);
+    g.rect(31, 23, 1, 5, f);
+    // right lens
+    g.rect(32, 22, 10, 1, f);
+    g.rect(32, 28, 10, 1, f);
+    g.rect(32, 23, 1, 5, f);
+    g.rect(41, 23, 1, 5, f);
+    // bridge and temples
+    g.rect(31, 24, 1, 1, f);
     g.rect(16, 23, 6, 1, f);
     g.rect(42, 23, 6, 1, f);
-    // eyes through the lenses
-    g.ellipse(27, 25, 2, 2, "#1d1a20");
-    g.ellipse(37, 25, 2, 2, "#1d1a20");
-    g.set(27, 24, "#c9c2b4"); g.set(37, 24, "#c9c2b4");
+    // lens glint, upper-left of each lens
+    g.set(24, 23, "#d7e2ec");
+    g.set(34, 23, "#d7e2ec");
+    // frames sit on the nose: a small shadow under each lens
     g.rect(24, 29, 6, 1, skinSh);
     g.rect(35, 29, 5, 1, skinSh);
   }
@@ -277,9 +353,8 @@ function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | nu
   if (spec.earrings) { g.rect(19, 33, 2, 2, "#e6cd8e"); g.rect(43, 33, 2, 2, "#e6cd8e"); }
   if (spec.bindi) g.rect(31, 17, 2, 2, "#b3452e");
 
-  // rim light: the lamp side
-  g.rect(21, 14, 1, 16, skinHi);
-  g.rect(13, 50, 1, 8, "#4a3826");
+  // rim light: a short catch along the hair edge on the lamp side
+  g.rect(21, 14, 1, 9, skinHi);
   g.set(20, 12, skinHi);
 
   return g.cells;
