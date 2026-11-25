@@ -1,9 +1,9 @@
-@import "@fontsource-variable/fraunces";
+﻿@import "@fontsource-variable/fraunces";
 @import "@fontsource-variable/public-sans";
 @import "tailwindcss";
 
 /*
-  Design system: "The Federal Document" — warm paper, midnight ink,
+  Design system: "The Federal Document" â€” warm paper, midnight ink,
   antique gold rules, burgundy for danger, government green for health.
   The pixel world uses the same six colours; the real Jalur Gemilang
   (red, white, canton blue, gold) appears only inside depictions of the flag.
@@ -43,7 +43,7 @@
   --chrome-ink: #e9dfc9;
   --chrome-gold: #c69b54;
   --chrome-good: #8fb3a8;
-  --chrome-bad: #c98b91;
+  --chrome-bad: #d19aa2;
   --on-brick: #f7f0e0; /* text placed on a burgundy fill */
   --scheme: light;
   --scrim: 233 223 201;
@@ -74,7 +74,7 @@
   --chrome-ink: #e9dfc9;
   --chrome-gold: #c69b54;
   --chrome-good: #8fb3a8;
-  --chrome-bad: #c98b91;
+  --chrome-bad: #d19aa2;
   --on-brick: #f7f0e0;
   --scheme: dark;
   --scrim: 23 32 43;
@@ -253,7 +253,7 @@ body::after {
 }
 
 /* Atmospheric light: deep navy above, burgundy below, antique gold from the
-   left — the title screen wash on warm paper. */
+   left â€” the title screen wash on warm paper. */
 .atmosphere {
   background:
     radial-gradient(120% 80% at 50% -10%, rgb(38 56 73 / 0.12) 0%, transparent 55%),
@@ -264,7 +264,7 @@ body::after {
 
 /* Suzerain-grade warm grade for illustrated backdrops: pulls the navy art
    family toward lamplit sepia without repainting a single file. Applied only
-   to legacy vector art — authored pixel plates carry their own palette. */
+   to legacy vector art â€” authored pixel plates carry their own palette. */
 .art-warm {
   filter: sepia(0.24) saturate(0.9) brightness(0.95) contrast(1.03);
 }

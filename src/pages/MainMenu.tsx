@@ -5,6 +5,7 @@ import { useAuthStore } from "../stores/auth-store";
 import { loadLocal } from "../services/save-service";
 import { ENVIRONMENTS } from "../data/art";
 import { SceneBackground } from "../components/game/SceneBackground";
+import { prefersReducedMotion } from "../hooks/usePortalOverlay";
 import { useT } from "../i18n/store";
 import { cn } from "../utils/cn";
 
@@ -63,7 +64,7 @@ export function MainMenu() {
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <motion.div
           className="absolute inset-0"
-          animate={{ scale: [1, 1.05] }}
+          animate={prefersReducedMotion() ? {} : { scale: [1, 1.05] }}
           transition={{ duration: 30, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
         >
           <SceneBackground art={ENVIRONMENTS.menuKeyArt} />

@@ -19,11 +19,24 @@ export const useLocale = create<LocaleState>()(
   persist(
     (set) => ({
       lang: "en",
-      setLang: (lang) => set({ lang }),
+      setLang: (lang) => {
+        set({ lang });
+        applyDocumentLang(lang);
+      },
     }),
-    { name: "mtm:locale:v1" },
+    {
+      name: "mtm:locale:v1",
+      onRehydrateStorage: () => (state) => {
+        // screen readers need the document language to match the locale
+        if (state) applyDocumentLang(state.lang);
+      },
+    },
   ),
 );
+
+function applyDocumentLang(lang: Lang) {
+  if (typeof document !== "undefined") document.documentElement.lang = lang;
+}
 
 export function getLang(): Lang {
   return useLocale.getState().lang;

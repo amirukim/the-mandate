@@ -225,6 +225,21 @@ The critical path is **art production**, not code. Code extraction is predictabl
 2. **Before Phase 2 code:** confirm M1 scope and that authored pixel art is to be produced in-house (AI generation is currently unavailable).
 3. **After M1:** review the before/after office screenshots; then authorise Phase 3.
 4. **Before Phase 6:** approve the new venues/routes (D-03).
+
+---
+
+## 14. Status (updated at the end of Phase 8)
+
+| Phase | Status | Evidence |
+|---|---|---|
+| 1 | Complete | `docs/*` committed with the resolved decision log |
+| 2 (M1) | Complete | office plate + scene family + manifest/validator (`env-office-hub.png` byte-reproducible) |
+| 3 | Complete | theatre split, cast by id, expression frames, paper wire |
+| 4 | Complete | shell extraction, drawer focus trap, 480×200 menu key art |
+| 5 | Complete | management screens, map highlight, PoliticalIndicators |
+| 6 | Complete | cabinet/diplomacy/security rooms; press route stays deferred (D-03) |
+| 7 | Complete | DocumentViewer, news front page, bound decision record |
+| 8 | Complete | six-viewport audit (0 overflow on 13 routes), tap-target fixes, contrast audit script (18/18 PASS, one `--chrome-bad` tone corrected), `lang` sync, reduced-motion gap closed, save roundtrip verified |
 5. **Before Phase 8:** freeze art scope; only fixes.
 
 No checkpoint may be skipped by starting the next phase "in parallel": parallel art production is allowed, parallel *merges* are not.

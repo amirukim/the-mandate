@@ -116,7 +116,7 @@ export function GameLayout() {
           {location.pathname !== "/game/office" && (
             <Link
               to="/game/office"
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted hover:text-gold-bright transition-colors mb-5"
+              className="inline-flex items-center gap-1.5 min-h-[24px] text-[11px] font-semibold uppercase tracking-[0.14em] text-muted hover:text-gold-bright transition-colors mb-5"
             >
               <span aria-hidden="true" className="h-px w-4 bg-gold/60" />
               {t("nav.backToOffice")}

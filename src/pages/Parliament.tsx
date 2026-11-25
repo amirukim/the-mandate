@@ -144,7 +144,7 @@ export function Parliament() {
                     onClick={() => setSelectedBloc(selectedBloc === c.id ? null : c.id)}
                     aria-pressed={selectedBloc === c.id}
                     className={cn(
-                      "flex items-center gap-1.5 border rounded-[2px] px-2 py-1 text-xs transition-colors",
+                      "flex items-center gap-1.5 border rounded-[2px] px-2 min-h-[28px] text-xs transition-colors",
                       selectedBloc === c.id
                         ? "border-gold/70 bg-surface text-ink"
                         : "border-rule text-muted hover:text-ink hover:border-rule-strong",
