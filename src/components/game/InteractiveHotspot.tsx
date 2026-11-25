@@ -47,7 +47,13 @@ export function InteractiveHotspot({
       disabled={disabled}
       title={label}
       aria-label={label}
-      className={cn("group absolute rounded-[2px] outline-none touch-manipulation", disabled && "cursor-not-allowed", className)}
+      className={cn(
+        "group absolute rounded-[2px] outline-none touch-manipulation",
+        // touch devices get the 44px floor; pointer devices keep art-true rects
+        "pointer-coarse:min-w-[44px] pointer-coarse:min-h-[44px]",
+        disabled && "cursor-not-allowed",
+        className,
+      )}
       style={{ left: pct(x, baseWidth), top: pct(y, baseHeight), width: pct(w, baseWidth), height: pct(h, baseHeight) }}
     >
       <span

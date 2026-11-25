@@ -154,6 +154,12 @@ export interface GameState {
   decisions: DecisionRecord[];
   /** The month-end report of the month just closed, kept so a reload during the summary restores it. */
   lastReport?: TurnReport;
+  /** v2 optional slices — absent on migrated v1 saves until their systems write them. */
+  avatar?: AvatarState;
+  policy?: PolicyState;
+  parliament?: ParliamentState;
+  cabinetState?: CabinetState;
+  budget?: BudgetState;
 }
 
 export interface Movement {
@@ -192,4 +198,50 @@ export interface GameSave {
   state: GameState;
 }
 
-export const SAVE_VERSION = 1;
+/** PM customisation chosen at New Game (v2, optional). */
+export interface AvatarState {
+  skin?: string;
+  hair?: string;
+  headwear?: "none" | "songkok" | "kopiah" | "tudung";
+  attire?: string;
+  glasses?: boolean;
+  homeState?: string;
+  priorCareer?: "civilService" | "military" | "business" | "activism" | "academia";
+  traits?: string[];
+}
+
+/** Policy dossier state (v2, optional): enacted measures and lever positions. */
+export interface PolicyState {
+  enacted: Record<string, number>;
+  levers?: Record<string, number>;
+}
+
+/** Parliament game state (v2, optional): bills, defections, confidence. */
+export interface ParliamentBill {
+  id: string;
+  title: string;
+  turn: number;
+  kind: "ordinary" | "constitution" | "supply" | "confidence";
+  votes: { for: number; against: number; abstain: number };
+  passed: boolean;
+}
+
+export interface ParliamentState {
+  bills: ParliamentBill[];
+  defections?: Array<{ turn: number; from: string; to: string; characterId?: string }>;
+  confidence?: { lastMotionTurn?: number; passed?: boolean };
+}
+
+/** Cabinet appointments and faction mood (v2, optional). */
+export interface CabinetState {
+  appointments: Record<string, string>;
+  factionAnger?: Record<string, number>;
+}
+
+/** Annual budget allocations (v2, optional). */
+export interface BudgetState {
+  allocations?: Record<string, number>;
+  passedTurn?: number;
+}
+
+export const SAVE_VERSION = 2;

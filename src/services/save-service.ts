@@ -1,5 +1,8 @@
 import { supabase, isCloudEnabled } from "./supabase";
 import { SAVE_VERSION, type GameState, type GameSave, type SaveSlotId, type SaveSummary } from "../types/game";
+import { migrateSave } from "../engine/save-migrate";
+
+export { migrateSave };
 
 const LOCAL_KEY = "mtm:slots";
 
@@ -56,14 +59,10 @@ export function deleteLocal(slot: SaveSlotId): void {
   writeLocalAll(all);
 }
 
-/** Migrate old save shapes forward. Currently only schema v1 exists. */
-export function migrateSave(raw: unknown): GameSave | null {
-  if (!raw || typeof raw !== "object") return null;
-  const candidate = raw as GameSave;
-  if (typeof candidate.version !== "number") return null;
-  if (!candidate.state || !candidate.state.meta) return null;
-  return candidate;
-}
+/**
+ * Migration lives in engine/save-migrate.ts (pure, self-checkable) and is
+ * re-exported here for the pages.
+ */
 
 export interface CloudSaveRow {
   slot: number;

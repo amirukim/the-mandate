@@ -2,13 +2,15 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { EN_DICT } from "./en";
 import { MS_DICT } from "./ms";
+import type { Lang } from "../types/lang";
+
+export type { Lang };
 
 /**
  * Locale: English default, Bahasa Melayu full translation.
  * Persisted so the choice survives reloads; the language a record was
  * generated in is the language it keeps (decision log, wire items).
  */
-export type Lang = "en" | "ms";
 
 interface LocaleState {
   lang: Lang;

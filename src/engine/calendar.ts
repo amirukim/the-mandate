@@ -1,5 +1,5 @@
 import type { GameState } from "../types/game";
-import type { Lang } from "../i18n/store";
+import type { Lang } from "../types/lang";
 
 export const START_YEAR = 2026;
 export const START_MONTH = 10; // November 2026 (0-based)
