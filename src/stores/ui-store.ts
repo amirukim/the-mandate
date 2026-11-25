@@ -13,15 +13,15 @@ interface UiState {
 
 function applyToDocument(theme: ThemeId, bodySize: BodySize): void {
   const root = document.documentElement;
-  // The cinematic dark scheme is the default on <html>; the light scheme is opt-in.
-  root.classList.toggle("theme-paper", theme === "paper");
+  // Jalur daylight is the default on <html>; the Night umber scheme is opt-in.
+  root.classList.toggle("theme-night", theme === "night");
   root.style.setProperty("--mtm-body-size", bodySize === "large" ? "18px" : "16px");
 }
 
 export const useUiStore = create<UiState>()(
   persist(
     (set) => ({
-      theme: "night",
+      theme: "paper",
       bodySize: "base",
       setTheme(theme) {
         set({ theme });
@@ -37,7 +37,7 @@ export const useUiStore = create<UiState>()(
       name: "mtm:ui:v2",
       partialize: (state) => ({ theme: state.theme, bodySize: state.bodySize }),
       onRehydrateStorage: () => (state) => {
-        applyToDocument(state?.theme ?? "night", state?.bodySize ?? "base");
+        applyToDocument(state?.theme ?? "paper", state?.bodySize ?? "base");
       },
     },
   ),

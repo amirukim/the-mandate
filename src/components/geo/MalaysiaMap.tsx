@@ -92,22 +92,22 @@ function staticMapSvgString(): string {
     `<g fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round">${rings
       .map((r) => `<path d="${ringPath(r)}"/>`)
       .join("")}</g>`;
-  const mid = "#1a202a";
-  const far = "#161c26";
+  const mid = "#e3e0d3";
+  const far = "#dcd8c8";
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">` +
-    `<rect width="${width}" height="${height}" fill="#0d1420"/>` +
-    country(GEO_Thailand, mid, "#2c3441", 1.2) +
-    country(GEO_Indonesia, mid, "#2c3441", 1.2) +
-    country(GEO_Vietnam, mid, "#2c3441", 1.2) +
-    country(GEO_Philippines, mid, "#2c3441", 1.2) +
-    country(GEO_Brunei, "#1f2530", "#3a4351", 1.2) +
-    country(GEO_Singapore, "#1f2530", "#3a4351", 1) +
-    country(GEO_China, far, "#232b37", 1) +
-    country(GEO_Taiwan, far, "#232b37", 1) +
-    country(GEO_Papua_New_Guinea, far, "#232b37", 1) +
-    country(GEO_East_Timor, far, "#232b37", 1) +
-    country(GEO_Malaysia, "#2a3f3c", "#c9a96a", 2) +
+    `<rect width="${width}" height="${height}" fill="#bfd7ea"/>` +
+    country(GEO_Thailand, mid, "#c9c2ae", 1.2) +
+    country(GEO_Indonesia, mid, "#c9c2ae", 1.2) +
+    country(GEO_Vietnam, mid, "#c9c2ae", 1.2) +
+    country(GEO_Philippines, mid, "#c9c2ae", 1.2) +
+    country(GEO_Brunei, "#efe9dc", "#c9c2ae", 1.2) +
+    country(GEO_Singapore, "#efe9dc", "#c9c2ae", 1) +
+    country(GEO_China, far, "#c9c2ae", 1) +
+    country(GEO_Taiwan, far, "#c9c2ae", 1) +
+    country(GEO_Papua_New_Guinea, far, "#c9c2ae", 1) +
+    country(GEO_East_Timor, far, "#c9c2ae", 1) +
+    country(GEO_Malaysia, "#f7f4ec", "#1a1e6e", 2.5) +
     "</svg>"
   );
 }
@@ -155,7 +155,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
     }
   };
 
-  const sea = expanded ? "#0c1320" : "#0d1420";
+  const sea = expanded ? "#a9c4dd" : "#bfd7ea";
 
   return (
     <section
@@ -179,10 +179,10 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
             <>
               <defs>
                 <pattern id="sea-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-                  <path d="M48 0H0v48" fill="none" stroke="#2c3441" strokeWidth="0.5" opacity="0.5" />
+                  <path d="M48 0H0v48" fill="none" stroke="#a9c4dd" strokeWidth="0.5" opacity="0.5" />
                 </pattern>
                 <radialGradient id="sea-glow" cx="0.5" cy="0.35" r="0.8">
-                  <stop offset="0" stopColor="#16202e" />
+                  <stop offset="0" stopColor="#d3e4f2" />
                   <stop offset="1" stopColor={sea} />
                 </radialGradient>
               </defs>
@@ -191,20 +191,20 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
               <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-grid)" />
 
               {/* neighbours and context, real geometry */}
-              <Country rings={GEO_Thailand} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-              <Country rings={GEO_Indonesia} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-              <Country rings={GEO_Vietnam} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-              <Country rings={GEO_Philippines} fill="#1a202a" stroke="#2c3441" strokeWidth={1.2} />
-              <Country rings={GEO_Brunei} fill="#1f2530" stroke="#3a4351" strokeWidth={1.2} />
-              <Country rings={GEO_Singapore} fill="#1f2530" stroke="#3a4351" strokeWidth={1} />
-              <Country rings={GEO_China} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-              <Country rings={GEO_Taiwan} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-              <Country rings={GEO_Papua_New_Guinea} fill="#161c26" stroke="#232b37" strokeWidth={1} />
-              <Country rings={GEO_East_Timor} fill="#161c26" stroke="#232b37" strokeWidth={1} />
+              <Country rings={GEO_Thailand} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
+              <Country rings={GEO_Indonesia} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
+              <Country rings={GEO_Vietnam} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
+              <Country rings={GEO_Philippines} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={1.2} />
+              <Country rings={GEO_Brunei} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={1.2} />
+              <Country rings={GEO_Singapore} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={1} />
+              <Country rings={GEO_China} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
+              <Country rings={GEO_Taiwan} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
+              <Country rings={GEO_Papua_New_Guinea} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
+              <Country rings={GEO_East_Timor} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={1} />
 
-              {/* the federation: real coastline, gold-lined */}
+              {/* the federation: real coastline, canton-lined */}
               <g strokeLinejoin="round">
-                <Country rings={GEO_Malaysia} fill="#2a3f3c" stroke="#c9a96a" strokeWidth={2} />
+                <Country rings={GEO_Malaysia} fill="#f7f4ec" stroke="#1a1e6e" strokeWidth={2.5} />
               </g>
             </>
           )}
@@ -250,20 +250,20 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                       height={size}
                       fill={fill}
                       fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
-                      stroke={selected || hovered ? "#e6cd8e" : "#0d1420"}
+                      stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
                       strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
                       style={{ transition: "fill-opacity 140ms ease" }}
                     />
                   );
                 })()}
                 {isTerritory ? (
-                  <rect x={x - 3} y={y - 3} width={6} height={6} fill="#e6cd8e" />
+                  <rect x={x - 3} y={y - 3} width={6} height={6} fill="#cc0001" />
                 ) : (
                   <text
                     x={x}
                     y={y + 4}
                     textAnchor="middle"
-                    fill="#ece5d5"
+                    fill="#14163a"
                     fontSize="12"
                     fontWeight="700"
                     fontFamily="Public Sans, sans-serif"
@@ -277,11 +277,11 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                     x={x}
                     y={y - 18}
                     textAnchor="middle"
-                    fill="#e6cd8e"
+                    fill="#1a1e6e"
                     fontSize="13"
                     fontWeight="700"
                     fontFamily="Public Sans, sans-serif"
-                    stroke="#0d1420"
+                    stroke="#f7f4ec"
                     strokeWidth="3"
                     paintOrder="stroke"
                     pointerEvents="none"
@@ -294,7 +294,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
           })}
 
           {/* sea labels at real positions */}
-          <g fill="#465062" fontFamily="Public Sans, sans-serif" fontSize="14" letterSpacing="5">
+          <g fill="#5a7ea6" fontFamily="Public Sans, sans-serif" fontSize="14" letterSpacing="5">
             <text x={project(112.5, 12.8)[0]} y={project(112.5, 12.8)[1]}>SOUTH CHINA SEA</text>
             <text x={project(97.6, 1.2)[0]} y={project(97.6, 1.2)[1]} transform={`rotate(-72 ${project(97.6, 1.2)[0]} ${project(97.6, 1.2)[1]})`}>
               STRAIT OF MALACCA

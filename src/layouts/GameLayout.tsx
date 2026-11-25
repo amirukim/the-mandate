@@ -157,13 +157,13 @@ export function GameLayout() {
         {t("common.skip")}
       </a>
 
-      {/* HUD readout line */}
-      <header className="relative z-30 border-b border-[#0a0806] bg-[#14110a]/95">
+      {/* HUD readout line — the flag's canton, carried as chrome */}
+      <header className="relative z-30 border-b border-[#0a0806] bg-[#1a1e6e]/97 text-white">
         <div className="flex items-center gap-3 sm:gap-5 px-3 sm:px-5 h-11">
           <StarMark />
           <div className="flex items-baseline gap-3 min-w-0">
-            <span className="tabular text-[13px] font-medium text-ink whitespace-nowrap">{dateLabel(game.turn, lang)}</span>
-            <span className="kicker hidden md:inline">{chapterTitle(game.chapter, lang)}</span>
+            <span className="tabular text-[13px] font-medium whitespace-nowrap text-[#ffcc00]">{dateLabel(game.turn, lang)}</span>
+            <span className="kicker hidden md:inline text-white/70">{chapterTitle(game.chapter, lang)}</span>
           </div>
 
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
@@ -179,13 +179,13 @@ export function GameLayout() {
               className={({ isActive }) =>
                 cn(
                   "relative flex items-center justify-center min-w-[36px] h-8 px-2 border rounded-[2px] transition-colors",
-                  isActive ? "border-gold text-gold-text" : "border-rule text-muted hover:text-ink hover:border-rule-strong",
+                  isActive ? "border-gold text-[#ffcc00]" : "border-white/30 text-white/80 hover:text-white hover:border-white/60",
                 )
               }
             >
               <FileText size={15} aria-hidden="true" />
               {queueCount > 0 && (
-                <span className="tabular absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-brick text-ink text-[10px] font-bold rounded-[1px] border border-paper">
+                <span className="tabular absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-brick text-white text-[10px] font-bold rounded-[1px] border border-white/70">
                   {queueCount}
                 </span>
               )}
@@ -197,12 +197,14 @@ export function GameLayout() {
               aria-expanded={menuOpen}
               aria-controls="game-nav"
               aria-label={t("nav.openNav")}
-              className="flex items-center justify-center min-w-[36px] h-8 border border-rule rounded-[2px] text-ink"
+              className="flex items-center justify-center min-w-[36px] h-8 border border-white/30 rounded-[2px] text-white/90"
             >
               <Menu size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
+        {/* the Jalur ribbon */}
+        <div aria-hidden="true" className="jalur-stripes h-[6px]" />
       </header>
 
       {/* the stage: the frame never scrolls, the report scrolls inside it */}
@@ -288,16 +290,16 @@ export function GameLayout() {
 function StarMark() {
   return (
     <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0" aria-hidden="true">
-      <g fill="var(--gold-bright)">
+      <g fill="#ffcc00">
         <rect x="9" y="9" width="14" height="14" />
         <rect x="9" y="9" width="14" height="14" transform="rotate(45 16 16)" />
       </g>
-      <circle cx="16" cy="16" r="4.2" fill="var(--card)" />
+      <circle cx="16" cy="16" r="4.2" fill="#1a1e6e" />
     </svg>
   );
 }
 
-/** Compact HUD readout: icon + figure, like a game status line. */
+/** Compact HUD readout: icon + figure, light-on-canton like the flag. */
 function Hud({
   icon: Icon,
   label,
@@ -310,10 +312,10 @@ function Hud({
   tone: "good" | "watch" | "bad" | "plain";
 }) {
   const color =
-    tone === "good" ? "text-moss-text" : tone === "watch" ? "text-gold-text" : tone === "bad" ? "text-brick-text" : "text-ink";
+    tone === "good" ? "text-[#a9d09a]" : tone === "watch" ? "text-[#ffcc00]" : tone === "bad" ? "text-[#ff9d9d]" : "text-white";
   return (
     <div className="flex items-center gap-1.5" title={label}>
-      <Icon size={13} aria-hidden="true" className="text-muted shrink-0" />
+      <Icon size={13} aria-hidden="true" className="text-white/70 shrink-0" />
       <span className={cn("tabular text-xs font-semibold", color)}>{value}</span>
     </div>
   );

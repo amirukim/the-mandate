@@ -133,7 +133,8 @@ export function MainMenu() {
         </motion.h1>
 
         <motion.div {...fade(0.16)} className="mt-5 w-56">
-          <div className="rule-gold" />
+          {/* the Jalur ribbon, worn as a lapel */}
+          <div className="jalur-stripes h-[28px] border border-[#d9d3c4]" />
         </motion.div>
 
         {/* the menu: a short stack of quiet lines */}
