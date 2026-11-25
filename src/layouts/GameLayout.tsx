@@ -129,15 +129,15 @@ export function GameLayout() {
                       cn(
                         "flex items-center gap-3 px-3 py-3 rounded-[2px] transition-colors font-display text-[15px] font-semibold",
                         isActive
-                          ? "bg-white/10 text-[#ffcc00]"
-                          : "text-white/85 hover:text-white hover:bg-white/5",
+                          ? "bg-chrome-ink/10 text-chrome-gold"
+                          : "text-chrome-ink/85 hover:text-chrome-ink hover:bg-chrome-ink/5",
                       )
                     }
                   >
-                    <Icon size={18} aria-hidden="true" className="shrink-0 text-[#ffcc00]/80" />
+                    <Icon size={18} aria-hidden="true" className="shrink-0 text-chrome-gold/80" />
                     <span className="min-w-0 truncate">{item.label}</span>
                     {item.to === "/game/briefing" && queueCount > 0 && (
-                      <span className="tabular ml-auto text-[11px] font-bold text-gold-text border border-gold rounded-[2px] px-1">
+                      <span className="tabular ml-auto text-[11px] font-bold text-chrome-gold border border-chrome-gold/60 rounded-[2px] px-1">
                         {queueCount}
                       </span>
                     )}
@@ -157,20 +157,22 @@ export function GameLayout() {
         {t("common.skip")}
       </a>
 
-      {/* HUD readout line — the flag's canton, carried as chrome */}
-      <header className="relative z-30 border-b border-[#0a0806] bg-[#1a1e6e]/97 text-white">
+      {/* HUD readout line — the federal instrument, carried as chrome */}
+      <header className="relative z-30 border-b border-black/30 bg-chrome text-chrome-ink">
         <div className="flex items-center gap-3 sm:gap-5 px-3 sm:px-5 h-11">
           <StarMark />
           <div className="flex items-baseline gap-3 min-w-0">
-            <span className="tabular text-[13px] font-medium whitespace-nowrap text-[#ffcc00]">{dateLabel(game.turn, lang)}</span>
-            <span className="kicker hidden md:inline text-white/70">{chapterTitle(game.chapter, lang)}</span>
+            <span className="tabular text-[13px] font-medium whitespace-nowrap text-chrome-gold">{dateLabel(game.turn, lang)}</span>
+            <span className="kicker hidden lg:inline whitespace-nowrap text-chrome-ink/70">{chapterTitle(game.chapter, lang)}</span>
           </div>
 
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3.5" aria-label={t("overview.mandate")}>
               <Hud icon={Users} label={t("common.approval")} value={`${Math.round(approval)}%`} tone={toneOf(approval, 45, 30)} />
-              <Hud icon={Handshake} label={t("overview.coalition")} value={`${Math.round(coalition)}`} tone={toneOf(coalition, 55, 35)} />
-              <Hud icon={Landmark} label={t("nav.parliament")} value={`${seats}/222`} tone="plain" />
+              <div className="hidden sm:flex items-center gap-3.5">
+                <Hud icon={Handshake} label={t("overview.coalition")} value={`${Math.round(coalition)}`} tone={toneOf(coalition, 55, 35)} />
+                <Hud icon={Landmark} label={t("nav.parliament")} value={`${seats}/222`} tone="plain" />
+              </div>
             </div>
 
             <NavLink
@@ -179,13 +181,13 @@ export function GameLayout() {
               className={({ isActive }) =>
                 cn(
                   "relative flex items-center justify-center min-w-[36px] h-8 px-2 border rounded-[2px] transition-colors",
-                  isActive ? "border-gold text-[#ffcc00]" : "border-white/30 text-white/80 hover:text-white hover:border-white/60",
+                  isActive ? "border-chrome-gold text-chrome-gold" : "border-chrome-ink/30 text-chrome-ink/80 hover:text-chrome-ink hover:border-chrome-ink/60",
                 )
               }
             >
               <FileText size={15} aria-hidden="true" />
               {queueCount > 0 && (
-                <span className="tabular absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-brick text-white text-[10px] font-bold rounded-[1px] border border-white/70">
+                <span className="tabular absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-brick text-on-brick text-[10px] font-bold rounded-[1px] border border-chrome-ink/70">
                   {queueCount}
                 </span>
               )}
@@ -197,14 +199,14 @@ export function GameLayout() {
               aria-expanded={menuOpen}
               aria-controls="game-nav"
               aria-label={t("nav.openNav")}
-              className="flex items-center justify-center min-w-[36px] h-8 border border-white/30 rounded-[2px] text-white/90"
+              className="flex items-center justify-center min-w-[36px] h-8 border border-chrome-ink/30 rounded-[2px] text-chrome-ink/90"
             >
               <Menu size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
-        {/* the Jalur ribbon */}
-        <div aria-hidden="true" className="jalur-stripes h-[6px]" />
+        {/* the instrument rule: antique gold, not a flag ribbon */}
+        <div aria-hidden="true" className="h-[2px] bg-chrome-gold/70" />
       </header>
 
       {/* the stage: the frame never scrolls, the report scrolls inside it */}
@@ -229,13 +231,13 @@ export function GameLayout() {
       </main>
 
       {/* the frame: floor bar with a gold hairline */}
-      <div aria-hidden="true" className="h-2 bg-[#0a0806] border-t border-gold/25" />
+      <div aria-hidden="true" className="h-2 bg-chrome-deep border-t border-gold/25" />
 
-      {/* scene cut: every screen change passes through black */}
+      {/* scene cut: every screen change passes through midnight */}
       <motion.div
         key={location.pathname}
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[45] bg-[#0a0806]"
+        className="pointer-events-none fixed inset-0 z-[45] bg-chrome-deep"
         initial={{ opacity: 1 }}
         animate={{ opacity: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
@@ -252,23 +254,23 @@ export function GameLayout() {
           />
           <div
             id="game-nav"
-            className="absolute right-0 top-0 h-full w-[20rem] max-w-[85vw] bg-[#14110a] border-l border-gold/30 flex flex-col overflow-hidden"
+            className="absolute right-0 top-0 h-full w-[20rem] max-w-[85vw] bg-chrome-deep border-l border-gold/30 flex flex-col overflow-hidden"
           >
-            <div className="flex items-center justify-between px-4 py-4 border-b border-white/15">
-              <span className="kicker text-[#ffcc00]">{t("nav.navTitle")}</span>
+            <div className="flex items-center justify-between px-4 py-4 border-b border-chrome-ink/15">
+              <span className="kicker text-chrome-gold">{t("nav.navTitle")}</span>
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
                 aria-label={t("nav.closeNav")}
-                className="flex items-center justify-center min-w-[44px] min-h-[44px] border border-white/30 rounded-[2px] text-white/90"
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] border border-chrome-ink/30 rounded-[2px] text-chrome-ink/90"
               >
                 <X size={16} aria-hidden="true" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-3">{drawerNav}</div>
-            <div className="px-4 py-3 border-t border-white/15">
-              <p className="tabular text-sm text-[#ffcc00]">{dateLabel(game.turn, lang)}</p>
-              <p className="kicker mt-0.5 text-white/60">{chapterTitle(game.chapter, lang)}</p>
+            <div className="px-4 py-3 border-t border-chrome-ink/15">
+              <p className="tabular text-sm text-chrome-gold">{dateLabel(game.turn, lang)}</p>
+              <p className="kicker mt-0.5 text-chrome-ink/60">{chapterTitle(game.chapter, lang)}</p>
             </div>
             <button
               type="button"
@@ -276,7 +278,7 @@ export function GameLayout() {
                 setMenuOpen(false);
                 navigate("/campaigns");
               }}
-              className="w-full text-sm text-white/70 hover:text-white py-3.5 border-t border-white/15 text-left px-4"
+              className="w-full text-sm text-chrome-ink/70 hover:text-chrome-ink py-3.5 border-t border-chrome-ink/15 text-left px-4"
             >
               {t("nav.exitCampaign")}
             </button>
@@ -290,16 +292,16 @@ export function GameLayout() {
 function StarMark() {
   return (
     <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0" aria-hidden="true">
-      <g fill="#ffcc00">
+      <g fill="var(--chrome-gold)">
         <rect x="9" y="9" width="14" height="14" />
         <rect x="9" y="9" width="14" height="14" transform="rotate(45 16 16)" />
       </g>
-      <circle cx="16" cy="16" r="4.2" fill="#1a1e6e" />
+      <circle cx="16" cy="16" r="4.2" fill="var(--chrome)" />
     </svg>
   );
 }
 
-/** Compact HUD readout: icon + figure, light-on-canton like the flag. */
+/** Compact HUD readout: icon + figure, light on the instrument bar. */
 function Hud({
   icon: Icon,
   label,
@@ -312,10 +314,10 @@ function Hud({
   tone: "good" | "watch" | "bad" | "plain";
 }) {
   const color =
-    tone === "good" ? "text-[#a9d09a]" : tone === "watch" ? "text-[#ffcc00]" : tone === "bad" ? "text-[#ff9d9d]" : "text-white";
+    tone === "good" ? "text-chrome-good" : tone === "watch" ? "text-chrome-gold" : tone === "bad" ? "text-chrome-bad" : "text-chrome-ink";
   return (
     <div className="flex items-center gap-1.5" title={label}>
-      <Icon size={13} aria-hidden="true" className="text-white/70 shrink-0" />
+      <Icon size={13} aria-hidden="true" className="text-chrome-ink/70 shrink-0" />
       <span className={cn("tabular text-xs font-semibold", color)}>{value}</span>
     </div>
   );

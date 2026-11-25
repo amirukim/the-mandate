@@ -53,7 +53,7 @@ export function MapTheatre({ selectedId, onSelect, onClose, state, onClearState 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: reduced ? 0 : 0.25 }}
-      className="fixed inset-0 z-[60] bg-[#0a0e15] flex flex-col"
+      className="fixed inset-0 z-[60] bg-paper-deep flex flex-col"
       role="dialog"
       aria-modal="true"
       aria-label={t("overview.mapAria")}
@@ -129,8 +129,11 @@ function StateFileCard({ state, lang, onClear }: { state: StateDef; lang: "en" |
           </div>
           <div className="py-2.5 flex items-baseline justify-between gap-3">
             <dt className="kicker text-[10px]">{t("overview.alignment")}</dt>
-            <dd className="text-sm font-semibold text-right" style={{ color: bloc?.color }}>
-              {blocDisplay ? blocDisplay.name : t("overview.federalGov")}
+            <dd className="text-sm font-semibold text-right flex items-center justify-end gap-1.5">
+              {bloc && (
+                <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: bloc.color }} />
+              )}
+              <span>{blocDisplay ? blocDisplay.name : t("overview.federalGov")}</span>
             </dd>
           </div>
         </dl>

@@ -2,71 +2,82 @@
 @import "@fontsource-variable/public-sans";
 @import "tailwindcss";
 
-@import "@fontsource-variable/fraunces";
-@import "@fontsource-variable/public-sans";
-@import "tailwindcss";
-
 /*
-  Design system: "Jalur Gemilang" — the national flag as palette.
-  Default scheme is daylight: off-white paper, deep canton blue for identity
-  and primary actions, flag red for warnings and danger, star gold reserved
-  for thin accents, blue-black ink, warm grey metadata.
-  A "Night" scheme (warm umber dark, the earlier Chamber look) remains
-  available in Settings (.theme-night on <html>).
-  Both schemes hold WCAG AA for body and metadata text.
+  Design system: "The Federal Document" — warm paper, midnight ink,
+  antique gold rules, burgundy for danger, government green for health.
+  The pixel world uses the same six colours; the real Jalur Gemilang
+  (red, white, canton blue, gold) appears only inside depictions of the flag.
 
-  Surfaces stack in four steps:  paper (page) < card (panel) < surface (raised) < inset wells.
+  Two schemes:
+    default  warm paper (light)
+    .theme-night  midnight (dark)
+
+  Surfaces stack in four steps: paper (page) < card (panel) < surface (raised) < inset wells.
   Radius stays minimal (2px controls, 3px panels). Shadows are restrained and
   used only on floating elements (decision rows, drawers).
   Texture: a very low-opacity fixed film grain sits above the UI.
 */
 
 :root {
-  --paper: #f7f4ec; /* off-white, the flag's white warmed for screens */
-  --paper-deep: #ece7da; /* recessed wells */
-  --card: #fdfcf8; /* near-white panels */
-  --surface: #efebde; /* raised surface / hover */
-  --ink: #14163a; /* blue-black ink, from the canton */
-  --navy: #1a1e6e; /* canton blue: primary buttons, plates */
-  --navy-deep: #12154d; /* primary hover */
-  --rule: #d9d3c4; /* subtle borders */
-  --rule-strong: #b9b2a0; /* stronger separators */
-  --muted: #6b6657; /* muted metadata text */
-  --gold: #ffcc00; /* star gold: thin accents, meters */
-  --gold-text: #8a6d00; /* gold that clears AA as text on light */
-  --gold-bright: #9a7a00; /* gold hover on light */
-  --brick: #cc0001; /* flag red: danger */
-  --brick-text: #a80000; /* red that clears AA as text */
-  --moss: #4e6b46;
-  --moss-text: #44603d;
-  --teal: #35707a; /* diplomacy / foreign affairs */
-  --teal-text: #2c5f67;
+  --paper: #e9dfc9; /* warm paper, the page */
+  --paper-deep: #ded3b8; /* recessed wells */
+  --card: #f1e9d6; /* panels, lifted from the page */
+  --surface: #e1d5ba; /* raised surface / hover */
+  --ink: #17202b; /* midnight ink */
+  --navy: #263849; /* deep navy: primary actions, civic identity */
+  --navy-deep: #1a2a38; /* primary hover */
+  --rule: #cfc2a6; /* subtle borders */
+  --rule-strong: #ab9c7e; /* stronger separators */
+  --muted: #5f5a4d; /* muted metadata text */
+  --gold: #c69b54; /* antique gold: rules, ticks, meters */
+  --gold-text: #7a5c22; /* gold that clears AA as text on paper */
+  --gold-bright: #6b5119; /* gold hover on paper */
+  --brick: #803f45; /* burgundy: danger */
+  --brick-text: #6e3339; /* burgundy that clears AA as text */
+  --moss: #527b72; /* government green */
+  --moss-text: #3e625a; /* green that clears AA as text */
+  --teal: #4e7a86; /* data-viz only */
+  --teal-text: #2f5c66;
+  --chrome: #263849; /* dark bands that stay dark in both schemes */
+  --chrome-deep: #111823; /* letterbox, drawer, scene cut */
+  --chrome-ink: #e9dfc9;
+  --chrome-gold: #c69b54;
+  --chrome-good: #8fb3a8;
+  --chrome-bad: #c98b91;
+  --on-brick: #f7f0e0; /* text placed on a burgundy fill */
   --scheme: light;
-  --scrim: 247 244 236;
+  --scrim: 233 223 201;
 }
 
 .theme-night {
-  --paper: #17130c; /* warm umber black, page */
-  --paper-deep: #100d08; /* recessed wells */
-  --card: #1e1912; /* oiled dark wood, panels */
-  --surface: #2a2418; /* raised surface / hover */
-  --ink: #ece5d5; /* warm ivory */
-  --navy: #ece5d5; /* solid light fill (primary buttons, plates) */
-  --navy-deep: #d5ccb8; /* light fill hover */
-  --rule: #453e2e; /* subtle borders */
-  --rule-strong: #5e543e; /* stronger separators */
-  --muted: #b0a693; /* muted metadata text */
-  --gold: #c9a96a; /* leaf gold: accents, rules, meters */
+  --paper: #17202b; /* midnight, page */
+  --paper-deep: #111823; /* recessed wells */
+  --card: #1d2835; /* panels */
+  --surface: #263849; /* raised surface / hover */
+  --ink: #e9dfc9; /* warm paper */
+  --navy: #e9dfc9; /* solid light fill (primary buttons, plates) */
+  --navy-deep: #cfc4ad; /* light fill hover */
+  --rule: #3a4a5c; /* subtle borders */
+  --rule-strong: #55677c; /* stronger separators */
+  --muted: #b9ae97; /* muted metadata text */
+  --gold: #c69b54; /* antique gold */
   --gold-text: #d9b877; /* gold that clears AA as text */
   --gold-bright: #e6cd8e; /* highlights on dark */
-  --brick: #8a474e; /* burgundy, lacquer red */
-  --brick-text: #dda7ac; /* burgundy that clears AA as text */
-  --moss: #6b9260;
-  --moss-text: #a9d09a;
-  --teal: #4d7f86; /* diplomacy / foreign affairs */
-  --teal-text: #93c5cb; /* teal that clears AA as text */
+  --brick: #803f45; /* burgundy */
+  --brick-text: #c98b91; /* burgundy that clears AA as text */
+  --moss: #527b72;
+  --moss-text: #8fb3a8;
+  --teal: #4e7a86;
+  --teal-text: #9fcbd3;
+  --chrome: #263849;
+  --chrome-deep: #111823;
+  --chrome-ink: #e9dfc9;
+  --chrome-gold: #c69b54;
+  --chrome-good: #8fb3a8;
+  --chrome-bad: #c98b91;
+  --on-brick: #f7f0e0;
   --scheme: dark;
-  --scrim: 12 9 5;
+  --scrim: 23 32 43;
 }
 
 @theme inline {
@@ -92,6 +103,13 @@
   --color-moss-text: var(--moss-text);
   --color-teal: var(--teal);
   --color-teal-text: var(--teal-text);
+  --color-chrome: var(--chrome);
+  --color-chrome-deep: var(--chrome-deep);
+  --color-chrome-ink: var(--chrome-ink);
+  --color-chrome-gold: var(--chrome-gold);
+  --color-chrome-good: var(--chrome-good);
+  --color-chrome-bad: var(--chrome-bad);
+  --color-on-brick: var(--on-brick);
 
   --radius-control: 2px;
   --radius-panel: 3px;
@@ -234,38 +252,52 @@ body::after {
   font-variant-numeric: tabular-nums;
 }
 
-/* Atmospheric light: canton blue above, flag red below, gold from the left —
-   the title screen wash on off-white paper. */
+/* Atmospheric light: deep navy above, burgundy below, antique gold from the
+   left — the title screen wash on warm paper. */
 .atmosphere {
   background:
-    radial-gradient(120% 80% at 50% -10%, rgb(26 30 110 / 0.10) 0%, transparent 55%),
-    radial-gradient(90% 60% at 85% 110%, rgb(204 0 1 / 0.07) 0%, transparent 60%),
-    radial-gradient(60% 45% at 12% 88%, rgb(255 204 0 / 0.14) 0%, transparent 65%),
-    linear-gradient(180deg, #f7f4ec 0%, #ece7da 100%);
+    radial-gradient(120% 80% at 50% -10%, rgb(38 56 73 / 0.12) 0%, transparent 55%),
+    radial-gradient(90% 60% at 85% 110%, rgb(128 63 69 / 0.09) 0%, transparent 60%),
+    radial-gradient(60% 45% at 12% 88%, rgb(198 155 84 / 0.16) 0%, transparent 65%),
+    linear-gradient(180deg, #e9dfc9 0%, #ded3b8 100%);
 }
 
 /* Suzerain-grade warm grade for illustrated backdrops: pulls the navy art
-   family toward lamplit sepia without repainting a single file. */
+   family toward lamplit sepia without repainting a single file. Applied only
+   to legacy vector art — authored pixel plates carry their own palette. */
 .art-warm {
   filter: sepia(0.24) saturate(0.9) brightness(0.95) contrast(1.03);
 }
 
-/* The Jalur ribbon: seven red and seven white hairlines, the flag itself. */
+/* The Jalur ribbon: seven red and seven white hairlines, the flag itself.
+   Used as a world motif (menu lapel, room art), never as interface chrome. */
 .jalur-stripes {
-  background: repeating-linear-gradient(180deg, #cc0001 0 2px, transparent 2px 4px);
+  background: repeating-linear-gradient(180deg, #cc0001 0 2px, #f7f0e0 2px 4px);
 }
 
-/* The dark stage re-binds its theme tokens to the Night values, so muted
-   text, stamps and rules stay readable inside the theatre whatever the
-   app theme. Everything else keeps the daylight pairs. */
+/* The dark stage rebinds every theme token to the Midnight scheme, so the
+   theatre is self-contained whatever the app theme: panels, buttons, text
+   and rules all read from one dark palette. */
 .stage {
-  --ink: #ece5d5;
-  --muted: #b0a693;
-  --gold-text: #e6cd8e;
+  --paper: #17202b;
+  --paper-deep: #111823;
+  --card: #1d2835;
+  --surface: #263849;
+  --ink: #e9dfc9;
+  --navy: #e9dfc9;
+  --navy-deep: #cfc4ad;
+  --muted: #b9ae97;
+  --gold: #c69b54;
+  --gold-text: #d9b877;
   --gold-bright: #e6cd8e;
-  --brick-text: #dda7ac;
-  --rule: #453e2e;
-  --rule-strong: #5e543e;
+  --brick: #803f45;
+  --brick-text: #c98b91;
+  --rule: #3a4a5c;
+  --rule-strong: #55677c;
+  --moss: #527b72;
+  --moss-text: #8fb3a8;
+  --teal: #4e7a86;
+  --teal-text: #9fcbd3;
 }
 
 /* Lamp-glow wash painted above an art layer: apply to the absolute inset-0
@@ -276,11 +308,11 @@ body::after {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(75% 110% at 16% 30%, rgb(255 204 0 / 0.22) 0%, transparent 70%);
+  background: radial-gradient(75% 110% at 16% 30%, rgb(198 155 84 / 0.22) 0%, transparent 70%);
 }
 
 .theme-night .glow-art::after {
-  background: radial-gradient(75% 110% at 16% 30%, rgb(201 169 106 / 0.17) 0%, transparent 70%);
+  background: radial-gradient(75% 110% at 16% 30%, rgb(198 155 84 / 0.18) 0%, transparent 70%);
 }
 
 /* Subtle screen fade for page continuity. Motion stays restrained, no loops. */
@@ -349,7 +381,7 @@ body::after {
   background:
     linear-gradient(0deg, rgb(155 140 105 / 0.05), rgb(155 140 105 / 0.05)),
     var(--paper);
-  border: 1px solid #0b1018;
+  border: 1px solid #17202b;
   box-shadow: 0 18px 40px rgb(0 0 0 / 0.5), 0 2px 8px rgb(0 0 0 / 0.4);
 }
 

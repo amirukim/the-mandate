@@ -119,7 +119,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
       key="theatre"
       ref={rootRef}
       onKeyDown={onStageKey}
-      className="fixed inset-0 z-[60] bg-[#0f0c08] stage text-ink overflow-hidden flex flex-col"
+      className="fixed inset-0 z-[60] bg-chrome-deep stage text-ink overflow-hidden flex flex-col"
       role="dialog"
       aria-modal="true"
       aria-label={`${display.title}`}
@@ -132,13 +132,13 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
       <div className="absolute inset-0" aria-hidden="true">
         <PixelScene src={artForScene(display.location)} width={480} height={140} className="art-warm opacity-75" />
         <PaintedScene srcs={paintedSceneSrcs(sceneKeyFor(display.location))} className="opacity-75" />
-        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,transparent_40%,rgba(10,8,5,0.88)_100%)]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0f0c08]/70 via-[#0f0c08]/30 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,transparent_40%,rgba(17,24,35,0.9)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#111823]/70 via-[#111823]/30 to-transparent" />
       </div>
 
       {/* letterbox bars */}
-      <div aria-hidden="true" className="relative z-10 h-6 sm:h-8 bg-[#0a0806] border-b border-white/5" />
-      <div aria-hidden="true" className="relative z-10 order-last h-6 sm:h-8 bg-[#0a0806] border-t border-white/5" />
+      <div aria-hidden="true" className="relative z-10 h-6 sm:h-8 bg-black border-b border-chrome-ink/10" />
+      <div aria-hidden="true" className="relative z-10 order-last h-6 sm:h-8 bg-black border-t border-chrome-ink/10" />
 
       {/* top strip: location · category · date, and the scene title */}
       <div className="relative z-10 px-5 sm:px-10 pt-5">
@@ -154,7 +154,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
             </>
           )}
         </div>
-        <h1 className="display text-xl sm:text-2xl font-semibold mt-1.5 text-[#ece5d5]/90">{display.title}</h1>
+        <h1 className="display text-xl sm:text-2xl font-semibold mt-1.5 text-ink/90">{display.title}</h1>
       </div>
 
       {/* the stage: a figure in the room on the left, the beat panel on the right */}
@@ -181,7 +181,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                     <Avatar name={activeLine.speaker} size="stage" className="ring-1 ring-gold/40 shadow-lift" />
                   </motion.div>
                 </div>
-                <div className="text-center bg-[#120f0a]/80 border border-gold/30 rounded-[2px] px-3 py-1.5">
+                <div className="text-center bg-card/80 border border-gold/30 rounded-[2px] px-3 py-1.5">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-bright">
                     {activeLine.speaker}
                   </p>
@@ -211,7 +211,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                 key="reaction"
                 {...stageFade(0)}
                 aria-labelledby="reaction-title"
-                className="max-w-3xl w-full ml-auto bg-[#120f0a]/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-6 py-5 max-h-[62vh] overflow-y-auto"
+                className="max-w-3xl w-full ml-auto bg-card/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-6 py-5 max-h-[62vh] overflow-y-auto"
               >
                 <p className="stamp">{t("scene.stamp")}</p>
                 <h1 id="reaction-title" className="display text-2xl sm:text-3xl font-semibold mt-3 leading-tight">
@@ -227,7 +227,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                       {chosen.notes.map((note, i) => (
                         <p
                           key={i}
-                          className="display text-[1.0313rem] leading-relaxed text-[#ece5d5]/90 border-l-2 border-gold pl-4 py-0.5"
+                          className="display text-[1.0313rem] leading-relaxed text-ink/90 border-l-2 border-gold pl-4 py-0.5"
                         >
                           {note}
                         </p>
@@ -260,7 +260,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                 key="briefing"
                 {...stageFade(0.05)}
                 aria-label={t("scene.briefingAria")}
-                className="max-w-3xl w-full ml-auto bg-[#120f0a]/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-7 py-5 max-h-[62vh] overflow-y-auto"
+                className="max-w-3xl w-full ml-auto bg-card/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-7 py-5 max-h-[62vh] overflow-y-auto"
               >
                 <div className="flex items-center gap-3">
                   <p className="kicker kicker-gold shrink-0">{t("scene.file")}</p>
@@ -271,7 +271,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                     <p
                       key={i}
                       className={cn(
-                        "display text-[1.0625rem] sm:text-[1.125rem] leading-[1.75] text-[#ece5d5]/90 max-w-prose",
+                        "display text-[1.0625rem] sm:text-[1.125rem] leading-[1.75] text-ink/90 max-w-prose",
                         i === 0 && "drop-cap",
                       )}
                     >
@@ -293,7 +293,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                 key={`dialogue-${lineIdx}`}
                 {...stageFade(0)}
                 aria-label={t("scene.inRoom")}
-                className="max-w-3xl w-full ml-auto bg-[#120f0a]/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-7 py-5"
+                className="max-w-3xl w-full ml-auto bg-card/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-7 py-5"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                   <div className="flex flex-wrap items-baseline gap-x-3">
@@ -304,7 +304,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                     {lineIdx + 1} / {display.dialogue.length}
                   </p>
                 </div>
-                <p className="display italic text-[1.2rem] sm:text-[1.32rem] leading-[1.6] mt-3 text-[#ece5d5]/95 min-h-[5.5rem]">
+                <p className="display italic text-[1.2rem] sm:text-[1.32rem] leading-[1.6] mt-3 text-ink/95 min-h-[5.5rem]">
                   &ldquo;{typing.shown}
                   {!typing.done && <span aria-hidden="true" className="text-gold">▌</span>}
                   {typing.done && "\u201D"}
@@ -322,7 +322,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                 key="decision"
                 {...stageFade(0)}
                 aria-label={t("scene.decisionsAria")}
-                className="max-w-3xl w-full ml-auto bg-[#120f0a]/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-7 py-5 max-h-[62vh] overflow-y-auto"
+                className="max-w-3xl w-full ml-auto bg-card/85 border border-gold/25 rounded-panel backdrop-blur-sm px-5 sm:px-7 py-5 max-h-[62vh] overflow-y-auto"
               >
                 <div className="flex items-center gap-3">
                   <p className="kicker kicker-gold shrink-0">{t("scene.reply")}</p>
@@ -340,7 +340,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                             // Small pause so the selection reads before consequences land.
                             window.setTimeout(() => onDecide(option.id), reduced ? 120 : 260);
                           }}
-                          className="group w-full text-left flex items-start gap-4 px-4 py-3 rounded-[3px] border border-white/10 bg-white/[0.04] transition-colors hover:border-gold/60 hover:bg-white/[0.07] focus-visible:border-gold"
+                          className="group w-full text-left flex items-start gap-4 px-4 py-3 rounded-[3px] border border-chrome-ink/10 bg-chrome-ink/[0.04] transition-colors hover:border-gold/60 hover:bg-chrome-ink/[0.07] focus-visible:border-gold"
                         >
                           <span className="tabular inline-flex w-7 h-7 shrink-0 mt-0.5 items-center justify-center border border-gold text-gold-text text-xs font-bold rounded-[2px] group-hover:bg-gold group-hover:text-paper transition-colors">
                             {String(i + 1).padStart(2, "0")}
@@ -427,12 +427,12 @@ function SpeakerStrip({
             className={cn(
               "flex w-14 shrink-0 flex-col items-center gap-1 rounded-[2px] p-1 transition-all",
               isActive
-                ? "bg-white/[0.07] opacity-100"
+                ? "bg-chrome-ink/[0.07] opacity-100"
                 : "opacity-55 hover:opacity-95 focus-visible:opacity-100",
             )}
             title={`${c.speaker} — ${c.role}`}
           >
-            <Avatar name={c.speaker} size="md" className={isActive ? "ring-gold" : "ring-white/10"} />
+            <Avatar name={c.speaker} size="md" className={isActive ? "ring-gold" : "ring-chrome-ink/10"} />
             <span
               className={cn(
                 "w-full truncate text-center text-[9px] font-semibold uppercase tracking-[0.06em] leading-tight",

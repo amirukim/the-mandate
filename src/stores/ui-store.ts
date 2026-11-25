@@ -13,9 +13,12 @@ interface UiState {
 
 function applyToDocument(theme: ThemeId, bodySize: BodySize): void {
   const root = document.documentElement;
-  // Jalur daylight is the default on <html>; the Night umber scheme is opt-in.
+  // Warm paper is the default on <html>; the Midnight scheme is opt-in.
   root.classList.toggle("theme-night", theme === "night");
   root.style.setProperty("--mtm-body-size", bodySize === "large" ? "18px" : "16px");
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", theme === "night" ? "#17202B" : "#E9DFC9");
 }
 
 export const useUiStore = create<UiState>()(

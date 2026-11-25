@@ -22,7 +22,7 @@ function Skyline() {
       className="absolute inset-x-0 bottom-0 h-[46vh] w-full pointer-events-none"
     >
       {/* far layer: office blocks */}
-      <g fill="rgb(182 154 91 / 0.16)">
+      <g fill="var(--gold)" opacity="0.16">
         <rect x="0" y="210" width="1440" height="110" />
         <rect x="60" y="170" width="70" height="150" />
         <rect x="150" y="196" width="46" height="124" />
@@ -33,7 +33,7 @@ function Skyline() {
         <rect x="1080" y="196" width="96" height="124" />
       </g>
       {/* mid layer: the domed complex and its minarets */}
-      <g fill="rgb(32 30 24 / 0.95)">
+      <g fill="var(--ink)" opacity="0.9">
         <rect x="560" y="236" width="320" height="84" />
         <path d="M640 236c0-44 36-80 80-80s80 36 80 80z" />
         <rect x="716" y="132" width="8" height="30" />
@@ -45,13 +45,13 @@ function Skyline() {
         <rect x="910" y="252" width="60" height="68" />
       </g>
       {/* near layer: boulevard edge */}
-      <g fill="rgb(8 7 5 / 0.98)">
+      <g fill="var(--ink)" opacity="0.98">
         <rect x="0" y="278" width="1440" height="42" />
         <rect x="180" y="248" width="120" height="72" />
         <rect x="1140" y="256" width="140" height="64" />
       </g>
       {/* horizon light */}
-      <rect x="0" y="276" width="1440" height="1.5" fill="rgb(182 154 91 / 0.65)" />
+      <rect x="0" y="276" width="1440" height="1.5" fill="var(--gold)" opacity="0.65" />
     </svg>
   );
 }
@@ -134,7 +134,7 @@ export function MainMenu() {
 
         <motion.div {...fade(0.16)} className="mt-5 w-56">
           {/* the Jalur ribbon, worn as a lapel */}
-          <div className="jalur-stripes h-[28px] border border-[#d9d3c4]" />
+          <div className="jalur-stripes h-[28px] border border-rule" />
         </motion.div>
 
         {/* the menu: a short stack of quiet lines */}

@@ -99,7 +99,7 @@ export function ParliamentChart({ selected = null, onSelect }: ParliamentChartPr
                 cy={seat.y}
                 r={isHovered ? 6 : 4.4}
                 fill={seat.color}
-                stroke={isHovered ? "#e6cd8e" : "var(--paper)"}
+                stroke={isHovered ? "var(--gold-bright)" : "var(--paper)"}
                 strokeWidth={isHovered ? 1.5 : 1}
                 style={{ transition: "r 120ms ease" }}
               />
@@ -113,7 +113,7 @@ export function ParliamentChart({ selected = null, onSelect }: ParliamentChartPr
           y1={CY}
           x2={lineEnd.x}
           y2={lineEnd.y}
-          stroke="#c9a96a"
+          stroke="var(--gold)"
           strokeWidth={1.2}
           strokeDasharray="3 3"
         />
@@ -121,7 +121,7 @@ export function ParliamentChart({ selected = null, onSelect }: ParliamentChartPr
           x={labelPos.x}
           y={labelPos.y}
           textAnchor="middle"
-          fill="#d9b877"
+          fill="var(--gold-text)"
           fontSize={9}
           fontWeight={700}
           fontFamily="Public Sans, sans-serif"

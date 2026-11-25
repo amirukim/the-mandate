@@ -7,15 +7,16 @@
       name="description"
       content="Malaysia: The Mandate. A work of political fiction. Govern Malaysia as Prime Minister in a narrative simulation of coalition, economy and legacy."
     />
-    <meta name="theme-color" content="#101722" />
+    <meta name="theme-color" content="#E9DFC9" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Malaysia: The Mandate</title>
     <script>
-      /* Apply persisted scheme before first paint to avoid a flash. Dark is the default. */
+      /* Apply the persisted scheme before first paint. Paper is the default;
+         only the opt-in Midnight scheme adds a class. */
       try {
         var raw = localStorage.getItem("mtm:ui:v2");
         var theme = raw ? JSON.parse(raw).state.theme : null;
-        if (theme === "paper") document.documentElement.classList.add("theme-paper");
+        if (theme === "night") document.documentElement.classList.add("theme-night");
       } catch (e) {}
     </script>
   </head>

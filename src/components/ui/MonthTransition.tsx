@@ -44,7 +44,7 @@ export function MonthTransition({ dateLabel, chapterTitle, onDone }: MonthTransi
       initial={{ opacity: 0 }}
       animate={{ opacity: exiting ? 0 : 1 }}
       transition={{ duration: 0.55 }}
-      className="fixed inset-0 z-[70] bg-[#06090e] flex items-center justify-center"
+      className="fixed inset-0 z-[70] bg-chrome-deep flex items-center justify-center"
       aria-hidden="true"
     >
       <motion.div
@@ -53,10 +53,10 @@ export function MonthTransition({ dateLabel, chapterTitle, onDone }: MonthTransi
         transition={{ duration: 0.45, delay: 0.15 }}
         className="text-center px-6"
       >
-        <p className="kicker text-[11px] text-[#c9a96a]">{entering}</p>
-        <p className="display text-4xl sm:text-6xl font-semibold mt-3 tracking-tight text-[#ece5d5]">{dateLabel}</p>
+        <p className="kicker text-[11px] text-chrome-gold">{entering}</p>
+        <p className="display text-4xl sm:text-6xl font-semibold mt-3 tracking-tight text-chrome-ink">{dateLabel}</p>
         <div className="rule-gold mt-6 max-w-xs mx-auto" />
-        <p className="kicker text-[10px] text-white/60">{chapterTitle}</p>
+        <p className="kicker text-[10px] text-chrome-ink/60">{chapterTitle}</p>
       </motion.div>
     </motion.div>,
     container,
