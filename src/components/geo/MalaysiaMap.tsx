@@ -112,6 +112,15 @@ function staticMapSvgString(): string {
   );
 }
 
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`pixelate: failed to load ${src}`));
+    img.src = src;
+  });
+}
+
 function useStaticPixelMap(): string | null {
   const [url, setUrl] = useState<string | null>(staticPixelUrl);
   const [failed, setFailed] = useState(false);
@@ -122,23 +131,32 @@ function useStaticPixelMap(): string | null {
     const h = Math.round(height / 3);
     const blob = new Blob([staticMapSvgString()], { type: "image/svg+xml" });
     const objectUrl = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.drawImage(img, 0, 0, w, h);
-      staticPixelUrl = canvas.toDataURL("image/png");
-      URL.revokeObjectURL(objectUrl);
-      setUrl(staticPixelUrl);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      setFailed(true);
-    };
-    img.src = objectUrl;
+    (async () => {
+      try {
+        const img = await loadImage(objectUrl);
+        // pass 1 — full-resolution raster of the chart, then pass 2 —
+        // nearest-neighbour downsample onto the pixel grid
+        const full = document.createElement("canvas");
+        full.width = width;
+        full.height = height;
+        const fctx = full.getContext("2d");
+        if (!fctx) return;
+        fctx.drawImage(img, 0, 0, width, height);
+        const out = document.createElement("canvas");
+        out.width = w;
+        out.height = h;
+        const octx = out.getContext("2d");
+        if (!octx) return;
+        octx.imageSmoothingEnabled = false;
+        octx.drawImage(full, 0, 0, w, h);
+        staticPixelUrl = out.toDataURL("image/png");
+        URL.revokeObjectURL(objectUrl);
+        setUrl(staticPixelUrl);
+      } catch {
+        URL.revokeObjectURL(objectUrl);
+        setFailed(true);
+      }
+    })();
   }, [url, failed]);
   return failed ? null : url;
 }

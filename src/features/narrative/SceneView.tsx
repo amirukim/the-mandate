@@ -119,7 +119,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
       key="theatre"
       ref={rootRef}
       onKeyDown={onStageKey}
-      className="fixed inset-0 z-[60] bg-[#0f0c08] text-ink overflow-hidden flex flex-col"
+      className="fixed inset-0 z-[60] bg-[#0f0c08] stage text-ink overflow-hidden flex flex-col"
       role="dialog"
       aria-modal="true"
       aria-label={`${display.title}`}
@@ -154,7 +154,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
             </>
           )}
         </div>
-        <h1 className="display text-xl sm:text-2xl font-semibold mt-1.5 text-ink/90">{display.title}</h1>
+        <h1 className="display text-xl sm:text-2xl font-semibold mt-1.5 text-[#ece5d5]/90">{display.title}</h1>
       </div>
 
       {/* the stage: a figure in the room on the left, the beat panel on the right */}
@@ -227,7 +227,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                       {chosen.notes.map((note, i) => (
                         <p
                           key={i}
-                          className="display text-[1.0313rem] leading-relaxed text-ink/90 border-l-2 border-gold pl-4 py-0.5"
+                          className="display text-[1.0313rem] leading-relaxed text-[#ece5d5]/90 border-l-2 border-gold pl-4 py-0.5"
                         >
                           {note}
                         </p>
@@ -271,7 +271,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                     <p
                       key={i}
                       className={cn(
-                        "display text-[1.0625rem] sm:text-[1.125rem] leading-[1.75] text-ink/90 max-w-prose",
+                        "display text-[1.0625rem] sm:text-[1.125rem] leading-[1.75] text-[#ece5d5]/90 max-w-prose",
                         i === 0 && "drop-cap",
                       )}
                     >
@@ -304,7 +304,7 @@ export function SceneView({ event, chosen, onDecide, onContinue }: SceneViewProp
                     {lineIdx + 1} / {display.dialogue.length}
                   </p>
                 </div>
-                <p className="display italic text-[1.2rem] sm:text-[1.32rem] leading-[1.6] mt-3 text-ink/95 min-h-[5.5rem]">
+                <p className="display italic text-[1.2rem] sm:text-[1.32rem] leading-[1.6] mt-3 text-[#ece5d5]/95 min-h-[5.5rem]">
                   &ldquo;{typing.shown}
                   {!typing.done && <span aria-hidden="true" className="text-gold">▌</span>}
                   {typing.done && "\u201D"}

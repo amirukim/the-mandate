@@ -129,12 +129,12 @@ export function GameLayout() {
                       cn(
                         "flex items-center gap-3 px-3 py-3 rounded-[2px] transition-colors font-display text-[15px] font-semibold",
                         isActive
-                          ? "bg-surface text-gold-bright"
-                          : "text-ink/80 hover:text-ink hover:bg-surface/60",
+                          ? "bg-white/10 text-[#ffcc00]"
+                          : "text-white/85 hover:text-white hover:bg-white/5",
                       )
                     }
                   >
-                    <Icon size={18} aria-hidden="true" className="shrink-0 text-gold/80" />
+                    <Icon size={18} aria-hidden="true" className="shrink-0 text-[#ffcc00]/80" />
                     <span className="min-w-0 truncate">{item.label}</span>
                     {item.to === "/game/briefing" && queueCount > 0 && (
                       <span className="tabular ml-auto text-[11px] font-bold text-gold-text border border-gold rounded-[2px] px-1">
@@ -254,21 +254,21 @@ export function GameLayout() {
             id="game-nav"
             className="absolute right-0 top-0 h-full w-[20rem] max-w-[85vw] bg-[#14110a] border-l border-gold/30 flex flex-col overflow-hidden"
           >
-            <div className="flex items-center justify-between px-4 py-4 border-b border-rule">
-              <span className="kicker kicker-gold">{t("nav.navTitle")}</span>
+            <div className="flex items-center justify-between px-4 py-4 border-b border-white/15">
+              <span className="kicker text-[#ffcc00]">{t("nav.navTitle")}</span>
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
                 aria-label={t("nav.closeNav")}
-                className="flex items-center justify-center min-w-[44px] min-h-[44px] border border-rule rounded-[2px]"
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] border border-white/30 rounded-[2px] text-white/90"
               >
                 <X size={16} aria-hidden="true" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-3">{drawerNav}</div>
-            <div className="px-4 py-3 border-t border-rule">
-              <p className="tabular text-sm text-ink">{dateLabel(game.turn, lang)}</p>
-              <p className="kicker mt-0.5">{chapterTitle(game.chapter, lang)}</p>
+            <div className="px-4 py-3 border-t border-white/15">
+              <p className="tabular text-sm text-[#ffcc00]">{dateLabel(game.turn, lang)}</p>
+              <p className="kicker mt-0.5 text-white/60">{chapterTitle(game.chapter, lang)}</p>
             </div>
             <button
               type="button"
@@ -276,7 +276,7 @@ export function GameLayout() {
                 setMenuOpen(false);
                 navigate("/campaigns");
               }}
-              className="w-full text-sm text-muted hover:text-ink py-3.5 border-t border-rule text-left px-4"
+              className="w-full text-sm text-white/70 hover:text-white py-3.5 border-t border-white/15 text-left px-4"
             >
               {t("nav.exitCampaign")}
             </button>

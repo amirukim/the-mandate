@@ -255,6 +255,19 @@ body::after {
   background: repeating-linear-gradient(180deg, #cc0001 0 2px, transparent 2px 4px);
 }
 
+/* The dark stage re-binds its theme tokens to the Night values, so muted
+   text, stamps and rules stay readable inside the theatre whatever the
+   app theme. Everything else keeps the daylight pairs. */
+.stage {
+  --ink: #ece5d5;
+  --muted: #b0a693;
+  --gold-text: #e6cd8e;
+  --gold-bright: #e6cd8e;
+  --brick-text: #dda7ac;
+  --rule: #453e2e;
+  --rule-strong: #5e543e;
+}
+
 /* Lamp-glow wash painted above an art layer: apply to the absolute inset-0
    art wrapper inside a header (its ::after stacks above the image + scrims,
    below the content layer that follows the wrapper). */
