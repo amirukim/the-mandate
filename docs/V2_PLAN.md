@@ -149,3 +149,22 @@ hotspot floor).
 D-07 office-as-wallpaper with room-view toggle; D-08 save v2 + migration; D-09 three additive
 routes (press last); D-10 Playwright devDependency; D-11 admin-1 polygons with recorded
 provenance. See `IMPLEMENTATION_PLAN.md` §12 for the formal D-06…D-11 entries.
+
+**During-execution decisions (2026-11-26, phases 6–8):**
+
+- **D-12 Map plate is smooth, not chunky-pixel.** The chunky 400×213 plate read as
+  Minecraft close-up and the user asked for the pixel effect removed; the plate re-renders at
+  2160×1152 (1.8 plate px per projection unit) and displays without `image-rendering:
+  pixelated`. Supersedes the Phase 6 art direction for this asset only.
+- **D-13 Full-bleed iPad shell.** The 1024×768 bezel mock-up made every screen look small;
+  the iPad *UI* (status bar, wallpaper, dock, chrome) is the presentation and runs 100dvh on
+  every viewport. Supersedes the Phase 3 device frame.
+- **D-14 Map crop + screen-constant tokens.** The playable frame crops the 1200×640 projection
+  to Malaysia (651×167 viewBox) so the federation fills the screen; tokens/labels divide by
+  zoom to hold ~26px on screen at any magnification.
+- **D-15 Inline bilingual content (LText).** Phase 7/8 content (policies, bills, budget lines,
+  cabinet posts, graph events) carries `{en, ms}` inline via `src/data/lt.ts` instead of the
+  key maps; UI chrome stays on the parity-checked key dictionaries. Content may graduate into
+  the maps in a later pass without engine changes.
+
+**Status: Phases 1–8 complete (tags v2-phase-1 … v2-phase-8). Phase 9 is the final sweep.**
