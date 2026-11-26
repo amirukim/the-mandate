@@ -8,12 +8,22 @@ import { SceneBackground } from "../components/game/SceneBackground";
 import { prefersReducedMotion } from "../hooks/usePortalOverlay";
 import { useT } from "../i18n/store";
 import { cn } from "../utils/cn";
+import type { GameSave } from "../types/game";
 
 /**
- * The title screen, cut to Suzerain's measure: one authored key art, one logo,
- * a short stack of quiet menu items, and nothing else. No cards, no pitch —
- * the mood does the selling.
+ * The title screen (v2 menu revamp): the authored key art and the logo lockup
+ * stay, but the menu is now a pixel-chrome panel — Silkscreen labels on app
+ * icons, a save-status chip on Continue — the same chrome language as the iPad
+ * shell's dock. Keyboard and touch rows are 44px or taller.
  */
+
+interface Item {
+  labelKey: "menu.continueCampaign" | "menu.newCampaign" | "menu.load" | "menu.signIn" | "menu.settings";
+  icon: string;
+  to?: string;
+  onClick?: () => void;
+  accent?: boolean;
+}
 
 export function MainMenu() {
   const continueGame = useGameStore((s) => s.continueGame);
@@ -24,7 +34,8 @@ export function MainMenu() {
   const navigate = useNavigate();
   const { t } = useT();
 
-  const hasAutosave = loadLocal(0) !== null;
+  const autosave: GameSave | null = loadLocal(0);
+  const hasAutosave = autosave !== null;
 
   const fade = (delay: number) => ({
     initial: { opacity: 0, y: 14 },
@@ -32,30 +43,24 @@ export function MainMenu() {
     transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const },
   });
 
-  interface Item {
-    label: string;
-    to?: string;
-    onClick?: () => void;
-    accent?: boolean;
-  }
-
   const items: Item[] = [
     ...(hasAutosave
       ? [
           {
-            label: t("menu.continueCampaign"),
+            labelKey: "menu.continueCampaign",
+            icon: "briefing",
             accent: true,
             onClick: () => {
               closeCampaign();
               if (continueGame()) navigate("/game/home");
             },
-          },
+          } as Item,
         ]
       : []),
-    { label: t("menu.newCampaign"), to: "/new" },
-    { label: t("menu.load"), to: "/campaigns" },
-    { label: t("menu.signIn"), to: "/login" },
-    { label: t("menu.settings"), to: "/settings" },
+    { labelKey: "menu.newCampaign", icon: "policy", to: "/new" },
+    { labelKey: "menu.load", icon: "saves", to: "/campaigns" },
+    { labelKey: "menu.signIn", icon: "diplomacy", to: "/login" },
+    { labelKey: "menu.settings", icon: "settings", to: "/settings" },
   ];
 
   return (
@@ -95,41 +100,58 @@ export function MainMenu() {
           <div className="jalur-stripes h-[28px] border border-rule" />
         </motion.div>
 
-        {/* the menu: a short stack of quiet lines */}
+        {/* the menu: a pixel-chrome panel, dock language */}
         <motion.nav {...fade(0.28)} aria-label="Main menu" className="mt-8 max-w-md">
-          <ul>
+          <ul className="bg-navy/75 border border-gold/30 rounded-[14px] backdrop-blur-sm shadow-lift p-2 space-y-1">
             {items.map((item) => {
               const inner = (
                 <>
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "h-px w-0 group-hover:w-7 transition-all duration-200 bg-gold shrink-0",
-                      item.accent && "bg-gold-bright",
-                    )}
+                  <img
+                    src={`/art/pixel/icons/icon-${item.icon}.png`}
+                    alt=""
+                    width={44}
+                    height={44}
+                    loading="lazy"
+                    className={cn("w-11 h-11 pixelated rounded-[7px] shrink-0", !item.accent && "opacity-90")}
                   />
                   <span
                     className={cn(
-                      "display text-[1.45rem] sm:text-[1.7rem] font-semibold tracking-tight transition-colors",
-                      item.accent ? "text-gold-bright" : "text-ink/90 group-hover:text-gold-bright",
+                      "font-pixel text-[12px] leading-tight flex-1 [text-shadow:0_1px_0_rgb(0_0_0/0.75)]",
+                      item.accent ? "text-gold" : "text-paper",
                     )}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
+                  </span>
+                  <span aria-hidden="true" className={cn("font-pixel text-[12px] shrink-0 [text-shadow:0_1px_0_rgb(0_0_0/0.75)]", item.accent ? "text-gold" : "text-paper/70")}>
+                    →
                   </span>
                 </>
               );
-              const cls =
-                "group flex items-center gap-0 py-2.5 text-left transition-colors focus-visible:outline-none";
+              const cls = cn(
+                "group flex items-center gap-3 w-full min-h-[56px] px-2.5 rounded-[9px] text-left transition-colors",
+                item.accent
+                  ? "bg-gold/15 hover:bg-gold/25 border border-gold/40"
+                  : "hover:bg-paper/10 border border-transparent focus-visible:border-paper/40 focus-visible:outline-none",
+              );
               return (
-                <li key={item.label}>
+                <li key={item.labelKey}>
                   {item.to ? (
-                    <Link to={item.to} className={cn(cls, "focus-visible:[&>span:first-child]:w-7")}>
+                    <Link to={item.to} className={cls}>
                       {inner}
                     </Link>
                   ) : (
-                    <button type="button" onClick={item.onClick} className={cn(cls, "w-full")}>
+                    <button type="button" onClick={item.onClick} className={cls}>
                       {inner}
                     </button>
+                  )}
+                  {item.accent && autosave && (
+                    <div className="px-2.5 pb-1.5 -mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 [text-shadow:0_1px_0_rgb(0_0_0/0.7)]">
+                      <span className="font-pixel text-[9px] text-paper">{autosave.summary.campaignName}</span>
+                      <span className="font-pixel text-[9px] text-paper/70">{autosave.summary.dateLabel}</span>
+                      <span className="font-pixel text-[9px] text-gold">
+                        {autosave.summary.approval}% {t("common.approval")}
+                      </span>
+                    </div>
                   )}
                 </li>
               );
@@ -137,7 +159,7 @@ export function MainMenu() {
           </ul>
 
           {user && (
-            <p className="mt-7 text-[11px] uppercase tracking-[0.12em] text-muted">
+            <p className="mt-5 text-[11px] uppercase tracking-[0.12em] text-muted">
               {t("menu.signIn") === "Sign in"
                 ? "Signed in: "
                 : "Telah log masuk: "}

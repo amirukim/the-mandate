@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useGameStore } from "../stores/game-store";
 import { CHARACTERS } from "../data/characters";
+import { ADVISOR_ARCS } from "../data/dialogue";
 import { CharacterPortrait } from "../components/game/CharacterPortrait";
 import { PageHeader } from "../components/ui/PageHeader";
+import { DialogueScene } from "../features/narrative/DialogueScene";
+import { saveLocal } from "../services/save-service";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
 import { cn } from "../utils/cn";
@@ -10,10 +13,9 @@ import { cn } from "../utils/cn";
 const COUNSELABLE = ["chiefOfStaff", "finance", "economicAdviser", "nationalSecurity", "foreign", "home"] as const;
 
 /**
- * The Messages app (v2 shell): adviser counsel as an iMessage-style thread.
- * The engine call is the existing `askCounsel` — one counsel per adviser per
- * month, unchanged. Thread history is session-local for now; persisting it is
- * a Phase 7 task alongside the adviser arcs.
+ * The Messages app (v2): adviser counsel as an iMessage-style thread — one
+ * counsel per adviser per month — plus the advisor arcs (Phase 8): three
+ * conversations that unlock as relationships are earned and play once.
  */
 export function Messages() {
   const game = useGameStore((s) => s.game);
@@ -21,6 +23,7 @@ export function Messages() {
   const { t, lang } = useT();
   const [openId, setOpenId] = useState<string | null>(COUNSELABLE[0]);
   const [threads, setThreads] = useState<Record<string, string[]>>({});
+  const [arcId, setArcId] = useState<string | null>(null);
 
   if (!game) return null;
 
@@ -39,9 +42,64 @@ export function Messages() {
     }
   };
 
+  const arc = arcId ? ADVISOR_ARCS.find((a) => a.id === arcId) ?? null : null;
+
+  if (arc) {
+    return (
+      <div className="page-enter">
+        <PageHeader dense kicker={t("messages.kicker")} title={t("messages.arcsTitle")} lead={t("messages.arcsLead")} />
+        <DialogueScene graphId={arc.graph.id} onDone={() => {
+          setArcId(null);
+          const g = useGameStore.getState().game;
+          if (g) useGameStore.setState({ game: { ...g } });
+        }} />
+      </div>
+    );
+  }
+
   return (
     <div className="page-enter">
       <PageHeader dense kicker={t("messages.kicker")} title={t("messages.title")} lead={t("messages.lead")} />
+
+      {/* advisor arcs: conversations that unlock as the relationship earns them */}
+      <div className="grid gap-3 sm:grid-cols-3 mt-1 mb-6">
+        {ADVISOR_ARCS.map((a) => {
+          const rel = game.characters[a.characterId]?.relationship ?? 50;
+          const done = game.flags[`arc.done.${a.id}`] === true;
+          const locked = rel < a.minRelationship;
+          const def = CHARACTERS.find((c) => c.id === a.characterId);
+          const display = def ? characterText(def, lang) : null;
+          return (
+            <button
+              key={a.id}
+              type="button"
+              disabled={locked || done}
+              onClick={() => {
+                setArcId(a.id);
+                const g = useGameStore.getState().game;
+                if (g) {
+                  g.flags = { ...g.flags, [`arc.done.${a.id}`]: true };
+                  saveLocal(0, g);
+                }
+              }}
+              className={cn(
+                "text-left bg-card border rounded-panel px-3.5 py-3 transition-colors min-h-[64px]",
+                locked || done ? "border-rule opacity-60 cursor-not-allowed" : "border-rule hover:border-gold/70 hover:bg-gold/5",
+              )}
+            >
+              <span className="display text-sm font-semibold block">{lang === "ms" ? a.title.ms : a.title.en}</span>
+              <span className="kicker text-[9px] block mt-0.5">{display?.name ?? a.characterId}</span>
+              <span className={cn("kicker text-[9px] mt-1 block", done ? "text-gold-text" : "text-muted")}>
+                {done
+                  ? (lang === "ms" ? "Telah dimainkan" : "Played")
+                  : locked
+                    ? `${lang === "ms" ? "Perlu hubungan" : "Needs relationship"} ${a.minRelationship} (${rel})`
+                    : lang === "ms" ? "Perbualan baharu" : "New conversation"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <nav aria-label={t("messages.threadsAria")} className="lg:col-span-1">

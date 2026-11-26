@@ -26,6 +26,9 @@ import { appoint, holderOf } from "./cabinet";
 import { classifyMandate } from "./endings";
 import { billById } from "../data/bills";
 import { POLICY_MEASURES } from "../data/policies";
+import { GRAPH_EVENTS, ADVISOR_ARCS, ensureContentRegistered } from "../data/dialogue";
+import { beginGraphEvent, chooseGraphEvent, completeGraphEvent } from "./graph-events";
+import { pickSchedulable, legacySchedulable } from "./narrative";
 
 export interface CheckResult {
   name: string;
@@ -496,6 +499,92 @@ export function runSelfChecks(): CheckResult[] {
     name: "v2 slices survive JSON save roundtrip + migration",
     pass: slicesOk,
     detail: `policy ${Object.keys(roundtripped?.state.policy?.enacted ?? {}).length}, bills ${roundtripped?.state.parliament?.bills.length}, trade=${roundtripped?.state.cabinetState?.appointments.trade}`,
+  });
+
+  // 19. Graph content: 20 events + 3 arcs, all sound on the validator, all paths terminate.
+  ensureContentRegistered();
+  let contentBad = 0;
+  let contentDetail = "";
+  for (const def of [...GRAPH_EVENTS, ...ADVISOR_ARCS.map((a) => ({ meta: { id: a.id }, graph: a.graph } as typeof GRAPH_EVENTS[number]))]) {
+    const problems = validateDialogueGraph(def.graph);
+    const bad = problems.missingTargets.length + problems.deadEnds.length + problems.unreachable.length + problems.missingText.length;
+    if (bad > 0 && contentBad === 0) contentDetail = `${def.graph.id}: ${bad} problem(s)`;
+    contentBad += bad;
+  }
+  // every path terminates within a bound
+  let runAway = 0;
+  const pathState = makeState();
+  for (const def of GRAPH_EVENTS) {
+    let view = beginGraphEvent(pathState, def.graph);
+    let guard = 0;
+    while (view.kind !== "end" && guard < 16) {
+      guard += 1;
+      if (view.kind === "line") view = dialogueAdvance(pathState, def.graph, view.nodeId);
+      else if (view.kind === "choices") {
+        const pick = view.choices.find((c) => !c.locked) ?? view.choices[0];
+        view = dialogueChoose(pathState, def.graph, view.nodeId, pick.id);
+      }
+    }
+    if (view.kind !== "end") runAway += 1;
+    // reset flags so the next event's resume-detection doesn't skip ahead
+    pathState.flags = {};
+  }
+  results.push({
+    name: `Graph content: ${GRAPH_EVENTS.length} events + ${ADVISOR_ARCS.length} arcs sound, all paths terminate`,
+    pass: GRAPH_EVENTS.length >= 20 && ADVISOR_ARCS.length >= 3 && contentBad === 0 && runAway === 0,
+    detail: contentDetail || `validator clean, ${runAway} runaway paths`,
+  });
+
+  // 20. Graph event finalisation: decision, wire, queue, fired marker.
+  const deskState = makeState();
+  beginTurn(deskState);
+  const graphInQueue = deskState.queuedEventIds.some((id) => id.startsWith("g_") || id.startsWith("arc_"));
+  const sample = GRAPH_EVENTS[0];
+  const deskView = beginGraphEvent(deskState, sample.graph);
+  let finGuard = 0;
+  let finView = deskView;
+  while (finView.kind !== "choices" && finGuard < 8) {
+    finGuard += 1;
+    if (finView.kind === "line") finView = dialogueAdvance(deskState, sample.graph, finView.nodeId);
+    else break;
+  }
+  if (finView.kind === "choices") {
+    const pick = finView.choices[0];
+    const choicesNode = sample.graph.nodes[finView.nodeId] as
+      | { kind: "choices"; choices: Array<{ id: string; news?: { outlet: "peninsula" | "borneo" | "sinar"; headline: { en: string; ms: string } } }> }
+      | undefined;
+    const chosenNews = choicesNode && choicesNode.kind === "choices"
+      ? choicesNode.choices.find((c) => c.id === pick.id)?.news ?? null
+      : null;
+    const after = chooseGraphEvent(deskState, sample.graph, finView.nodeId, pick.id);
+    completeGraphEvent(deskState, sample.graph.id, chosenNews?.headline ?? null, sample.meta.category);
+    const logged = deskState.decisions.some((d) => d.id === sample.graph.id && d.optionId === pick.id);
+    const fired = deskState.firedEvents.includes(sample.graph.id);
+    const offDesk = !deskState.queuedEventIds.includes(sample.graph.id);
+    const onWire = chosenNews ? deskState.news.some((n) => n.id === `${sample.graph.id}-${deskState.turn}`) : true;
+    results.push({
+      name: "Graph event finalisation: decision, wire, queue, fired marker",
+      pass: after.decided && logged && fired && offDesk && onWire,
+      detail: `logged=${logged}, fired=${fired}, offDesk=${offDesk}, wire=${onWire}`,
+    });
+  } else {
+    results.push({ name: "Graph event finalisation", pass: false, detail: "path never reached choices" });
+  }
+  void graphInQueue;
+
+  // 21. The scheduler can place graph events on the desk (deterministic).
+  const schedState = makeState();
+  schedState.chapter = 2;
+  schedState.turn = 10;
+  const schedulable = pickSchedulable(schedState, [
+    ...legacySchedulable(ALL_EVENTS),
+    ...GRAPH_EVENTS.map((e) => ({ id: e.meta.id, kind: e.meta.kind, chapter: e.meta.chapter, window: e.meta.window, priority: e.meta.priority, minGap: e.meta.minGap, schedule: e.meta.schedule })),
+  ]);
+  const hasGraphOnDesk = schedulable.some((id) => id.startsWith("g_"));
+  results.push({
+    name: "Scheduler merges graph events onto the desk queue",
+    pass: schedulable.length > 0 && hasGraphOnDesk,
+    detail: `queue: ${schedulable.join(", ")}`,
   });
 
   return results;

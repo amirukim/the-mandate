@@ -130,7 +130,7 @@ export function HomeScreen() {
         aria-label={t("nav.dock")}
         className="absolute z-20 inset-x-0 bottom-5 flex justify-center"
       >
-        <div className="flex items-end gap-5 px-6 py-3 rounded-[18px] bg-midnight/55 border border-gold/25 backdrop-blur-sm shadow-lift">
+        <div className="flex items-end gap-5 px-6 py-3 rounded-[18px] bg-navy/70 border border-gold/25 backdrop-blur-sm shadow-lift">
           {DOCK.map((app) => (
             <Link
               key={app.id}

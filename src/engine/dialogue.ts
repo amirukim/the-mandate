@@ -43,6 +43,8 @@ export interface DialogueChoice {
   effects?: Effect[];
   /** Flags written on the transition (in addition to the automatic callback flag). */
   setFlags?: GameFlags;
+  /** Authoring-layer extra (Phase 8): the wire line this pick generates. */
+  news?: { outlet: "peninsula" | "borneo" | "sinar"; headline: LocalizedText };
 }
 
 export interface DialogueLineNode {

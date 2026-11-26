@@ -1,15 +1,19 @@
 import { ALL_EVENTS, getEventById } from "../data/events";
+import { ensureContentRegistered } from "../data/dialogue";
 import type { GameState, NewsItem } from "../types/game";import type { GameEventDef, SceneOption } from "../types/narrative";
 import { applyEffects } from "./effects";
 import { economyHeadline, endTurn, type TurnReport } from "./simulation";
-import { selectEventsForTurn } from "./narrative";
+import { legacySchedulable, pickSchedulable } from "./narrative";
+import { graphSchedulable } from "./graph-events";
 import { ensureMutable } from "./array-guard";
 
 const OUTLET_ROTATION = ["peninsula", "borneo", "sinar"] as const;
 
-/** Schedule this month's briefings onto the desk. */
+/** Schedule this month's briefings onto the desk — legacy and graph events share it. */
 export function beginTurn(state: GameState): void {
-  state.queuedEventIds = selectEventsForTurn(state, ALL_EVENTS);
+  ensureContentRegistered();
+  const items = [...legacySchedulable(ALL_EVENTS), ...graphSchedulable()];
+  state.queuedEventIds = pickSchedulable(state, items);
 }
 
 /** The event currently on the Prime Minister's desk, if any. */
