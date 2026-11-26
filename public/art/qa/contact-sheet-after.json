@@ -5,7 +5,9 @@
     "neutral",
     "concerned",
     "pleased",
-    "stern"
+    "stern",
+    "weary",
+    "surprised"
   ],
   "cast": [
     {

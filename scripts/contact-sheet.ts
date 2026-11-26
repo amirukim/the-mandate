@@ -90,7 +90,7 @@ function parseCell(cell: string): [number, number, number, number] {
 
 /* --- compose the sheet --------------------------------------------------- */
 
-const EXPRESSIONS: Expression[] = ["neutral", "concerned", "pleased", "stern"];
+const EXPRESSIONS: Expression[] = ["neutral", "concerned", "pleased", "stern", "weary", "surprised"];
 const CAST = [...CHARACTERS, ...SUPPORTING_CAST];
 
 const cellW = SPRITE_W * SCALE;
