@@ -1,12 +1,12 @@
 ﻿/**
- * Builds the federation terrain plate — 400x213, the chunky-pixel map.
- * Displayed at 3x (1200x640) with image-rendering: pixelated, so every drawn
- * pixel becomes a 3px block: true pixel art, not a smooth vector map (art
- * bible 5.7; v2 map revamp).
+ * Builds the federation terrain plate — high resolution (2160x1152, 1.8 plate
+ * px per projection unit), displayed smooth: no pixelated upscale. The chunky
+ * look was dropped in the 6c map pass; the plate is a clean stylised map that
+ * stays legible at every zoom level.
  *
  * Layers: sea band, shore halo, neighbour tones, the federation in cream with
  * a navy coast, subdued state tones, stepped relief ridges clipped to real
- * polygons, rivers, landmark pixels.
+ * polygons, rivers, landmark props.
  *
  * Run: npm run build:map-plate   (tsx scripts/build-map-plate.ts)
  * Out: public/art/pixel/map-federation.png
@@ -23,19 +23,20 @@ import {
 import { GEO_STATES } from "../src/data/geo-states";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const W = 400, H = 213; // bible spec: 400x213 at x3 = 1200x640
+const S = 1.8; // plate px per projection unit (1200x640 -> 2160x1152)
+const W = Math.round(1200 * S), H = Math.round(640 * S);
 const px = new PixelCanvas(W, H);
 const C_GOLD_LT = "#e5c385";
 
-/** rings arrive baked at 1200x640; divide by 3 into plate space */
+/** rings arrive baked at 1200x640; scale into plate space */
 const to3 = (ring: GeoRing | number[][]): [number, number][] =>
   (ring as ReadonlyArray<ReadonlyArray<number>>).map((p) => [
-    Math.round((p[0] / 3) * 10) / 10,
-    Math.round((p[1] / 3) * 10) / 10,
+    Math.round(p[0] * S * 10) / 10,
+    Math.round(p[1] * S * 10) / 10,
   ]);
 const at3 = (lon: number, lat: number): [number, number] => {
-  const x = ((lon - 92) / 40) * (1200 / 3);
-  const y = 213 - ((lat + 12) / 42) * (640 / 3);
+  const x = ((lon - 92) / 40) * 1200 * S;
+  const y = H - ((lat + 12) / 42) * H;
   return [Math.round(x), Math.round(y)];
 };
 
@@ -87,11 +88,11 @@ function insideRing(ring: number[][], x: number, y: number): boolean {
 
 /* --- sea + shore halo ------------------------------------------------------ */
 
-px.rect(0, 0, W, 13, "#cfe3f2"); // horizon band
-px.rect(0, 13, W, H - 13, "#bfd7ea");
+px.rect(0, 0, W, Math.round(13 * S), "#cfe3f2"); // horizon band
+px.rect(0, Math.round(13 * S), W, H - Math.round(13 * S), "#bfd7ea");
 const MY_RINGS = Object.values(GEO_STATES).map((rings) => rings.map((ring) => to3(ring)));
-for (const rings of MY_RINGS) for (const ring of rings) strokePolygon(ring, "#d5e9f6", 8);
-for (const rings of MY_RINGS) for (const ring of rings) strokePolygon(ring, "#e0f0fa", 3);
+for (const rings of MY_RINGS) for (const ring of rings) strokePolygon(ring, "#d5e9f6", Math.round(8 * S));
+for (const rings of MY_RINGS) for (const ring of rings) strokePolygon(ring, "#e0f0fa", Math.round(3 * S));
 
 /* --- neighbours ------------------------------------------------------------- */
 
@@ -115,11 +116,11 @@ for (const rings of MY_RINGS) {
   for (const ring of rings) fillPolygon(ring, "#f7f4ec");
 }
 for (const rings of MY_RINGS) {
-  for (const ring of rings) strokePolygon(ring, "#1a1e6e", 1);
+  for (const ring of rings) strokePolygon(ring, "#1a1e6e", Math.round(2 * S));
 }
 for (const [id, rings] of Object.entries(GEO_STATES)) {
   const tone = STATE_TONE[id] ?? "#8a8478";
-  for (const ring of rings) strokePolygon(to3(ring), tone, 1);
+  for (const ring of rings) strokePolygon(to3(ring), tone, Math.max(1, Math.round(S)));
 }
 
 /* --- banded relief, clipped to the federation ---------------------------------- */
@@ -140,7 +141,7 @@ for (const band of RELIEF_BANDS) {
       const lat = lat1 + ((lat2 - lat1) * t) / steps;
       const [x, y] = at3(lon, lat);
       if (allRings.some((ring) => insideRing(ring, x, y))) {
-        px.rect(x, y, 1, 1, Math.floor(t / 3) % 2 === 0 ? band.c : "#3b5b54");
+        px.rect(x, y, Math.max(1, Math.round(S)), Math.max(1, Math.round(S)), Math.floor(t / 3) % 2 === 0 ? band.c : "#3b5b54");
       }
     }
   }
@@ -160,43 +161,42 @@ for (const river of RIVERS) {
     const steps = Math.ceil(Math.hypot(lon2 - lon1, lat2 - lat1) * 8);
     for (let t = 0; t <= steps; t++) {
       const [x, y] = at3(lon1 + ((lon2 - lon1) * t) / steps, lat1 + ((lat2 - lat1) * t) / steps);
-      if (allRings.some((ring) => insideRing(ring, x, y))) px.set(x, y, "#9fc4dd");
+      if (allRings.some((ring) => insideRing(ring, x, y))) px.rect(x, y, Math.max(1, Math.round(S)), Math.max(1, Math.round(S) + 1), "#9fc4dd");
     }
   }
 }
 
-/* --- landmark pixels ------------------------------------------------------------------ */
+/* --- landmark props ---------------------------------------------------------------------- */
 
 // Petronas Towers near KL: twin dark columns with gold tips
 {
   const [x, y] = at3(101.72, 3.16);
-  px.rect(x - 1, y - 2, 1, 2, "#39414c");
-  px.rect(x + 1, y - 2, 1, 2, "#39414c");
-  px.set(x - 1, y - 3, C_GOLD_LT);
-  px.set(x + 1, y - 3, C_GOLD_LT);
+  px.rect(x - 2, y - 5, 2, 5, "#39414c");
+  px.rect(x + 1, y - 5, 2, 5, "#39414c");
+  px.rect(x - 2, y - 6, 2, 1, C_GOLD_LT);
+  px.rect(x + 1, y - 6, 2, 1, C_GOLD_LT);
 }
-// Putrajaya: gold dome pixel
+// Putrajaya: gold dome
 {
   const [x, y] = at3(101.7, 2.93);
-  px.set(x, y, C_GOLD_LT);
+  px.disc(x, y, 2, C_GOLD_LT);
 }
 // Penang Bridge: dotted line island-to-mainland
 {
   const [x1, y1] = at3(100.28, 5.22);
   const [x2, y2] = at3(100.42, 5.35);
-  for (let t = 0; t <= 6; t++) px.set(Math.round(x1 + ((x2 - x1) * t) / 6), Math.round(y1 + ((y2 - y1) * t) / 6), "#8a8478");
+  for (let t = 0; t <= 8; t++) px.disc(Math.round(x1 + ((x2 - x1) * t) / 8), Math.round(y1 + ((y2 - y1) * t) / 8), 1, "#8a8478");
 }
 // Mount Kinabalu: stepped peak
 {
   const [x, y] = at3(116.62, 6.05);
-  px.set(x, y - 1, "#f7f4ec");
-  px.set(x - 1, y, "#d8cbb0"); px.set(x + 1, y, "#d8cbb0");
-  px.rect(x - 1, y + 1, 3, 1, "#c9c2ae");
+  for (let i = 0; i < 5; i++) px.rect(x - 2 * (4 - i), y + i * 4, 4 * (4 - i), 4, i < 2 ? "#d8cbb0" : "#c9c2ae");
+  px.rect(x - 2, y - 4, 4, 4, "#f7f4ec");
 }
-// Kuching waterfront: gold pixel
+// Kuching waterfront: gold dash
 {
   const [x, y] = at3(110.34, 1.55);
-  px.set(x, y, C_GOLD_LT);
+  px.rect(x - 3, y, 6, 2, C_GOLD_LT);
 }
 
 /* --- encode + manifest ------------------------------------------------------------------ */
@@ -217,10 +217,10 @@ manifest.assets.push({
   src: "/art/pixel/map-federation.png",
   width: W,
   height: H,
-  scale: 3,
+  scale: 1,
   source: "authored",
   licence: "original",
-  note: "Chunky-pixel terrain plate built from Natural Earth geometry (build:map-plate).",
+  note: "Smooth high-resolution terrain plate built from Natural Earth geometry (build:map-plate).",
 });
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
 console.log(`manifest now ${manifest.assets.length} assets`);

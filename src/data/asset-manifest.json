@@ -2991,12 +2991,12 @@
       "id": "map.federation",
       "kind": "map",
       "src": "/art/pixel/map-federation.png",
-      "width": 400,
-      "height": 213,
-      "scale": 3,
+      "width": 2160,
+      "height": 1152,
+      "scale": 1,
       "source": "authored",
       "licence": "original",
-      "note": "Chunky-pixel terrain plate built from Natural Earth geometry (build:map-plate)."
+      "note": "Smooth high-resolution terrain plate built from Natural Earth geometry (build:map-plate)."
     }
   ]
 }

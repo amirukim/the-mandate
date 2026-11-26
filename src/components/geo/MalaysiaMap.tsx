@@ -99,9 +99,9 @@ const TERRAIN_PLATE = "/art/pixel/map-federation.png";
 const ZOOM_MAX = 3.5;
 
 /**
- * The federation map (v2 revamp): a chunky-pixel terrain plate (400x213 at 3x,
- * image-rendering pixelated) with state-shape hover/click fills from the real
- * admin-1 polygons, cursor tooltip, Political/Sentiment data layers, one-tap
+ * The federation map (v2 revamp): a smooth high-resolution terrain plate
+ * (built at build time from the real admin-1 polygons) with state-shape
+ * hover/click fills, cursor tooltip, Political/Sentiment data layers, one-tap
  * region presets, wheel + drag + double-click + keyboard navigation, and a
  * bottom-sheet card for the selected state.
  */
@@ -256,14 +256,13 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
             className={cn("block w-full h-auto", expanded && "h-full w-full")}
             role="presentation"
           >
-            {/* terrain plate: chunky-pixel, built at build time from the same polygons */}
+            {/* terrain plate: high-resolution smooth render, built at build time from the same polygons */}
             <image
               href={TERRAIN_PLATE}
               x={0}
               y={0}
               width={GEO_VIEWBOX.width}
               height={GEO_VIEWBOX.height}
-              style={{ imageRendering: "pixelated" }}
             />
 
             {/* state shapes: hover and click on the real polygons */}
