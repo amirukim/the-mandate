@@ -14,7 +14,7 @@
 
 import data from "./asset-manifest.json";
 
-export type AssetKind = "environment" | "scene" | "sprite" | "bust" | "prop" | "map" | "icon" | "keyart";
+export type AssetKind = "environment" | "scene" | "sprite" | "bust" | "prop" | "map" | "icon" | "keyart" | "qa";
 
 export interface AssetEntry {
   id: string;

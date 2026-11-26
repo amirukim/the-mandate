@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "build:sprites": "tsx scripts/build-sprites.ts",
     "build:office-overlays": "node scripts/build-office-overlays.mjs",
-    "build:map-plate": "tsx scripts/build-map-plate.ts"
+    "build:map-plate": "tsx scripts/build-map-plate.ts",
+    "contact:sheet": "tsx scripts/contact-sheet.ts"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

@@ -2997,6 +2997,20 @@
       "source": "authored",
       "licence": "original",
       "note": "Smooth high-resolution terrain plate built from Natural Earth geometry (build:map-plate)."
+    },
+    {
+      "id": "qa.contact-sheet",
+      "kind": "qa",
+      "src": "/art/qa/contact-sheet-before.png",
+      "width": 792,
+      "height": 4888,
+      "scale": 1,
+      "candidates": [
+        "/art/qa/contact-sheet-after.png"
+      ],
+      "source": "authored",
+      "licence": "original",
+      "note": "Review artefact: every character x expression at 4x on neutral grey (contact:sheet)."
     }
   ]
 }
