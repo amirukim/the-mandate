@@ -45,11 +45,16 @@ const project = (() => {
   ];
 })();
 
+/** The playable frame: the viewBox crops to Malaysia and its immediate seas.
+ * The plate still covers the whole 1200x640 projection; the crop is what makes
+ * the federation read big instead of a thin band across an empty ocean. */
+const VIEW = { x: 189, y: 305, w: 651, h: 167 } as const;
+
 /** One-tap regions: the cure for "difficult to navigate". */
 const PRESETS = {
   federation: { zoom: 1, lon: 106, lat: 3.5 },
   peninsula: { zoom: 2.6, lon: 102.0, lat: 3.9 },
-  borneo: { zoom: 2.0, lon: 114.3, lat: 3.8 },
+  borneo: { zoom: 1.8, lon: 114.3, lat: 3.6 },
 } as const;
 
 const PRESET_LABEL: Record<keyof typeof PRESETS, string> = {
@@ -108,6 +113,9 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
   const [dragging, setDragging] = useState(false);
   const [layer, setLayer] = useState<"political" | "sentiment">("political");
   const [tip, setTip] = useState<{ x: number; y: number } | null>(null);
+  /** The untransformed frame: never measure the transformed wrapper — its rect
+   * is already scaled by zoom, which compounds every pan/zoom computation. */
+  const frameRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
   const reduced = prefersReducedMotion();
@@ -121,7 +129,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
     }
   };
 
-  const rectOf = () => viewRef.current?.getBoundingClientRect();
+  const rectOf = () => frameRef.current?.getBoundingClientRect();
 
   /** Pan is a css-px translation; clamp against the live rendered box. */
   const clampPan = (z: number, x: number, y: number): { x: number; y: number } => {
@@ -154,15 +162,18 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
       setPan({ x: 0, y: 0 });
       return;
     }
-    const k = rect.width / GEO_VIEWBOX.width;
-    const [wx, wy] = project(lon, lat);
+    const k = rect.width / VIEW.w;
+    // world coords must be rebased to the wrapper origin (the viewBox offset)
+    const cx = (project(lon, lat)[0] - VIEW.x) * k;
+    const cy = (project(lon, lat)[1] - VIEW.y) * k;
     setZoom(z);
-    setPan(clampPan(z, rect.width / 2 - wx * k * z, rect.height / 2 - wy * k * z));
+    setPan(clampPan(z, rect.width / 2 - cx * z, rect.height / 2 - cy * z));
   };
 
   const onWheel = (e: ReactWheelEvent<HTMLDivElement>) => {
     if (reduced) return;
-    const rect = e.currentTarget.getBoundingClientRect();
+    const rect = rectOf();
+    if (!rect) return;
     const fx = (e.clientX - rect.left) / rect.width;
     const fy = (e.clientY - rect.top) / rect.height;
     const next = zoom - e.deltaY * 0.0015;
@@ -177,8 +188,8 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
     e.currentTarget.setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setTip({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    const rect = rectOf();
+    if (rect) setTip({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.x;
     const dy = e.clientY - dragRef.current.y;
@@ -213,7 +224,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
         expanded ? "rounded-none border-0 h-full w-full" : "rounded-panel",
       )}
     >
-      <div className={cn("relative overflow-hidden", expanded ? "flex-1 min-h-0" : "")}>
+      <div ref={frameRef} className={cn("relative overflow-hidden", expanded ? "flex-1 min-h-0" : "")}>
         <div
           ref={viewRef}
           tabIndex={0}
@@ -226,7 +237,8 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
           onPointerUp={endDrag}
           onPointerLeave={() => { endDrag(); setTip(null); setHoverId(null); }}
           onDoubleClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
+            const rect = rectOf();
+            if (!rect) return;
             zoomAt(zoom * 1.5, (e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height);
           }}
           className={cn(
@@ -240,7 +252,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
           }
         >
           <svg
-            viewBox={`0 0 ${GEO_VIEWBOX.width} ${GEO_VIEWBOX.height}`}
+            viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`}
             className={cn("block w-full h-auto", expanded && "h-full w-full")}
             role="presentation"
           >
@@ -268,7 +280,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                   fill={fill}
                   fillOpacity={selected ? 0.5 : hovered ? 0.32 : 0.14}
                   stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
-                  strokeWidth={selected || hovered ? 3 : 1.6}
+                  strokeWidth={(selected || hovered ? 3 : 1.6) / zoom}
                   className="cursor-pointer"
                   onClick={() => toggle(state.id)}
                   onMouseEnter={() => setHoverId(state.id)}
@@ -291,6 +303,10 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                 const fill = fillFor(state, layer);
                 const isTerritory = ["kuala-lumpur", "putrajaya", "labuan"].includes(state.id);
                 const abbr = ABBR[state.id] ?? state.name.toUpperCase().slice(0, 3);
+                /** s scales world units so tokens stay ~26px on screen at any zoom. */
+                const s = 1 / zoom;
+                const size = (selected ? 17 : hovered ? 15 : 13) * s;
+                const half = size / 2;
                 return (
                   <g
                     key={state.id}
@@ -308,40 +324,32 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                   >
                     {(selected || hovered) && (
                       <g fill={fill} opacity={0.26} pointerEvents="none">
-                        <rect x={x - 24} y={y - 24} width={48} height={48} />
-                        <rect x={x - 34} y={y - 13} width={68} height={26} />
-                        <rect x={x - 13} y={y - 34} width={26} height={68} />
+                        <rect x={x - size * 1.6} y={y - size * 1.6} width={size * 3.2} height={size * 3.2} />
+                        <rect x={x - size * 2.5} y={y - size * 0.8} width={size * 5} height={size * 1.6} />
+                        <rect x={x - size * 0.8} y={y - size * 2.5} width={size * 1.6} height={size * 5} />
                       </g>
                     )}
-                    {(() => {
-                      const size = selected ? 34 : hovered ? 30 : 26;
-                      const half = size / 2;
-                      return (
-                        <>
-                          <rect x={x - half - 2} y={y - half - 2} width={size + 4} height={size + 4} fill="#f7f4ec" />
-                          <rect
-                            x={x - half}
-                            y={y - half}
-                            width={size}
-                            height={size}
-                            fill={fill}
-                            fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
-                            stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
-                            strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
-                            style={{ transition: "fill-opacity 140ms ease" }}
-                          />
-                        </>
-                      );
-                    })()}
+                    <rect x={x - half - 1.2 * s} y={y - half - 1.2 * s} width={size + 2.4 * s} height={size + 2.4 * s} fill="#f7f4ec" />
+                    <rect
+                      x={x - half}
+                      y={y - half}
+                      width={size}
+                      height={size}
+                      fill={fill}
+                      fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
+                      stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
+                      strokeWidth={(selected ? 2.2 : hovered ? 1.8 : 1.2) * s}
+                      style={{ transition: "fill-opacity 140ms ease" }}
+                    />
                     {isTerritory ? (
-                      <rect x={x - 3} y={y - 3} width={6} height={6} fill="#cc0001" />
+                      <rect x={x - 2 * s} y={y - 2 * s} width={4 * s} height={4 * s} fill="#cc0001" />
                     ) : (
                       <text
                         x={x}
-                        y={y + 4}
+                        y={y + 2.5 * s}
                         textAnchor="middle"
                         fill="#14163a"
-                        fontSize="13"
+                        fontSize={6.5 * s}
                         fontWeight="700"
                         fontFamily="Public Sans, sans-serif"
                         pointerEvents="none"
@@ -353,30 +361,29 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
                 );
               })}
 
-            {/* sea labels at real positions */}
-            <g fill="#5a7ea6" fontFamily="Public Sans, sans-serif" fontSize="14" letterSpacing="5" pointerEvents="none">
-              <text x={project(112.5, 12.8)[0]} y={project(112.5, 12.8)[1]}>SOUTH CHINA SEA</text>
-              <text x={project(97.6, 1.2)[0]} y={project(97.6, 1.2)[1]} transform={`rotate(-72 ${project(97.6, 1.2)[0]} ${project(97.6, 1.2)[1]})`}>
+            {/* sea labels at real positions, inside the crop */}
+            <g fill="#5a7ea6" fontFamily="Public Sans, sans-serif" fontSize="8" letterSpacing="3" pointerEvents="none">
+              <text x={project(113.5, 7.5)[0]} y={project(113.5, 7.5)[1]}>SOUTH CHINA SEA</text>
+              <text x={project(98.6, 4.8)[0]} y={project(98.6, 4.8)[1]} transform={`rotate(-90 ${project(98.6, 4.8)[0]} ${project(98.6, 4.8)[1]})`}>
                 STRAIT OF MALACCA
               </text>
-              <text x={project(120.5, -6.5)[0]} y={project(120.5, -6.5)[1]}>CELEBES SEA</text>
             </g>
           </svg>
-
-          {/* cursor tooltip: name + relation follows the pointer */}
-          {activeState && tip && (
-            <div
-              aria-hidden="true"
-              className="absolute z-30 pointer-events-none bg-paper border border-gold shadow-lift px-2 py-1 rounded-[2px]"
-              style={{ left: tip.x + 16, top: tip.y + 18 }}
-            >
-              <p className="display text-xs font-semibold leading-none">{activeState.name}</p>
-              <p className="kicker text-[9px] mt-1">
-                {t("overview.relationShort")}: {Math.round(activeState.relation)}
-              </p>
-            </div>
-          )}
         </div>
+
+        {/* cursor tooltip: name + relation follows the pointer, on the frame layer */}
+        {activeState && tip && (
+          <div
+            aria-hidden="true"
+            className="absolute z-30 pointer-events-none bg-paper border border-gold shadow-lift px-2 py-1 rounded-[2px]"
+            style={{ left: tip.x + 16, top: tip.y + 18 }}
+          >
+            <p className="display text-xs font-semibold leading-none">{activeState.name}</p>
+            <p className="kicker text-[9px] mt-1">
+              {t("overview.relationShort")}: {Math.round(activeState.relation)}
+            </p>
+          </div>
+        )}
 
         {/* bottom-sheet card: the selected state's dossier */}
         {selectedState && card && (
