@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { isMonsoonTurn } from "../../engine/calendar";
 import { prefersReducedMotion } from "../../hooks/usePortalOverlay";
 import { specFromAvatar, spriteDataUrl } from "../../data/pixel-portraits";
@@ -7,7 +7,7 @@ import type { GameState } from "../../types/game";
 /**
  * The office's living layer (v2 Phase 5): everything between the static plate
  * and the hotspots. Weather and the clock follow the in-game month; the props
- * follow the state — unread files, wire pile, orchid, furled flag, award
+ * follow the state â€” unread files, wire pile, orchid, furled flag, award
  * plaque, phone badge. The PM stands at the desk; a visitor walks in when a
  * briefing is waiting. All motion stills under reduced motion.
  */
@@ -22,7 +22,7 @@ function useCycle(length: number, ms: number, enabled: boolean): number {
   return i;
 }
 
-/** art-space coordinates → percentage styles inside the SceneLayer box. */
+/** art-space coordinates â†’ percentage styles inside the SceneLayer box. */
 const at = (x: number, y: number, w: number, h?: number) => ({
   left: `${(x / 480) * 100}%`,
   top: `${(y / 253) * 100}%`,
@@ -190,7 +190,7 @@ export function OfficeDynamic({ state }: { state: GameState }) {
           style={{
             left: `${(visitorLeft / 480) * 100}%`,
             top: `${(180 / 253) * 100}%`,
-            width: `${(48 / 480) * 100}%`,
+            width: `${(64 / 480) * 100}%`,
             transition: reduced ? "none" : "left 1400ms ease-out",
           }}
         />
@@ -201,9 +201,9 @@ export function OfficeDynamic({ state }: { state: GameState }) {
         aria-hidden="true"
         className="absolute overflow-hidden"
         style={{
-          left: `${(204 / 480) * 100}%`,
+          left: `${(196 / 480) * 100}%`,
           top: "0%",
-          width: `${(48 / 480) * 100}%`,
+          width: `${(64 / 480) * 100}%`,
           height: `${(156 / 253) * 100}%`,
         }}
       >

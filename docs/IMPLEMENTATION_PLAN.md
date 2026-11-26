@@ -221,7 +221,14 @@ The critical path is **art production**, not code. Code extraction is predictabl
 | D-08 | Save v2: additive optional fields, `SAVE_VERSION 2`, `migrateSave` v1→v2 | **Resolved (v2)** — approved; v1 fixture stays in the self-checks |
 | D-09 | New additive routes `/game/policy`, `/game/budget`, `/game/press` | **Resolved (v2)** — approved; policy/budget land with their apps, press ships last with content |
 | D-10 | Playwright as a devDependency for screenshots | **Resolved (v2)** — approved; dev-only, never shipped |
-| D-11 | Natural Earth admin-1 state polygons | **Resolved (v2)** — approved; public domain, provenance recorded in the manifest and geo source |
+| D-11 | Natural Earth admin-1 state polygons | **Resolved (v2)** - approved; public domain, provenance recorded in the manifest and geo source |
+| D-16 | Sprite canvas 48x64 -> 64x96, busts 96x96 later; integer display scales only (>= 3x) | **Approved (v3a)** - faces need the room; PixelSprite quantises |
+| D-17 | Layered paper-doll generator (body/clothing/head/hair-headwear/face/props) as the single spec source for bust + sprite + portrait | **Approved (v3a)** - variety becomes data, silhouettes checkable |
+| D-18 | Six expressions (neutral, concerned, pleased, stern, weary, surprised) with a >= 3% non-transparent-pixel delta gate vs neutral | **Approved (v3a)** |
+| D-19 | Five body types (slim, average, broad, tall, heavy) + older-stoop variant, with a pairwise silhouette gate: IoU < 0.8 across body classes, < 0.9 within a class (same-class characters differentiate by stance, height jitter, hair and headwear) | **Approved (v3a)** |
+| D-20 | Accurate culture wardrobe (tudung/hijab draped scarf, songkok, kopiah, batik, kebaya, baju Melayu, sherwani, sarong) with per-character signature colours | **Approved (v3a)** - phase 3 |
+| D-21 | Web Audio sound kit, synthesised, muted until first gesture, silent under reduced motion | **Approved (v3a)** - phase 4 |
+| D-22 | Playwright (existing devDependency, D-10) as the before/after screenshot tool | **Approved (v3a)** |
 
 ---
 

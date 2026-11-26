@@ -183,24 +183,36 @@ Ten fictional officeholders (`src/data/characters.ts`). **No character may resem
 | `bnChair` | Tan Sri Raja Nordin — BN Chairman | 60s | heavy | midnight mandarin suit, gold trim | white | songkok, grey moustache |
 | `oppositionLeader` | Dato' Iskandar Rahman — Opposition Leader | 50s | lean | slate mandarin suit | dark short | white kopiah, dark beard |
 
-### Expression states (Phase 3)
+### Expression states (v3: six states, gated)
 
-Each character needs a minimum set, drawn as face-only swaps on the same body:
+Drawn as face + body-language swaps on the same body — brows, eyes, mouth AND shoulders/head/hands move together:
 
 1. `neutral` — the default reading.
-2. `concerned` — brows lowered inward, mouth flat.
-3. `pleased` — brows lifted, mouth soft/up one step.
-4. `stern` — brows down, jaw set (used for refusals and warnings).
+2. `concerned` — inner brows up, head tilted toward the file, mouth flat.
+3. `pleased` — brows lifted, chin up, shoulders relaxed, mouth corners up.
+4. `stern` — brows pressed, eyes narrowed to the iris, shoulders squared.
+5. `weary` — heavy lids, head dipped, shoulders dropped.
+6. `surprised` — brows high, eyes wide, mouth open, shoulders lifted.
 
-Optional per scene: `weary` (older characters), `surprised` (rare). Never cartoonish; the game is a drama, not a comedy.
+Automated gate (self-checks): every non-neutral expression must differ from neutral by **>= 3% of
+non-transparent pixels** per character. Never cartoonish; the game is a drama, not a comedy.
 
-### Sprite proportions
+### Sprite proportions (v3: 64 × 96, layered paper-doll)
 
-- **48 × 64** full body: head 18 × 18, shoulders 26 wide, feet at y=62.
-- 3–4 head heights total (stylised, not realistic).
-- Idle: 2 frames at 6 fps (1 px shoulder rise). Blink: 2 frames every 4–7 s, randomised, no synchronised blinking across the cast.
-- Walk (only if a scene needs it): 4 frames at 8 fps, integer offsets, no motion blur.
-- Sprites are transparent PNG, 1 px dark-navy partial outline where they meet a dark background, no outline against light backgrounds.
+- **64 × 96** full body (D-16), displayed at integer scale >= 3x with `image-rendering: pixelated`.
+- Body types (D-19) per the section 6 table — slim, average, broad, tall, heavy, plus the
+  older-stoop variant — each with its own shoulder width, waist, leg length and head volume, so
+  silhouettes separate in solid black. Automated gate: pairwise IoU < 0.8 across body classes,
+  < 0.9 within a class (same-class characters differ by stance, height, hair, headwear).
+- Resting stances: `stand`, `clasp`, `hip`, `cross` — assigned per character in the spec.
+- Idle: 2 frames (1 px arm shift). Blink: every 4–7 s, randomised, never synchronised.
+- Walk: 4 frames, integer offsets, no motion blur.
+- Culture dress (D-20) is drawn accurately: the tudung/hijab is a draped scarf (covers hair,
+  frames the face, neck/chest layer, fold lines, pin — `cape` and `long` variants), the songkok
+  is a flat-topped oval cap with a gold band, the kopiah a white knit cap with ribs. Never
+  caricatured; never reduced to a hair shape.
+- Sprites are transparent PNG. Signed by `scripts/build-sprites.ts`; reviewed via
+  `npm run contact:sheet` (`public/art/qa/contact-sheet-*.png`).
 
 ### Portrait chain stays intact
 

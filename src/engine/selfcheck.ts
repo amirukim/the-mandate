@@ -29,6 +29,9 @@ import { POLICY_MEASURES } from "../data/policies";
 import { GRAPH_EVENTS, ADVISOR_ARCS, ensureContentRegistered } from "../data/dialogue";
 import { beginGraphEvent, chooseGraphEvent, completeGraphEvent } from "./graph-events";
 import { pickSchedulable, legacySchedulable } from "./narrative";
+import { drawSprite, specById } from "../data/pixel-portraits";
+import { CHARACTERS } from "../data/characters";
+import { SUPPORTING_CAST } from "../data/cast-v2";
 
 export interface CheckResult {
   name: string;
@@ -585,6 +588,65 @@ export function runSelfChecks(): CheckResult[] {
     name: "Scheduler merges graph events onto the desk queue",
     pass: schedulable.length > 0 && hasGraphOnDesk,
     detail: `queue: ${schedulable.join(", ")}`,
+  });
+
+  // 22. Character art gates (v3a, D-18/D-19): every expression differs from
+  //     neutral by >= 3% of the non-transparent pixels, and no two characters
+  //     share a silhouette (pairwise IoU < 0.8).
+  const artIds = [...CHARACTERS, ...SUPPORTING_CAST].map((c) => c.id);
+  const masks = new Map<string, Set<string>>();
+  for (const id of artIds) {
+    const spec = specById(id);
+    const cells = drawSprite(spec, "neutral", { pose: "stand", frame: 0, blink: false });
+    const mask = new Set<string>();
+    cells.forEach((row, y) => row.forEach((c, x) => { if (c) mask.add(`${x},${y}`); }));
+    masks.set(id, mask);
+  }
+  let minDelta = 1;
+  let deltaDetail = "";
+  for (const id of artIds) {
+    const base = masks.get(id)!;
+    const unionSize = base.size;
+    for (const expression of ["concerned", "pleased", "stern", "weary", "surprised"] as const) {
+      const cells = drawSprite(specById(id), expression, { pose: "stand", frame: 0, blink: false });
+      const mask = new Set<string>();
+      cells.forEach((row, y) => row.forEach((c, x) => { if (c) mask.add(`${x},${y}`); }));
+      let diff = 0;
+      const all = new Set([...base, ...mask]);
+      for (const key of all) if (base.has(key) !== mask.has(key)) diff += 1;
+      const ratio = diff / Math.max(1, all.size);
+      if (ratio < minDelta) {
+        minDelta = ratio;
+        deltaDetail = `${id}/${expression}`;
+      }
+    }
+    void unionSize;
+  }
+  let maxExcess = -Infinity;
+  let iouDetail = "";
+  for (let i = 0; i < artIds.length; i++) {
+    for (let j = i + 1; j < artIds.length; j++) {
+      const a = masks.get(artIds[i])!;
+      const b = masks.get(artIds[j])!;
+      let inter = 0;
+      for (const key of a) if (b.has(key)) inter += 1;
+      const union = a.size + b.size - inter;
+      const iou = union > 0 ? inter / union : 1;
+      // same body class shares the torso: 0.9 there, 0.8 across classes
+      const classA = specById(artIds[i]).body ?? "average";
+      const classB = specById(artIds[j]).body ?? "average";
+      const limit = classA === classB ? 0.9 : 0.8;
+      const excess = iou - limit;
+      if (excess > maxExcess) {
+        maxExcess = excess;
+        iouDetail = `${artIds[i]}~${artIds[j]} at ${iou.toFixed(2)} (limit ${limit})`;
+      }
+    }
+  }
+  results.push({
+    name: "Character art: expressions >= 3% delta, silhouettes distinguishable (cross-class IoU < 0.8, same-class < 0.9)",
+    pass: minDelta >= 0.03 && maxExcess < 0,
+    detail: `min expression delta ${(minDelta * 100).toFixed(1)}% (${deltaDetail}); worst silhouette ${iouDetail}`,
   });
 
   return results;

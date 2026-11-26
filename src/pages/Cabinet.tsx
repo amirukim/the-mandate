@@ -5,6 +5,7 @@ import { PixelSprite } from "../components/game/PixelSprite";
 import { PartyFlag } from "../components/ui/PartyFlag";
 import { PixelScene } from "../components/game/PixelScene";
 import { CabinetTable } from "../features/cabinet/CabinetTable";
+import { SPRITE_W, SPRITE_H } from "../data/pixel-portraits";
 import { prefersReducedMotion } from "../hooks/usePortalOverlay";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
@@ -55,8 +56,8 @@ function CharacterCard({ id, tier }: CharacterCardProps) {
       )}
     >
       <div className="shrink-0 self-start flex flex-col items-center gap-1.5">
-        <PixelSprite characterId={id} mode="idle" scale={2} className="rounded-[2px] bg-navy/90 border border-rule" />
-        <span className="kicker text-[8px] text-muted">48 × 64</span>
+        <PixelSprite characterId={id} mode="idle" scale={3} className="rounded-[2px] bg-navy/90 border border-rule" />
+        <span className="kicker text-[8px] text-muted">{SPRITE_W} × {SPRITE_H}</span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -161,7 +162,7 @@ export function Cabinet() {
         </div>
       </header>
 
-      {/* v2: the working table — posts, appointments, faction anger */}
+      {/* v2: the working table â€” posts, appointments, faction anger */}
       <section id="appointments" aria-label={t("cabinet.appointments")} className="mb-2 scroll-mt-6">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <h2 className="kicker kicker-gold">{t("cabinet.appointments")}</h2>

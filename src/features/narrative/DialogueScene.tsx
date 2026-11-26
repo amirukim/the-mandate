@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { CHARACTERS } from "../../data/characters";
 import { SUPPORTING_CAST } from "../../data/cast-v2";
 import { characterText } from "../../i18n/data";
@@ -16,7 +16,7 @@ import { cn } from "../../utils/cn";
 import type { Expression } from "../../data/pixel-portraits";
 
 /**
- * The v2 runner UI (Phase 8): renders a graph event on the desk — big bust,
+ * The v2 runner UI (Phase 8): renders a graph event on the desk â€” big bust,
  * nameplate, lines to advance, choices with effect-on-pick, locked chips with
  * their reasons. Choices apply through the engine and finalise the desk
  * bookkeeping (decision, wire, queue) on the pick, mirroring chooseOption.
@@ -91,7 +91,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
     onDone();
   };
 
-  const kicker = `${lang === "ms" ? meta.location.ms : meta.location.en} · ${lang === "ms" ? meta.title.ms : meta.title.en}`;
+  const kicker = `${lang === "ms" ? meta.location.ms : meta.location.en} Â· ${lang === "ms" ? meta.title.ms : meta.title.en}`;
 
   return (
     <div className="space-y-5">
@@ -107,7 +107,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
           <div className="bg-card border border-rule rounded-panel p-5">
             <div className="flex gap-4">
               {info.spriteId ? (
-                <PixelSprite characterId={info.spriteId} expression={expression} scale={2} className="shrink-0 rounded-[2px] bg-navy/90 border border-rule" />
+                <PixelSprite characterId={info.spriteId} expression={expression} scale={3} className="shrink-0 rounded-[2px] bg-navy/90 border border-rule" />
               ) : (
                 <div className="shrink-0 w-[96px] h-[128px] rounded-[2px] bg-navy/90 border border-rule flex items-center justify-center">
                   <span aria-hidden="true" className="font-pixel text-[10px] text-gold/80 text-center px-1">PM</span>
@@ -128,7 +128,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
                 onClick={() => advance(current.nodeId)}
                 className="text-sm font-semibold text-gold-text hover:text-gold-bright transition-colors"
               >
-                {t("scene.continue")} →
+                {t("scene.continue")} â†’
               </button>
             </div>
           </div>
@@ -177,7 +177,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
               : (lang === "ms" ? "Tiada keputusan diperlukan." : "No decision was required here.")}
           </p>
           {headlines.map((h, i) => (
-            <p key={i} className="text-sm font-semibold mt-2">“{h}”</p>
+            <p key={i} className="text-sm font-semibold mt-2">â€œ{h}â€</p>
           ))}
           <div className="mt-4 flex justify-end">
             <button
@@ -185,7 +185,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
               onClick={finish}
               className="text-sm font-semibold text-gold-text hover:text-gold-bright transition-colors"
             >
-              {t("scene.continue")} →
+              {t("scene.continue")} â†’
             </button>
           </div>
         </div>

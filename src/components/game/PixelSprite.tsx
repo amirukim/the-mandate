@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { cn } from "../../utils/cn";
-import type { Expression } from "../../data/pixel-portraits";
+import { SPRITE_W, SPRITE_H, type Expression } from "../../data/pixel-portraits";
 
 interface PixelSpriteProps {
   characterId: string;
   expression?: Expression;
   /** "idle" cycles the two idle frames and blinks; "stand" holds one frame. */
   mode?: "idle" | "stand";
-  /** Integer display multiple of the 48x64 sheet (2 = 96x128). */
-  scale?: 1 | 2 | 3;
+  /** Integer display multiple of the 64x96 sheet (D-16: >= 3). */
+  scale?: 1 | 2 | 3 | 4;
   /** Staggers blink/idle timing so a row of sprites never moves as one. */
   phaseOffsetMs?: number;
   className?: string;
@@ -27,7 +27,7 @@ export function PixelSprite({
   characterId,
   expression = "neutral",
   mode = "idle",
-  scale = 2,
+  scale = 3,
   phaseOffsetMs = 0,
   className,
 }: PixelSpriteProps) {
@@ -73,8 +73,8 @@ export function PixelSprite({
     <img
       src={`/art/pixel/sprites/${file}`}
       alt=""
-      width={48 * scale}
-      height={64 * scale}
+      width={SPRITE_W * scale}
+      height={SPRITE_H * scale}
       className={cn("pixelated select-none", className)}
       draggable={false}
     />

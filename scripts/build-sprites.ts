@@ -87,7 +87,7 @@ function encodeRGBA(width: number, height: number, cells: (string | null)[][]): 
 
 /* --- the sprite families ---------------------------------------------- */
 
-const EXPRESSIONS: Expression[] = ["neutral", "concerned", "pleased", "stern"];
+const EXPRESSIONS: Expression[] = ["neutral", "concerned", "pleased", "stern", "weary", "surprised"];
 const CAST = [...CHARACTERS, ...SUPPORTING_CAST];
 
 const files: Array<{ name: string; id: string; expression: Expression; pose: "stand" | "walk"; frame: number; blink: boolean }> = [];
@@ -127,12 +127,12 @@ for (const file of files) {
     id: `sprite.${file.name.replace(/^sprite-/, "").replace(/\.png$/, "")}`,
     kind: "sprite",
     src: `/art/pixel/sprites/${file.name}`,
-    width: 48,
-    height: 64,
-    scale: 2,
+    width: SPRITE_W,
+    height: SPRITE_H,
+    scale: 3,
     source: "authored",
     licence: "original",
-    note: "Full-body sprite, generated from the bust spec (build:sprites).",
+    note: "Full-body sprite from the layered paper-doll spec (build:sprites, D-16..D-19).",
   });
 }
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");

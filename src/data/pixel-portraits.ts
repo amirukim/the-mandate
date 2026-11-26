@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Pixel portrait engine â€” 64Ã—64 busts, rendered to canvas and scaled with
  * image-rendering: pixelated on large surfaces (smooth 2D downscale on small
  * ones, so the cast strip stays legible). Deliberate art direction, not a
@@ -30,7 +30,7 @@ interface PixelSpec {
   bg: [string, string];
   attire: { kind: "suit" | "open" | "mandarin"; c: string; trim: string; shirt: string; tie?: string; accent?: string };
   hair?: { c: string; hi: string; style: "bob" | "short" | "receding" | "tied" | "sidepart" | "curls" | "combed" | "white" };
-  hijab?: { c: string; hi: string };
+  hijab?: { c: string; hi: string; style?: "cape" | "long" };
   songkok?: string;
   kopiah?: string;
   glasses?: boolean;
@@ -39,7 +39,18 @@ interface PixelSpec {
   mouth?: "firm" | "set" | "soft";
   earrings?: boolean;
   bindi?: boolean;
+  /** v3 paper-doll (D-17/D-19): body volume and older-posture variant. */
+  body?: BodyType;
+  stoop?: boolean;
+  /** v3: resting arm stance — real silhouette variety on shared body types. */
+  stance?: "stand" | "clasp" | "hip" | "cross";
+  /** v3: leg-length jitter so same-body characters differ in height. */
+  heightAdj?: number;
+  /** Per-character face geometry so faces read as different people. */
+  face?: { brow?: "straight" | "arched" | "bushy"; chin?: "taper" | "square" | "round"; nose?: "slim" | "broad" };
 }
+
+export type BodyType = "slim" | "average" | "broad" | "tall" | "heavy";
 
 class Grid {
   readonly w: number;
@@ -51,7 +62,9 @@ class Grid {
     this.h = h;
     this.cells = Array.from({ length: h }, () => Array<string | null>(w).fill(null));
   }
-  set(x: number, y: number, c: string | null) {
+  set(inputX: number, inputY: number, c: string | null) {
+    const x = Math.round(inputX);
+    const y = Math.round(inputY);
     if (x < 0 || y < 0 || x >= this.w || y >= this.h) return;
     this.cells[y][x] = c;
   }
@@ -417,7 +430,7 @@ export function specById(id: string): PixelSpec {
  * SPECS; these four overlays redraw brows and mouth on top of it. Selection is
  * rule-driven (features/narrative/cast.ts), never random.
  */
-export type Expression = "neutral" | "concerned" | "pleased" | "stern";
+export type Expression = "neutral" | "concerned" | "pleased" | "stern" | "weary" | "surprised";
 
 const MOUTH = "#4d3230";
 
@@ -439,6 +452,21 @@ function applyExpression(g: Grid, expression: Expression, skin: string) {
     g.rect(29, 37, 6, 1, MOUTH);
     g.set(28, 38, MOUTH);
     g.set(35, 38, MOUTH);
+  } else if (expression === "weary") {
+    // heavy lids, brow flat and low, mouth pulled down at the corners
+    g.rect(25, 23, 6, 1, brow);
+    g.rect(33, 23, 6, 1, brow);
+    g.rect(26, 24, 6, 1, skin); // droop the upper lid
+    g.rect(35, 24, 6, 1, skin);
+    g.rect(29, 37, 7, 1, MOUTH);
+    g.set(28, 36, MOUTH);
+    g.set(36, 36, MOUTH);
+  } else if (expression === "surprised") {
+    // brows high, mouth a small open ellipse
+    g.rect(25, 18, 6, 1, brow);
+    g.rect(33, 18, 6, 1, brow);
+    g.rect(28, 36, 8, 3, MOUTH);
+    g.rect(29, 37, 6, 1, "#3a1f22");
   } else {
     // stern: brows pressed flat and low, mouth a straight line
     g.rect(25, 22, 5, 1, brow);
@@ -451,8 +479,8 @@ function applyExpression(g: Grid, expression: Expression, skin: string) {
 /* Full-body sprites (v2, plan C/D): 48x64, same specs and palette     */
 /* ------------------------------------------------------------------ */
 
-export const SPRITE_W = 48;
-export const SPRITE_H = 64;
+export const SPRITE_W = 64;
+export const SPRITE_H = 96;
 export type SpritePose = "stand" | "walk";
 export type SpriteBlink = boolean;
 
@@ -463,305 +491,504 @@ export interface SpriteFrameOpts {
   blink?: boolean;
 }
 
-/** Compact face at sprite scale: same spec fields, same expression mapping. */
-function drawSpriteHead(
-  g: Grid,
-  spec: PixelSpec,
-  expression: Expression,
-  cx: number,
-  top: number,
-  blink: boolean,
-) {
-  const [skin, skinSh, skinHi] = spec.skin;
-  const hy = top + 8; // head centre
-  // shade crescent, then the lit face
-  g.ellipse(cx + 1.5, hy, 7, 7, skinSh);
-  g.ellipse(cx, hy, 7, 7, skin);
-  g.ellipse(cx, hy + 3, 6, 5, skin);
-  // left light plane
-  g.vline(cx - 5, hy - 4, 7, skinHi);
-  g.set(cx - 5, hy - 5, skinHi);
-  // ears
-  g.rect(cx - 8, hy, 2, 3, skin);
-  g.set(cx - 8, hy + 1, skinSh);
-  g.rect(cx + 6, hy, 2, 3, skin);
-  g.set(cx + 7, hy + 1, skinSh);
+/**
+ * The layered paper-doll (D-17): shadow, legs, torso, arms, head, hair and
+ * headwear, face, expression posture. Every layer is a pure function of the
+ * PixelSpec, so bust and sprite can never drift, and the silhouette becomes
+ * checkable (D-19). Expressions change brows, eyes, mouth AND body language
+ * (D-18).
+ */
 
-  // hair / headwear (mini silhouettes of the bust styles)
-  const h = spec.hair;
-  if (h) {
-    const { c, hi } = h;
-    const hairSh = shade(c, 0.3);
-    switch (h.style) {
-      case "bob":
-        g.ellipse(cx, hy - 1, 8, 6, c);
-        g.rect(cx - 8, hy, 3, 8, c);
-        g.rect(cx + 5, hy, 3, 8, c);
-        g.ellipse(cx, hy + 1, 6, 5, skin);
-        g.rect(cx + 6, hy + 1, 2, 6, hairSh);
-        g.set(cx - 4, hy - 5, hi);
-        g.set(cx + 3, hy - 5, hi);
-        break;
-      case "receding":
-        g.ellipse(cx, hy - 3, 7, 5, c);
-        g.ellipse(cx, hy + 1, 6, 5, skin);
-        g.rect(cx + 4, hy - 4, 2, 6, hairSh);
-        g.set(cx - 3, hy - 6, hi);
-        break;
-      case "tied":
-        g.ellipse(cx, hy - 2, 7, 6, c);
-        g.ellipse(cx, hy + 1, 6, 5, skin);
-        g.rect(cx - 8, hy - 1, 2, 5, c);
-        g.rect(cx + 6, hy - 1, 2, 5, c);
-        g.rect(cx - 2, top - 1, 4, 2, c);
-        g.rect(cx + 5, hy + 1, 2, 6, hairSh);
-        g.set(cx - 3, hy - 5, hi);
-        break;
-      case "sidepart":
-        g.ellipse(cx, hy - 2, 7, 5, c);
-        g.ellipse(cx, hy + 1, 6, 5, skin);
-        g.rect(cx - 6, hy - 4, 4, 3, c);
-        g.rect(cx + 5, hy - 3, 2, 7, hairSh);
-        g.set(cx - 4, hy - 6, hi); g.set(cx - 3, hy - 5, hi);
-        break;
-      case "curls":
-        for (const [dx, dy, r] of [[-5, -4, 3], [0, -6, 4], [5, -3, 3], [-7, 0, 2], [7, 0, 2]] as const) {
-          g.ellipse(cx + dx, hy + dy, r, r - 1, c);
-        }
-        g.ellipse(cx, hy + 1, 6, 5, skin);
-        g.set(cx - 1, hy - 7, hi);
-        g.set(cx + 6, hy + 1, hairSh);
-        break;
-      case "combed":
-      case "white":
-        g.ellipse(cx, hy - 3, 7, 5, c);
-        g.ellipse(cx, hy + 1, 6, 5, skin);
-        g.rect(cx + 5, hy - 4, 2, 7, hairSh);
-        g.set(cx - 4, hy - 6, hi); g.set(cx - 3, hy - 5, tint(c, 0.35));
-        break;
-      case "short":
-      default:
-        g.ellipse(cx, hy - 3, 7, 5, c);
-        g.ellipse(cx, hy + 1, 6, 5, skin);
-        g.rect(cx + 4, hy - 4, 2, 7, hairSh);
-        g.set(cx - 4, hy - 6, hi); g.set(cx + 3, hy - 6, hi);
-        break;
-    }
-  }
-  if (spec.hijab) {
-    g.ellipse(cx, hy, 9, 8, spec.hijab.c);
-    g.rect(cx - 9, hy + 2, 3, 12, spec.hijab.c);
-    g.rect(cx + 6, hy + 2, 3, 12, spec.hijab.c);
-    g.rect(cx - 9, hy + 2, 1, 12, spec.hijab.hi);
-    g.ellipse(cx, hy + 1, 6, 5, skin);
-    g.rect(cx + 6, hy + 3, 2, 9, shade(spec.hijab.c, 0.2));
-    g.set(cx - 3, hy - 7, tint(spec.hijab.c, 0.3));
-  }
-  if (spec.songkok) {
-    px_ellipseTop(g, cx, top + 3, 8, 4, spec.songkok);
-    g.hline(cx - 7, top + 6, 15, "#c9a96a");
-    g.rect(cx + 4, top + 4, 2, 5, shade(spec.songkok, 0.25));
-    g.set(cx - 4, top + 4, tint(spec.songkok, 0.25));
-  }
-  if (spec.kopiah) {
-    px_ellipseTop(g, cx, top + 3, 8, 4, spec.kopiah);
-    g.hline(cx - 7, top + 6, 15, "#8f8a7c");
-    g.rect(cx + 4, top + 4, 2, 5, shade(spec.kopiah, 0.25));
-  }
-  if (spec.bindi) g.rect(cx, hy - 4, 1, 2, "#b3452e");
-
-  // brows — tapered
-  const brow = spec.older ? skinSh : "#26222a";
-  const by = hy - 3;
-  g.rect(cx - 5, by, 3, 1, brow);
-  g.set(cx - 2, by, brow);
-  g.rect(cx + 2, by, 3, 1, brow);
-  g.set(cx + 1, by, brow);
-
-  // eyes — sclera, iris, glint; blink swaps to lids
-  const ey = hy + 1;
-  if (blink) {
-    g.hline(cx - 4, ey, 3, "#241f26");
-    g.hline(cx + 2, ey, 3, "#241f26");
-  } else {
-    g.ellipse(cx - 3, ey, 2, 1, "#f6f2e8");
-    g.ellipse(cx + 3, ey, 2, 1, "#f6f2e8");
-    g.set(cx - 3, ey, "#23303e");
-    g.set(cx + 3, ey, "#23303e");
-    g.set(cx - 3, ey - 1, "#4d5f72");
-    g.set(cx + 3, ey - 1, "#4d5f72");
-    g.hline(cx - 4, ey - 1, 3, "#241f26");
-    g.hline(cx + 2, ey - 1, 3, "#241f26");
-  }
-
-  // nose
-  g.vline(cx, ey + 1, 3, skinSh);
-  g.set(cx - 1, ey + 4, skinSh);
-  g.set(cx + 1, ey + 4, skinSh);
-
-  // cheeks
-  g.set(cx - 5, ey + 3, skinHi);
-  g.set(cx + 6, ey + 3, skinSh);
-
-  // mouth per expression (sprite-scale mapping of the bust expressions)
-  const my = hy + 8;
-  if (expression === "pleased") {
-    g.hline(cx - 3, my, 7, MOUTH);
-    g.set(cx - 4, my - 1, MOUTH);
-    g.set(cx + 3, my - 1, MOUTH);
-  } else if (expression === "concerned") {
-    g.set(cx - 2, by - 1, brow);
-    g.set(cx + 2, by - 1, brow);
-    g.hline(cx - 2, my, 5, MOUTH);
-    g.set(cx - 3, my + 1, MOUTH);
-    g.set(cx + 2, my + 1, MOUTH);
-  } else if (expression === "stern") {
-    g.hline(cx - 4, by + 1, 3, brow);
-    g.hline(cx + 2, by + 1, 3, brow);
-    g.hline(cx - 3, my, 7, MOUTH);
-  } else if ((spec.mouth ?? "firm") === "soft") {
-    g.hline(cx - 3, my, 6, MOUTH);
-    g.set(cx - 4, my - 1, MOUTH);
-  } else {
-    g.hline(cx - 3, my, 7, MOUTH);
-  }
-
-  if (spec.facial) {
-    const fc = spec.facial.includes("grey") ? "#a7aca4" : "#232833";
-    if (spec.facial.startsWith("moustache")) {
-      g.hline(cx - 5, my - 2, 11, fc);
-    } else {
-      g.rect(cx - 6, my, 12, 4, fc);
-      g.rect(cx - 4, my + 4, 8, 2, fc);
-      g.hline(cx - 2, my + 1, 5, skinSh);
-    }
-  }
-  if (spec.glasses) {
-    const f = "#39414c";
-    g.rect(cx - 6, ey - 2, 6, 1, f);
-    g.rect(cx - 6, ey + 1, 6, 1, f);
-    g.rect(cx - 6, ey - 1, 1, 2, f);
-    g.rect(cx - 1, ey - 1, 1, 2, f);
-    g.rect(cx + 1, ey - 2, 6, 1, f);
-    g.rect(cx + 1, ey + 1, 6, 1, f);
-    g.rect(cx + 6, ey - 1, 1, 2, f);
-    g.rect(cx, ey - 1, 1, 1, f);
-    g.rect(cx - 10, ey - 1, 4, 1, f);
-    g.rect(cx + 7, ey - 1, 4, 1, f);
-    g.set(cx - 5, ey - 2, "#d7e2ec");
-    g.set(cx + 3, ey - 2, "#d7e2ec");
-  }
-  if (spec.earrings) {
-    g.set(cx - 8, hy + 3, "#e6cd8e");
-    g.set(cx + 8, hy + 3, "#e6cd8e");
-  }
-  // rim light catch
-  g.set(cx - 5, hy - 6, skinHi);
+/** Body volume per type (D-19): shoulders, waist, legs and head all differ. */
+interface BodyGeom {
+  sw: number;
+  ww: number;
+  shoulderY: number;
+  legTop: number;
+  legH: number;
+  headRx: number;
+  headRy: number;
+  headCy: number;
+  legW: number;
 }
 
-function px_ellipseTop(g: Grid, cx: number, cy: number, rx: number, ry: number, c: string) {
-  for (let yy = cy - ry; yy <= cy; yy++) {
-    const dy = (yy - cy) / ry;
-    const half = Math.round(rx * Math.sqrt(Math.max(0, 1 - dy * dy)));
-    g.hline(cx - half, yy, half * 2 + 1, c);
-  }
-}
+const BODY_GEOM: Record<BodyType, BodyGeom> = {
+  slim:    { sw: 7,  ww: 5,  shoulderY: 37, legTop: 69, legH: 20, headRx: 8,   headRy: 9,  headCy: 18, legW: 4 },
+  average: { sw: 11, ww: 9,  shoulderY: 36, legTop: 68, legH: 20, headRx: 10,  headRy: 11, headCy: 17, legW: 6 },
+  broad:   { sw: 15, ww: 12, shoulderY: 35, legTop: 68, legH: 20, headRx: 11.5, headRy: 12, headCy: 15, legW: 7 },
+  heavy:   { sw: 17, ww: 20, shoulderY: 37, legTop: 66, legH: 21, headRx: 13,  headRy: 13, headCy: 19, legW: 8 },
+  tall:    { sw: 8,  ww: 6,  shoulderY: 34, legTop: 76, legH: 16, headRx: 8.5, headRy: 9.5, headCy: 12, legW: 5 },
+};
 
-/** Full-body 48x64 sprite: head from the spec, body from the attire, pose
- *  frames for idle/walk, blink and the four expressions. Same spec source as
- *  the busts, so the two never drift. */
+/** Expression body language (D-18): the pose changes with the mood. */
+interface ExprPose {
+  headDx: number;
+  headDy: number;
+  shoulderDy: number;
+  armDy: number;
+}
+const EXPR_POSE: Record<Expression, ExprPose> = {
+  neutral:   { headDx: 0, headDy: 0, shoulderDy: 0, armDy: 0 },
+  concerned: { headDx: 2, headDy: 0, shoulderDy: 0, armDy: 0 },
+  pleased:   { headDx: 0, headDy: -1, shoulderDy: -2, armDy: -2 },
+  stern:     { headDx: 1, headDy: 1, shoulderDy: 2, armDy: 0 },
+  weary:     { headDx: 1, headDy: 1, shoulderDy: 2, armDy: 3 },
+  surprised: { headDx: 0, headDy: -1, shoulderDy: -2, armDy: -2 },
+};
+
+const C_BELT_BUCKLE = "#c69b54";
+
+/** The full-body sprite, layer by layer. */
 export function drawSprite(
   spec: PixelSpec,
   expression: Expression,
   opts: SpriteFrameOpts = {},
 ): (string | null)[][] {
   const g = new Grid(SPRITE_W, SPRITE_H);
+  const body = spec.body ?? "average";
+  const geom = BODY_GEOM[body];
   const [skin] = spec.skin;
   const a = spec.attire;
   const pose = opts.pose ?? "stand";
   const frame = opts.frame ?? 0;
-  const cx = 24;
+  const exprPose = EXPR_POSE[expression];
+  const stoop = spec.stoop === true;
+
+  const headDx = exprPose.headDx + (stoop ? 3 : 0);
+  const headDy = exprPose.headDy + (stoop ? 1 : 0);
+  const shoulderY = geom.shoulderY + exprPose.shoulderDy + (stoop ? 2 : 0);
+  const legTop = geom.legTop;
+  const legH = Math.min(22, geom.legH + (spec.heightAdj ?? 0));
+  const legW = geom.legW;
+  const shoe = shade(a.c, 0.5);
 
   // floor shadow
-  g.ellipse(cx, 60, 12, 2, "rgba(0,0,0,0.28)");
+  g.ellipse(32, SPRITE_H - 3, 14, 2, "rgba(0,0,0,0.28)");
 
-  // legs first (behind the coat hem)
-  const legY = 46;
-  const legH = 14;
-  const shoe = shade(a.c, 0.45);
+  // --- legs -------------------------------------------------------------
+  const legAX = 32 - Math.round(geom.ww / 2) - Math.round(legW / 2) - 1;
+  const legBX = legAX + Math.round(geom.ww / 2) + legW - 1;
   if (pose === "walk") {
-    const swing = frame === 0 ? -2 : frame === 2 ? 2 : 0;
-    const bent = frame === 1 || frame === 3;
-    const leftX = 17 + (frame === 0 ? -3 : frame === 2 ? 2 : 0);
-    const rightX = 26 + (frame === 0 ? 2 : frame === 2 ? -3 : 0);
-    g.rect(leftX, legY, 5, bent ? legH - 2 : legH, a.c);
-    g.rect(rightX, legY, 5, legH, a.c);
-    g.rect(leftX, legY + legH - (bent ? 4 : 2), 5, 2, shoe);
-    g.rect(rightX, legY + legH - 2, 5, 2, shoe);
-    void swing;
+    const bentA = frame === 1 || frame === 3;
+    const bentB = frame === 0 || frame === 2;
+    const shiftA = frame === 0 ? -3 : frame === 2 ? 3 : 0;
+    const shiftB = -shiftA;
+    g.rect(legAX + shiftA, legTop, legW, bentA ? legH - 3 : legH, a.c);
+    g.rect(legBX + shiftB, legTop, legW, bentB ? legH - 3 : legH, a.c);
+    g.rect(legAX + shiftA, legTop + (bentA ? legH - 6 : legH - 3), legW, 3, shoe);
+    g.rect(legBX + shiftB, legTop + (bentB ? legH - 6 : legH - 3), legW, 3, shoe);
   } else {
-    g.rect(17, legY, 5, legH, a.c);
-    g.rect(26, legY, 5, legH, a.c);
-    g.rect(17, legY + legH - 2, 5, 2, shoe);
-    g.rect(26, legY + legH - 2, 5, 2, shoe);
+    g.rect(legAX, legTop, legW, legH, a.c);
+    g.rect(legBX, legTop, legW, legH, a.c);
+    g.rect(legAX, legTop + legH - 3, legW, 3, shoe);
+    g.rect(legBX, legTop + legH - 3, legW, 3, shoe);
   }
 
-  // torso: shoulders widening to the hips
-  for (let y = 30; y < legY; y++) {
-    const t = (y - 30) / (legY - 30);
-    const half = 6 + Math.round(t * 7);
-    g.rect(cx - half, y, half * 2, 1, a.c);
+  // --- torso: shoulders tapering to the waist, hem flare per cut ---------
+  const hemFlare = a.kind === "suit" ? 1 : a.kind === "open" ? 2 : 0;
+  for (let y = shoulderY; y < legTop; y++) {
+    const t = (y - shoulderY) / Math.max(1, legTop - shoulderY);
+    let half = Math.round(geom.sw + (geom.ww - geom.sw) * t);
+    if (body === "heavy" && t > 0.45 && t < 0.9) half += 2; // the belly
+    if (y > legTop - 4) half += hemFlare;
+    g.rect(32 - half, y, half * 2, 1, a.c);
   }
-  g.rect(18, 28, 12, 3, a.c);
-  // key light left, shade right
-  g.vline(cx - 7, 32, 10, tint(a.c, 0.18));
-  g.rect(cx + 9, 34, 3, 10, shade(a.c, 0.2));
-  // collar furniture per kind
+  // shoulder slope above the shoulder line
+  for (let s = 1; s <= 2; s++) {
+    const half = Math.max(3, geom.sw - s * 3);
+    g.rect(32 - half, shoulderY - s, half * 2, 1, a.c);
+  }
+  // key light left, core shade right (recompute the width per row)
+  for (let y = shoulderY + 2; y < legTop - 4; y++) {
+    const t = (y - shoulderY) / Math.max(1, legTop - shoulderY);
+    const half = Math.round(geom.sw + (geom.ww - geom.sw) * t) + (y > legTop - 4 ? hemFlare : 0);
+    g.set(32 - half + 1, y, tint(a.c, 0.16));
+    g.set(32 + half - 1, y, shade(a.c, 0.2));
+  }
+
+  // collar furniture, parametrised by the shoulder width
+  const collarY = shoulderY + 2;
+  const torsoH = legTop - shoulderY;
   if (a.kind === "suit") {
-    g.rect(cx - 2, 30, 4, 16, a.shirt);
-    g.vline(cx + 1, 30, 16, shade(a.shirt, 0.18));
+    g.rect(29, collarY, 6, torsoH - 2, a.shirt);
+    g.vline(33, collarY, torsoH - 2, shade(a.shirt, 0.18));
     if (a.tie) {
-      g.rect(cx - 1, 30, 2, 2, a.tie);
-      g.rect(cx - 1, 32, 2, 9, a.tie);
-      g.rect(cx - 1, 41, 2, 3, shade(a.tie, 0.22));
+      g.rect(31, collarY, 2, 3, a.tie);
+      g.rect(31, collarY + 3, 2, Math.max(4, torsoH - 8), a.tie);
+      g.rect(31, collarY + torsoH - 6, 2, 3, shade(a.tie, 0.22));
     }
-    g.rect(cx - 5, 30, 3, 3, a.trim);
-    g.rect(cx - 6, 33, 3, 4, a.trim);
-    g.rect(cx + 2, 30, 3, 3, a.trim);
-    g.rect(cx + 3, 33, 3, 4, a.trim);
-    if (a.accent) g.rect(cx + 7, 44, 3, 2, a.accent);
+    const lap = Math.round(geom.sw * 0.6);
+    g.rect(32 - lap, collarY, 3, 3, a.trim);
+    g.rect(32 - lap - 1, collarY + 3, 3, 4, a.trim);
+    g.rect(32 + lap - 3, collarY, 3, 3, a.trim);
+    g.rect(32 + lap, collarY + 3, 3, 4, a.trim);
+    if (a.accent) g.rect(32 + lap + 3, collarY + 12, 3, 2, a.accent);
   } else if (a.kind === "open") {
-    g.rect(cx - 5, 30, 10, 16, a.shirt);
-    g.vline(cx + 2, 30, 16, shade(a.shirt, 0.15));
-    g.rect(cx - 6, 30, 2, 16, a.trim);
-    g.rect(cx + 4, 30, 2, 16, a.trim);
+    g.rect(32 - Math.round(geom.sw * 0.5), collarY, 4, torsoH - 2, a.shirt);
+    g.rect(32 + Math.round(geom.sw * 0.5) - 4, collarY, 4, torsoH - 2, a.shirt);
+    g.rect(32 - Math.round(geom.sw * 0.5) - 2, collarY, 2, torsoH - 2, a.trim);
+    g.rect(32 + Math.round(geom.sw * 0.5) + 1, collarY, 2, torsoH - 2, a.trim);
   } else {
-    g.rect(cx - 5, 30, 10, 16, a.shirt);
-    g.vline(cx, 32, 14, shade(a.shirt, 0.14));
-    g.rect(cx - 1, 30, 3, 2, a.accent ?? a.trim);
+    g.rect(29, collarY, 6, torsoH - 2, a.shirt);
+    g.vline(32, collarY + 2, torsoH - 4, shade(a.shirt, 0.14));
+    g.rect(30, collarY - 1, 4, 2, a.accent ?? a.trim);
   }
+
   // belt
-  g.rect(cx - 8, 44, 16, 3, shade(a.c, 0.4));
-  g.set(cx - 7, 45, C_BELT_BUCKLE);
-  g.set(cx + 6, 45, C_BELT_BUCKLE);
+  g.rect(32 - geom.ww - 2, legTop - 6, geom.ww * 2 + 4, 3, shade(a.c, 0.4));
+  g.set(32 - geom.ww, legTop - 5, C_BELT_BUCKLE);
+  g.set(32 + geom.ww - 1, legTop - 5, C_BELT_BUCKLE);
 
-  // arms
-  const idleIn = opts.pose === "stand" && opts.frame === 1 ? 1 : 0;
+  // --- arms: the resting stance is per character (silhouette variety) -----
+  const armW = body === "heavy" ? 5 : body === "slim" ? 3 : 4;
+  const armY = shoulderY + 3;
   const armSwing = pose === "walk" ? (frame === 0 ? 1 : frame === 2 ? -1 : 0) : 0;
-  const leftArmX = cx - 11 + idleIn - armSwing;
-  const rightArmX = cx + 8 + idleIn + armSwing;
-  const armY = 32;
-  g.rect(leftArmX, armY, 3, 12, shade(a.c, 0.12));
-  g.rect(rightArmX, armY, 3, 12, shade(a.c, 0.12));
-  g.rect(leftArmX, armY + 12, 3, 3, skin);
-  g.rect(rightArmX, armY + 12, 3, 3, skin);
+  const idleIn = pose === "stand" && frame === 1 ? 1 : 0;
+  const stance = spec.stance ?? "stand";
+  const armLen = Math.max(6, legTop - armY - 5 + exprPose.armDy);
 
-  // head
-  drawSpriteHead(g, spec, expression, cx, 6, Boolean(opts.blink));
+  if (pose === "walk") {
+    const wLX = 32 - geom.sw - armW + 2 - armSwing;
+    const wRX = 32 + geom.sw - 2 + armSwing;
+    g.rect(wLX, armY, armW, armLen, shade(a.c, 0.12));
+    g.rect(wRX, armY, armW, armLen, shade(a.c, 0.12));
+    g.rect(wLX, armY + armLen, armW, 3, skin);
+    g.rect(wRX, armY + armLen, armW, 3, skin);
+  } else if (stance === "clasp") {
+    // upper arms angle inward; the hands meet in front of the waist
+    const upper = Math.max(4, Math.round(armLen * 0.55));
+    for (const side of [-1, 1] as const) {
+      for (let s = 0; s < upper; s++) {
+        const t = s / upper;
+        g.rect(32 + side * (geom.sw + armW - 2) - side * Math.round(t * (geom.sw - 1)) - (side < 0 ? armW : 0), armY + s, armW, 1, shade(a.c, 0.12));
+      }
+      g.rect(32 + side * 2 - (side < 0 ? armW : 1), armY + upper, armW, 3, skin);
+    }
+  } else if (stance === "hip") {
+    // akimbo: elbow out at the waist, hand resting on the hip
+    const elbowY = armY + Math.round(armLen * 0.6);
+    for (const side of [-1, 1] as const) {
+      const ax = 32 + side * (geom.sw - armW + 1) - (side < 0 ? 0 : armW - 1);
+      g.rect(ax, armY, armW, elbowY - armY, shade(a.c, 0.12));
+      const outX = 32 + side * (geom.sw + 3) - (side < 0 ? 0 : armW - 1);
+      for (let s = 0; s <= 3; s++) {
+        g.rect(Math.round(ax + ((outX - ax) * s) / 3), elbowY + s, armW, 1, shade(a.c, 0.12));
+      }
+      g.rect(outX + (side < 0 ? -1 : 0), elbowY + 4, armW, 3, skin);
+    }
+  } else if (stance === "cross") {
+    // arms folded: upper arms at the sides, then a full-width fold bar
+    const foldY = armY + Math.round(armLen * 0.55);
+    for (const side of [-1, 1] as const) {
+      const ax = 32 + side * (geom.sw - armW + 1) - (side < 0 ? 0 : armW - 1);
+      g.rect(ax, armY, armW, foldY - armY + 1, shade(a.c, 0.12));
+    }
+    g.rect(32 - geom.sw - 1, foldY, geom.sw * 2 + 3, 4, shade(a.c, 0.2));
+    g.rect(32 - geom.sw - 1, foldY + 4, geom.sw * 2 + 3, 2, skin);
+  } else {
+    const armLX = 32 - geom.sw - armW + 2 + idleIn;
+    const armRX = 32 + geom.sw - 2 - idleIn;
+    g.rect(armLX, armY, armW, armLen, shade(a.c, 0.12));
+    g.rect(armRX, armY, armW, armLen, shade(a.c, 0.12));
+    g.rect(armLX, armY + armLen, armW, 3, skin);
+    g.rect(armRX, armY + armLen, armW, 3, skin);
+  }
+
+  // --- head ----------------------------------------------------------------
+  drawDollHead(g, spec, expression, 32 + headDx, geom.headCy + headDy, geom.headRx, geom.headRy, Boolean(opts.blink));
   return g.cells;
 }
 
-const C_BELT_BUCKLE = "#c69b54";
+/** The sprite head: bigger face (D-16), real eyes with iris and glint,
+ *  brows/chin/nose geometry per character (D-17), accurate headwear (D-20),
+ *  expression overlays (D-18). */
+function drawDollHead(
+  g: Grid,
+  spec: PixelSpec,
+  expression: Expression,
+  hx: number,
+  hy: number,
+  rx: number,
+  ry: number,
+  blink: boolean,
+) {
+  const [skin, skinSh, skinHi] = spec.skin;
+  const chin = spec.face?.chin ?? "taper";
+  const noseW = spec.face?.nose ?? "slim";
+  const browShape = spec.face?.brow ?? "straight";
+
+  // skull: shade crescent right, lit face left
+  g.ellipse(hx + 1, hy, rx, ry, skinSh);
+  g.ellipse(hx, hy, rx, ry, skin);
+  g.ellipse(hx, hy + Math.round(ry * 0.4), rx - 2, Math.round(ry * 0.6), skin);
+  // jaw + chin per shape
+  if (chin === "square") {
+    g.rect(hx - Math.round(rx * 0.7), hy + Math.round(ry * 0.7), Math.round(rx * 1.4), 4, skin);
+    g.rect(hx - Math.round(rx * 0.55), hy + Math.round(ry * 0.85), Math.round(rx * 1.1), 2, skin);
+  } else if (chin === "round") {
+    g.ellipse(hx, hy + Math.round(ry * 0.7), Math.round(rx * 0.7), Math.round(ry * 0.5), skin);
+  } else {
+    g.ellipse(hx, hy + Math.round(ry * 0.75), Math.round(rx * 0.5), Math.round(ry * 0.45), skin);
+  }
+  // selective 1 px outline: right edge and jaw underside
+  g.vline(hx + rx - 1, hy - 2, Math.round(ry * 0.8), skinSh);
+  g.set(hx + rx - 2, hy + Math.round(ry * 0.55), skinSh);
+  g.set(hx + 1, hy + ry + (chin === "square" ? 2 : 1), skinSh);
+  // left light plane
+  g.vline(hx - rx + 1, hy - 2, Math.round(ry * 0.8), skinHi);
+  g.set(hx - rx + 1, hy - 3, skinHi);
+  // ears
+  g.rect(hx - rx - 1, hy, 2, 4, skin);
+  g.rect(hx + rx - 1, hy, 2, 4, skin);
+  // neck
+  g.rect(hx - 3, hy + ry - 1, 6, 5, skinSh);
+
+  // --- hair (mass first, face carve after) ---------------------------------
+  const h = spec.hair;
+  if (h) {
+    const { c, hi } = h;
+    const hairSh = shade(c, 0.3);
+    switch (h.style) {
+      case "bob":
+        g.ellipse(hx, hy - 1, rx + 3, ry + 1, c);
+        g.rect(hx - rx - 3, hy + 1, 4, Math.round(ry * 1.6), c);
+        g.rect(hx + rx - 1, hy + 1, 4, Math.round(ry * 1.6), c);
+        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
+        g.rect(hx + rx - 1, hy + 2, 3, Math.round(ry * 1.4), hairSh);
+        g.set(hx - 4, hy - ry, hi); g.set(hx + 2, hy - ry - 1, hi);
+        break;
+      case "receding":
+        g.ellipse(hx, hy - 3, rx + 1, ry - 3, c);
+        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
+        g.rect(hx + rx - 2, hy - 5, 3, 7, hairSh);
+        g.set(hx - 3, hy - ry - 1, hi); g.set(hx - 2, hy - ry, hi);
+        break;
+      case "tied":
+        g.ellipse(hx, hy - 2, rx + 2, ry, c);
+        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
+        g.ellipse(hx - rx - 1, hy - 1, 3, 4, c);
+        g.set(hx - 2, hy - ry - 1, hi);
+        break;
+      case "sidepart":
+        g.ellipse(hx, hy - 2, rx + 2, ry - 1, c);
+        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
+        g.rect(hx - rx - 1, hy - 4, 5, 4, c);
+        g.rect(hx + rx - 2, hy - 3, 3, 6, hairSh);
+        g.set(hx - 4, hy - ry - 1, hi); g.set(hx - 3, hy - ry, hi);
+        break;
+      case "curls":
+        for (const [dx, dy, r] of [[-6, -3, 4], [0, -5, 5], [6, -2, 4], [-9, 1, 3], [9, 1, 3]] as const) {
+          g.ellipse(hx + dx, hy + dy, r, r - 1, c);
+        }
+        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
+        g.set(hx - 1, hy - ry - 1, hi); g.set(hx + 5, hy + 2, hairSh);
+        break;
+      case "combed":
+      case "white":
+        g.ellipse(hx, hy - 3, rx + 1, ry - 2, c);
+        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
+        g.rect(hx + rx - 2, hy - 5, 3, 8, hairSh);
+        g.set(hx - 4, hy - ry - 1, hi); g.set(hx - 3, hy - ry + 1, hi);
+        break;
+      case "short":
+      default:
+        g.ellipse(hx, hy - 2, rx + 2, ry, c);
+        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
+        g.rect(hx + rx - 2, hy - 4, 3, 7, hairSh);
+        g.set(hx - 4, hy - ry, hi); g.set(hx + 3, hy - ry, hi);
+        break;
+    }
+  }
+
+  // --- headwear: accurate shapes (D-20) -------------------------------------
+  if (spec.hijab) {
+    const c = spec.hijab.c;
+    const hi = spec.hijab.hi;
+    const long = spec.hijab.style === "long";
+    g.ellipse(hx, hy, rx + (long ? 1 : 3), ry + 2, c);
+    if (long) {
+      // long straight scarf: snug crown, panels fall inside the body line
+      g.rect(hx - rx + 1, hy + 2, 3, Math.round(ry * 2.4), c);
+      g.rect(hx + rx - 4, hy + 2, 3, Math.round(ry * 2.4), c);
+      g.rect(hx - 6, hy + Math.round(ry * 1.4), 12, Math.round(ry * 1.5), c);
+      g.vline(hx - 6, hy + Math.round(ry * 1.4), Math.round(ry * 1.5), shade(c, 0.18));
+    } else {
+      // shoulder cape: wide drape over the shoulders
+      g.rect(hx - rx - 3, hy, 4, Math.round(ry * 2.1), c);
+      g.rect(hx + rx - 1, hy, 4, Math.round(ry * 2.1), c);
+      g.rect(hx - rx - 2, hy + Math.round(ry * 1.6), rx * 2 + 4, 7, c);
+      g.hline(hx - rx - 2, hy + Math.round(ry * 1.6) + 6, rx * 2 + 4, shade(c, 0.18));
+    }
+    g.ellipse(hx, hy + 1, rx - 2, ry - 2, skin);
+    g.rect(hx - rx + 2, hy - 2, rx * 2 - 4, 4, skin);
+    g.vline(hx - rx - 1, hy - 2, Math.round(ry * 1.8), shade(c, 0.22));
+    g.vline(hx + rx, hy - 2, Math.round(ry * 1.8), shade(c, 0.22));
+    g.vline(hx - 1, hy - ry - 1, 4, shade(c, 0.18));
+    g.hline(hx - rx - 1, hy + Math.round(ry * 1.2), 3, shade(c, 0.18));
+    g.set(hx + rx - 2, hy + ry + 3, "#e6cd8e");
+    g.set(hx + rx - 3, hy + ry + 3, hi);
+    g.set(hx - 3, hy - ry - 1, tint(c, 0.3)); g.set(hx + 1, hy - ry - 1, tint(c, 0.3));
+  }
+  if (spec.songkok) {
+    // flat-topped oval cap with a gold band
+    g.ellipse(hx, hy - ry, rx + 2, 4, spec.songkok);
+    g.rect(hx - rx - 2, hy - ry - 2, rx * 2 + 4, 5, spec.songkok);
+    g.rect(hx - rx - 2, hy - ry + 2, rx * 2 + 4, 2, "#c9a96a");
+    g.rect(hx + rx - 3, hy - ry - 1, 3, 5, shade(spec.songkok, 0.25));
+    g.set(hx - 4, hy - ry - 1, tint(spec.songkok, 0.25));
+  }
+  if (spec.kopiah) {
+    // the white knit skullcap: rounder, shorter, with the knit ribs
+    g.ellipse(hx, hy - ry, rx + 1, 4, spec.kopiah);
+    g.rect(hx - rx - 1, hy - ry - 1, rx * 2 + 2, 5, spec.kopiah);
+    g.rect(hx - rx - 1, hy - ry + 3, rx * 2 + 2, 1, "#8f8a7c");
+    for (const x of [hx - 5, hx - 1, hx + 3]) g.rect(x, hy - ry - 1, 1, 4, "#8f8a7c");
+    g.rect(hx + rx - 2, hy - ry, 2, 5, shade(spec.kopiah, 0.25));
+  }
+
+  // --- face -----------------------------------------------------------------
+  const browC = spec.older ? shade(skin, 0.4) : "#26222a";
+  const browW = browShape === "bushy" ? 5 : 4;
+  const browH = browShape === "bushy" ? 2 : 1;
+  const browY = hy - Math.round(ry * 0.45) + (expression === "stern" ? 1 : expression === "surprised" ? -2 : expression === "weary" ? 1 : 0);
+  const browTilt = expression === "concerned" ? 1 : 0;
+
+  g.rect(hx - Math.round(rx * 0.6), browY + browTilt, browW, browH, browC);
+  g.rect(hx + 1, browY + browTilt, browW, browH, browC);
+  if (browShape === "arched") {
+    g.set(hx - Math.round(rx * 0.6) + 1, browY + browTilt - 1, browC);
+    g.set(hx + 2, browY + browTilt - 1, browC);
+  }
+
+  // eyes: sclera, iris, pupil, glint — readable at game scale (D-16)
+  const ey = hy + 1;
+  const eyeW = noseW === "broad" ? 3 : 4;
+  const exL = hx - Math.round(rx * 0.55);
+  const exR = hx + 2;
+  if (blink || expression === "weary") {
+    g.hline(exL, ey + 1, eyeW, "#241f26");
+    g.hline(exR, ey + 1, eyeW, "#241f26");
+    if (expression === "weary") {
+      g.rect(exL, ey, eyeW, 1, "#f6f2e8");
+      g.set(exL + 1, ey, "#23303e");
+      g.rect(exR, ey, eyeW, 1, "#f6f2e8");
+      g.set(exR + 1, ey, "#23303e");
+    }
+  } else if (expression === "stern") {
+    // narrowed eyes: iris only, no sclera
+    g.rect(exL + 1, ey, 2, 2, "#23303e");
+    g.rect(exR + 1, ey, 2, 2, "#23303e");
+    g.hline(exL - 1, ey - 1, eyeW + 2, "#241f26");
+    g.hline(exR - 1, ey - 1, eyeW + 2, "#241f26");
+  } else {
+    const eyeH = expression === "surprised" ? 3 : 2;
+    g.rect(exL, ey - (eyeH > 2 ? 1 : 0), eyeW, eyeH, "#f6f2e8");
+    g.rect(exR, ey - (eyeH > 2 ? 1 : 0), eyeW, eyeH, "#f6f2e8");
+    const iy = ey;
+    g.rect(exL + 1, iy, 2, 2, "#23303e");
+    g.rect(exR + 1, iy, 2, 2, "#23303e");
+    g.set(exL + 1, iy, "#12171d");
+    g.set(exR + 1, iy, "#12171d");
+    g.set(exL + 1, iy - (eyeH > 2 ? 1 : 0), "#4d5f72");
+    g.set(exR + 1, iy - (eyeH > 2 ? 1 : 0), "#4d5f72");
+    g.set(exL + eyeW - 1, ey - (eyeH > 2 ? 1 : 0), "#d7e2ec");
+    g.set(exR + eyeW - 1, ey - (eyeH > 2 ? 1 : 0), "#d7e2ec");
+    g.hline(exL - 1, ey - (eyeH > 2 ? 2 : 1), eyeW + 2, "#241f26");
+    g.hline(exR - 1, ey - (eyeH > 2 ? 2 : 1), eyeW + 2, "#241f26");
+  }
+
+  // nose: bridge + nostrils, per width
+  const ny = ey + 3;
+  g.vline(hx + 1, ny - 1, 3, skinSh);
+  g.set(hx - (noseW === "broad" ? 2 : 1), ny + 2, skinSh);
+  g.set(hx + (noseW === "broad" ? 2 : 1), ny + 2, skinSh);
+  g.set(hx, ny + 1, skinHi);
+
+  // cheeks
+  g.set(hx - rx + 2, ny, skinHi);
+  g.set(hx + rx - 2, ny + 1, skinSh);
+
+  // mouth per expression (authored resting shape under neutral)
+  const my = hy + Math.round(ry * 0.82);
+  const resting = spec.mouth ?? "firm";
+  if (expression === "stern") {
+    g.hline(hx - 3, my, 7, MOUTH);
+    g.set(hx - 4, my + 1, MOUTH); // corners pull down: a real stern read
+    g.set(hx + 4, my + 1, MOUTH);
+  } else if (expression === "pleased") {
+    g.hline(hx - 3, my, 7, MOUTH);
+    g.set(hx - 4, my - 1, MOUTH);
+    g.set(hx + 3, my - 1, MOUTH);
+  } else if (expression === "concerned") {
+    g.hline(hx - 2, my, 5, MOUTH);
+    g.set(hx - 3, my + 1, MOUTH);
+    g.set(hx + 2, my + 1, MOUTH);
+  } else if (expression === "surprised") {
+    g.rect(hx - 2, my - 1, 5, 3, MOUTH);
+    g.rect(hx - 1, my, 3, 1, "#3a1f22");
+  } else if (expression === "weary") {
+    g.hline(hx - 3, my, 7, MOUTH);
+    g.set(hx - 4, my - 1, MOUTH);
+    g.set(hx + 3, my - 1, MOUTH);
+  } else if (resting === "set") {
+    g.hline(hx - 3, my, 7, MOUTH);
+  } else if (resting === "soft") {
+    g.hline(hx - 3, my - 1, 6, MOUTH);
+    g.set(hx + 3, my, MOUTH);
+  } else {
+    g.hline(hx - 3, my - 1, 7, MOUTH);
+    g.set(hx - 4, my - 1, MOUTH); g.set(hx + 3, my - 1, MOUTH);
+    g.hline(hx - 2, my, 5, skinHi);
+  }
+
+  // age marks (senior): crow's feet and the nasolabial line
+  if (spec.older) {
+    g.set(hx - rx + 1, ey, skinSh); g.set(hx + rx - 1, ey, skinSh);
+    g.set(hx - 4, my - 2, skinSh); g.set(hx + 4, my - 2, skinSh);
+  }
+
+  // facial hair
+  if (spec.facial) {
+    const grey = spec.facial.includes("grey");
+    const fc = grey ? "#a7aca4" : "#232833";
+    if (spec.facial.startsWith("moustache")) {
+      g.rect(hx - 5, my - 2, 11, 2, fc);
+      g.rect(hx - 6, my - 1, 3, 1, fc); g.rect(hx + 4, my - 1, 3, 1, fc);
+    } else {
+      g.rect(hx - 6, my, 13, 5, fc);
+      g.rect(hx - 5, my - 2, 3, 2, fc); g.rect(hx + 3, my - 2, 3, 2, fc);
+      g.rect(hx - 2, my + 2, 5, 2, skinSh);
+      g.rect(hx - 5, my + 5, 11, 2, fc);
+      if (grey) g.rect(hx + 3, my + 4, 3, 1, "#c9cdc6");
+    }
+  }
+
+  // glasses: outline frames with the refined eyes visible behind (D-16)
+  if (spec.glasses) {
+    const f = "#39414c";
+    const gy = ey - 2;
+    const gh = expression === "surprised" ? 3 : 2;
+    for (const gx of [exL - 1, exR - 1]) {
+      g.hline(gx, gy, eyeW + 2, f);
+      g.hline(gx, gy + gh + 1, eyeW + 2, f);
+      g.vline(gx, gy, gh + 1, f);
+      g.vline(gx + eyeW + 1, gy, gh + 1, f);
+      g.set(gx + 1, gy + 1, "#d7e2ec");
+    }
+    g.set(hx, gy + 1, f);
+    g.hline(exL - Math.round(rx * 0.4), gy + 1, Math.round(rx * 0.4), f);
+    g.hline(exR + eyeW + 1, gy + 1, Math.round(rx * 0.4), f);
+  }
+
+  if (spec.earrings) {
+    g.set(hx - rx, hy + 4, "#e6cd8e");
+    g.set(hx + rx - 1, hy + 4, "#e6cd8e");
+  }
+  if (spec.bindi) g.rect(hx - 1, hy - Math.round(ry * 0.5), 2, 2, "#b3452e");
+
+  // rim light catch on the lamp side
+  g.set(hx - rx + 1, hy - ry - 1, skinHi);
+}
 
 /** The PM avatar customisation, as chosen at New Game. */
 export interface AvatarCustomisation {
@@ -771,6 +998,8 @@ export interface AvatarCustomisation {
   attire?: string;
   glasses?: boolean;
   homeState?: string;
+  /** v3 paper-doll (D-17/D-19): the avatar's body volume. Additive. */
+  body?: BodyType;
   /** Drives one-time opening nudges and gates avatar-specific dialogue. */
   priorCareer?: "civilService" | "military" | "business" | "activism" | "academia";
   /** Free-form trait tags; dialogue conditions gate on `avatar.trait.<tag>`. */
@@ -782,22 +1011,34 @@ export function specFromAvatar(avatar: AvatarCustomisation): PixelSpec {
   const skin = AVATAR_SKINS.find((s) => s[0] === avatar.skin) ?? AVATAR_SKINS[0];
   const hair = AVATAR_HAIRS.find((h) => h.id === avatar.hair) ?? AVATAR_HAIRS[0];
   const attire = AVATAR_ATTIRE.find((t) => t.id === avatar.attire) ?? AVATAR_ATTIRE[0];
+  const body = AVATAR_BODIES.find((b) => b.id === avatar.body) ?? AVATAR_BODIES[0];
   const spec: PixelSpec = {
     skin: [...skin],
     bg: ["#1b2434", "#10141d"],
     attire: { ...attire },
     mouth: "firm",
+    body: body.id,
   };
   if (avatar.headwear === "songkok") spec.songkok = "#10151d";
   if (avatar.headwear === "kopiah") spec.kopiah = "#d9d2c0";
   if (avatar.headwear === "tudung") {
-    spec.hijab = { c: hair.c, hi: tint(hair.c, 0.3) };
+    spec.hijab = { c: hair.c, hi: tint(hair.c, 0.3), style: "cape" };
+    spec.hair = undefined;
   } else {
     spec.hair = { c: hair.c, hi: hair.hi, style: hair.style };
   }
   if (avatar.glasses) spec.glasses = true;
   return spec;
 }
+
+/** Body volume options for the PM avatar (D-19). */
+export const AVATAR_BODIES: Array<{ id: BodyType; label: { en: string; ms: string } }> = [
+  { id: "slim", label: { en: "Slim", ms: "Langsing" } },
+  { id: "average", label: { en: "Average", ms: "Sederhana" } },
+  { id: "broad", label: { en: "Broad", ms: "Bidang" } },
+  { id: "tall", label: { en: "Tall", ms: "Tinggi" } },
+  { id: "heavy", label: { en: "Heavy", ms: "Gempal" } },
+];
 
 /** Six authored skin ramps for the PM avatar. */
 export const AVATAR_SKINS: [string, string, string][] = [
@@ -876,6 +1117,9 @@ const SPECS: Record<string, PixelSpec> = {
     attire: { kind: "suit", c: "#2a3140", trim: "#4a5468", shirt: "#e9e2d2", tie: "#8a6c1f", accent: "#c9a96a" },
     hair: { c: "#1d222c", hi: "#4d5a6e", style: "bob" },
     mouth: "soft",
+    body: "slim",
+    heightAdj: 1,
+    face: { brow: "arched", chin: "taper", nose: "slim" },
   },
   finance: {
     skin: ["#c49a72", "#8a6244", "#e2ba92"],
@@ -885,6 +1129,10 @@ const SPECS: Record<string, PixelSpec> = {
     glasses: true,
     older: true,
     mouth: "set",
+    body: "broad",
+    stance: "cross",
+    heightAdj: 3,
+    face: { brow: "bushy", chin: "square", nose: "broad" },
   },
   economicAdviser: {
     skin: ["#b5825a", "#7d5539", "#dcae84"],
@@ -895,14 +1143,21 @@ const SPECS: Record<string, PixelSpec> = {
     bindi: true,
     earrings: true,
     mouth: "firm",
+    stance: "hip",
+    body: "slim",
+    heightAdj: -4,
+    face: { brow: "arched", chin: "taper", nose: "slim" },
   },
   nationalSecurity: {
     skin: ["#c19a72", "#87613f", "#dfb894"],
     bg: ["#20262e", "#11151b"],
     attire: { kind: "suit", c: "#262d38", trim: "#48536a", shirt: "#cfd6de" },
-    hijab: { c: "#20262e", hi: "#3a4a5c" },
+    hijab: { c: "#26324a", hi: "#3d556a", style: "long" },
     older: true,
     mouth: "set",
+    body: "average",
+    heightAdj: 2,
+    face: { brow: "straight", chin: "taper", nose: "slim" },
   },
   foreign: {
     skin: ["#d0a276", "#96684a", "#ecd0a8"],
@@ -912,14 +1167,20 @@ const SPECS: Record<string, PixelSpec> = {
     glasses: true,
     older: true,
     mouth: "firm",
+    body: "slim",
+    heightAdj: -3,
+    face: { brow: "straight", chin: "square", nose: "slim" },
   },
   home: {
     skin: ["#c39c74", "#896248", "#e0bd97"],
     bg: ["#33202a", "#170f14"],
     attire: { kind: "suit", c: "#2a2632", trim: "#4a4458", shirt: "#d8d3c8", accent: "#e6cd8e" },
-    hijab: { c: "#6e2f3a", hi: "#8a474e" },
+    hijab: { c: "#6e2f3a", hi: "#8a474e", style: "cape" },
     older: true,
     mouth: "firm",
+    body: "broad",
+    heightAdj: 3,
+    face: { brow: "straight", chin: "taper", nose: "slim" },
   },
   borneoMinister: {
     skin: ["#a9744c", "#74502f", "#cc9871"],
@@ -928,6 +1189,8 @@ const SPECS: Record<string, PixelSpec> = {
     hair: { c: "#262b30", hi: "#6e747c", style: "curls" },
     older: true,
     mouth: "firm",
+        heightAdj: -5,
+    face: { brow: "bushy", chin: "round", nose: "broad" },
   },
   gpsPremier: {
     skin: ["#bd8a5e", "#835a38", "#d9ad82"],
@@ -937,6 +1200,8 @@ const SPECS: Record<string, PixelSpec> = {
     glasses: true,
     older: true,
     mouth: "firm",
+    body: "tall",
+    face: { brow: "straight", chin: "square", nose: "slim" },
   },
   bnChair: {
     skin: ["#bd9268", "#84603e", "#dfb98e"],
@@ -947,6 +1212,8 @@ const SPECS: Record<string, PixelSpec> = {
     facial: "moustache-grey",
     older: true,
     mouth: "set",
+    body: "heavy",
+    face: { brow: "bushy", chin: "square", nose: "broad" },
   },
   oppositionLeader: {
     skin: ["#c39a70", "#8a6244", "#dfba92"],
@@ -956,6 +1223,122 @@ const SPECS: Record<string, PixelSpec> = {
     kopiah: "#d9d2c0",
     facial: "beard",
     mouth: "set",
+    body: "average",
+    heightAdj: -2,
+    face: { brow: "bushy", chin: "square", nose: "broad" },
+  },
+  // --- supporting cast (v3a phase 2): real specs, never anonymous ----------
+  "sup-palaceSecretary": {
+    skin: ["#c49a72", "#8a6244", "#e2ba92"],
+    bg: ["#241f18", "#14100c"],
+    attire: { kind: "open", c: "#d9d2c0", trim: "#b8ad93", shirt: "#efe9dc" },
+    hair: { c: "#e5e2da", hi: "#f7f5ef", style: "combed" },
+    songkok: "#3a3f4a",
+    facial: "moustache-grey",
+    older: true,
+    stoop: true,
+    mouth: "soft",
+    body: "average",
+    face: { brow: "straight", chin: "taper", nose: "slim" },
+  },
+  "sup-attorneyGeneral": {
+    skin: ["#b5825a", "#7d5539", "#dcae84"],
+    bg: ["#2a1e20", "#161011"],
+    attire: { kind: "suit", c: "#1f232c", trim: "#39414c", shirt: "#e9e2d2", tie: "#6e3440" },
+    hair: { c: "#31353d", hi: "#7d8492", style: "bob" },
+    glasses: true,
+    older: true,
+    mouth: "set",
+    body: "slim",
+    stance: "clasp",
+    heightAdj: -5,
+    face: { brow: "straight", chin: "taper", nose: "slim" },
+  },
+  "sup-bankGovernor": {
+    skin: ["#d0a276", "#96684a", "#ecd0a8"],
+    bg: ["#1d2740", "#10141d"],
+    attire: { kind: "suit", c: "#3a3f4a", trim: "#5a6070", shirt: "#dde2e8", tie: "#1d2740" },
+    hair: { c: "#8f8f8c", hi: "#c4c4c0", style: "combed" },
+    glasses: true,
+    older: true,
+    stoop: true,
+    mouth: "firm",
+    body: "heavy",
+    face: { brow: "bushy", chin: "round", nose: "broad" },
+  },
+  "sup-armedForcesChief": {
+    skin: ["#c19a72", "#87613f", "#dfb894"],
+    bg: ["#1f2a1c", "#10140e"],
+    attire: { kind: "mandarin", c: "#3d4a35", trim: "#5f7050", shirt: "#d5d2c4" },
+    hair: { c: "#232833", hi: "#4d5a6e", style: "short" },
+    facial: "moustache",
+    older: true,
+    mouth: "set",
+    body: "broad",
+    heightAdj: -2,
+    face: { brow: "bushy", chin: "square", nose: "broad" },
+  },
+  "sup-kelantanLeader": {
+    skin: ["#bd8a5e", "#835a38", "#d9ad82"],
+    bg: ["#24201a", "#14110d"],
+    attire: { kind: "open", c: "#e6dfcd", trim: "#c4bda6", shirt: "#efe9dc" },
+    hair: { c: "#8f8f8c", hi: "#c4c4c0", style: "short" },
+    songkok: "#1f232c",
+    facial: "beard-grey",
+    older: true,
+    stoop: true,
+    mouth: "firm",
+    body: "broad",
+    face: { brow: "bushy", chin: "square", nose: "broad" },
+  },
+  "sup-terengganuLeader": {
+    skin: ["#c39a70", "#8a6244", "#dfba92"],
+    bg: ["#1c2436", "#10141d"],
+    attire: { kind: "suit", c: "#2a3140", trim: "#4a5468", shirt: "#ece9e0", tie: "#3f5a48" },
+    hair: { c: "#232833", hi: "#4d5a6e", style: "sidepart" },
+    kopiah: "#efe9dc",
+    facial: "beard",
+    mouth: "firm",
+    body: "slim",
+    stance: "clasp",
+    heightAdj: -2,
+    face: { brow: "straight", chin: "square", nose: "broad" },
+  },
+  "sup-journalist": {
+    skin: ["#d0a276", "#96684a", "#ecd0a8"],
+    bg: ["#331d17", "#180f0c"],
+    attire: { kind: "suit", c: "#6e2f3a", trim: "#8a474e", shirt: "#e9e2d2" },
+    hair: { c: "#191d24", hi: "#3f4a5a", style: "bob" },
+    earrings: true,
+    mouth: "soft",
+    body: "average",
+    stance: "hip",
+    heightAdj: 2,
+    face: { brow: "arched", chin: "taper", nose: "slim" },
+  },
+  "sup-activist": {
+    skin: ["#a9744c", "#74502f", "#cc9871"],
+    bg: ["#1c2e1f", "#0f1812"],
+    attire: { kind: "open", c: "#2d4a3a", trim: "#3f6b57", shirt: "#c6cdc2" },
+    hair: { c: "#262b30", hi: "#6e747c", style: "curls" },
+    earrings: true,
+    mouth: "firm",
+    body: "slim",
+    stance: "cross",
+    heightAdj: -1,
+    face: { brow: "arched", chin: "round", nose: "slim" },
+  },
+  "sup-tycoon": {
+    skin: ["#bd9268", "#84603e", "#dfb98e"],
+    bg: ["#33291a", "#191209"],
+    attire: { kind: "suit", c: "#ded6c2", trim: "#c9b98e", shirt: "#f2ede1", tie: "#8a6c1f", accent: "#c69b54" },
+    hair: { c: "#2a2f38", hi: "#8b93a1", style: "sidepart" },
+    older: true,
+    mouth: "soft",
+    body: "heavy",
+    stance: "cross",
+    heightAdj: -4,
+    face: { brow: "straight", chin: "round", nose: "broad" },
   },
 };
 

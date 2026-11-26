@@ -1,0 +1,107 @@
+{
+  "scale": 4,
+  "cell": "64x96",
+  "expressions": [
+    "neutral",
+    "concerned",
+    "pleased",
+    "stern"
+  ],
+  "cast": [
+    {
+      "row": 0,
+      "id": "chiefOfStaff",
+      "name": "Sarah Tan"
+    },
+    {
+      "row": 1,
+      "id": "finance",
+      "name": "Tan Sri Azlan Mahmud"
+    },
+    {
+      "row": 2,
+      "id": "economicAdviser",
+      "name": "Dr. Kavitha Rao"
+    },
+    {
+      "row": 3,
+      "id": "nationalSecurity",
+      "name": "Dato' Faridah Yusof"
+    },
+    {
+      "row": 4,
+      "id": "foreign",
+      "name": "Datuk Lim Wei Sheng"
+    },
+    {
+      "row": 5,
+      "id": "home",
+      "name": "Datuk Seri Norliza Ahmad"
+    },
+    {
+      "row": 6,
+      "id": "borneoMinister",
+      "name": "Datuk Seri Peter Mojuntin"
+    },
+    {
+      "row": 7,
+      "id": "gpsPremier",
+      "name": "Datuk Patinggi Jonathan Lingga"
+    },
+    {
+      "row": 8,
+      "id": "bnChair",
+      "name": "Tan Sri Raja Nordin"
+    },
+    {
+      "row": 9,
+      "id": "oppositionLeader",
+      "name": "Dato' Iskandar Rahman"
+    },
+    {
+      "row": 10,
+      "id": "sup-palaceSecretary",
+      "name": "Datin Marissa Jaafar"
+    },
+    {
+      "row": 11,
+      "id": "sup-attorneyGeneral",
+      "name": "Tan Sri Halim Usman"
+    },
+    {
+      "row": 12,
+      "id": "sup-bankGovernor",
+      "name": "Governor Nurul Aini Hamzah"
+    },
+    {
+      "row": 13,
+      "id": "sup-armedForcesChief",
+      "name": "General Tan Sri Rohaizad Osman"
+    },
+    {
+      "row": 14,
+      "id": "sup-kelantanLeader",
+      "name": "Dato' Mukhtar Lazim"
+    },
+    {
+      "row": 15,
+      "id": "sup-terengganuLeader",
+      "name": "Dato' Seri Razali Idrus"
+    },
+    {
+      "row": 16,
+      "id": "sup-journalist",
+      "name": "Aina Zulkifli"
+    },
+    {
+      "row": 17,
+      "id": "sup-activist",
+      "name": "Farah Aziz"
+    },
+    {
+      "row": 18,
+      "id": "sup-tycoon",
+      "name": "Tan Sri Vincent Khoo"
+    }
+  ]
+}
