@@ -211,6 +211,9 @@ non-transparent pixels** per character. Never cartoonish; the game is a drama, n
   frames the face, neck/chest layer, fold lines, pin — `cape` and `long` variants), the songkok
   is a flat-topped oval cap with a gold band, the kopiah a white knit cap with ribs. Never
   caricatured; never reduced to a hair shape.
+- Wardrobe kinds (D-20): `suit`, `open` (batik/jacket), `mandarin`, `baju` (baju Melayu with
+  button placket and folded sampin sash), `sherwani` (full placket, stand collar, hem edging).
+- Props (D-17): `folder`, `phone`, `tablet`, `cane` carried in the stand pose at hand level.
 - Sprites are transparent PNG. Signed by `scripts/build-sprites.ts`; reviewed via
   `npm run contact:sheet` (`public/art/qa/contact-sheet-*.png`).
 

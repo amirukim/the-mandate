@@ -28,7 +28,9 @@ function tint(hex: string, f: number): string {
 interface PixelSpec {
   skin: [string, string, string];
   bg: [string, string];
-  attire: { kind: "suit" | "open" | "mandarin"; c: string; trim: string; shirt: string; tie?: string; accent?: string };
+  attire: { kind: "suit" | "open" | "mandarin" | "baju" | "sherwani"; c: string; trim: string; shirt: string; tie?: string; accent?: string };
+  /** v3: the prop the character carries in stand pose (D-17 props layer). */
+  prop?: "folder" | "phone" | "tablet" | "cane";
   hair?: { c: string; hi: string; style: "bob" | "short" | "receding" | "tied" | "sidepart" | "curls" | "combed" | "white" };
   hijab?: { c: string; hi: string; style?: "cape" | "long" };
   songkok?: string;
@@ -93,304 +95,28 @@ class Grid {
   }
 }
 
-function draw(spec: PixelSpec, expression: Expression = "neutral"): (string | null)[][] {
-  const g = new Grid();
-  const [skin, skinSh, skinHi] = spec.skin;
-  const a = spec.attire;
-
+/** The 96x96 bust (v3a phase 3): the paper-doll's head-and-chest crop at 2x,
+ *  so the portrait and the sprite are the same drawing by construction (D-17),
+ *  with the authored backdrop and the six-expression support of the doll. */
+function drawBustCells(spec: PixelSpec, expression: Expression): (string | null)[][] {
+  const sprite = drawSprite(spec, expression, { pose: "stand", frame: 0 });
+  const g = new Grid(96, 96);
   // backdrop, with a quiet warm glow behind the head
-  g.rect(0, 0, W, 34, spec.bg[0]);
-  g.rect(0, 34, W, H - 34, spec.bg[1]);
-  g.ellipse(32, 28, 26, 24, spec.bg[1]);
-
-  // shoulders: the coat, rising from the floor
-  for (let y = 46; y < H; y++) {
-    const t = (y - 46) / (H - 46);
-    const half = 10 + Math.round(t * 22);
-    g.rect(32 - half, y, half * 2, 1, a.c);
-  }
-  g.rect(20, 44, 24, 4, a.c);
-  // key light falls from the left: lit shoulder, shaded right
-  g.rect(22, 50, 4, 10, tint(a.c, 0.18));
-  g.set(21, 48, tint(a.c, 0.14)); g.set(22, 60, tint(a.c, 0.12));
-  g.rect(49, 54, 3, 8, shade(a.c, 0.22));
-  g.rect(46, 48, 2, 4, shade(a.c, 0.14));
-
-  // collar per kind
-  if (a.kind === "suit") {
-    // shirt band with a placket shadow
-    g.rect(30, 46, 4, 18, a.shirt);
-    g.rect(33, 46, 1, 18, shade(a.shirt, 0.18));
-    // tie: knot, blade, tip
-    if (a.tie) {
-      g.rect(31, 46, 2, 2, a.tie);
-      g.rect(30, 48, 3, 2, shade(a.tie, 0.12));
-      g.rect(31, 50, 2, 7, a.tie);
-      g.rect(31, 57, 2, 4, shade(a.tie, 0.22));
-    }
-    // lapels: stepped, falling outward from the collar
-    g.rect(27, 46, 3, 3, a.trim);
-    g.rect(26, 49, 3, 4, a.trim);
-    g.rect(25, 53, 3, 4, shade(a.trim, 0.16));
-    g.rect(34, 46, 3, 3, a.trim);
-    g.rect(35, 49, 3, 4, a.trim);
-    g.rect(36, 53, 3, 4, shade(a.trim, 0.16));
-    if (a.accent) g.rect(40, 55, 4, 2, a.accent);
-  } else if (a.kind === "open") {
-    g.rect(28, 46, 8, 14, a.shirt);
-    g.set(28, 46, a.trim); g.set(29, 47, a.trim); g.set(27, 48, a.trim);
-    g.rect(35, 46, 8, 14, a.shirt);
-    g.set(35, 46, a.trim); g.set(36, 47, a.trim); g.set(37, 48, a.trim);
-    // placket line and cloth folds
-    g.rect(34, 47, 1, 12, shade(a.shirt, 0.14));
-    g.set(29, 52, shade(a.shirt, 0.1)); g.set(30, 57, shade(a.shirt, 0.1));
-  } else {
-    g.rect(26, 46, 12, 18, a.shirt);
-    g.rect(25, 46, 2, 18, a.c);
-    g.rect(37, 46, 2, 18, a.c);
-    // mandarian collar shadow + placket with a single top button
-    g.rect(26, 46, 12, 2, shade(a.shirt, 0.16));
-    g.rect(32, 48, 1, 16, shade(a.shirt, 0.12));
-    g.rect(31, 47, 3, 2, a.accent ?? a.trim);
-  }
-
-  // neck: jaw shadow above, throat light below
-  g.rect(27, 39, 10, 7, skinSh);
-  g.rect(29, 41, 6, 5, skin);
-  g.rect(29, 41, 6, 2, tint(skin, 0.08));
-
-  // head: shade crescent first, then the lit face leaves a tapered shadow
-  g.ellipse(34, 26, 12, 14, skinSh);
-  g.ellipse(33, 30, 11, 10, skinSh);
-  g.ellipse(32, 26, 12, 14, skin);
-  g.ellipse(31, 30, 10, 9, skin);
-  // right-edge core shadow along the jaw
-  g.rect(40, 24, 2, 9, skinSh);
-  g.set(41, 30, skinSh); g.set(40, 33, skinSh);
-  // left light plane
-  g.rect(22, 17, 2, 15, skinHi);
-  g.set(23, 15, skinHi); g.set(24, 14, skinHi);
-  // forehead sheen
-  g.rect(27, 16, 6, 1, tint(skin, 0.12));
-  // ears with inner shadow
-  g.rect(19, 26, 3, 6, skin);
-  g.set(20, 28, skinSh); g.set(20, 29, skinSh);
-  g.rect(42, 26, 3, 6, skin);
-  g.set(43, 28, skinSh); g.set(43, 29, skinSh);
-
-  // hair â€” mass first, then a curved carve for the hairline, then light
-  const h = spec.hair;
-  if (h) {
-    const { c, hi } = h;
-    const hairSh = shade(c, 0.3);
-    switch (h.style) {
-      case "bob":
-        g.ellipse(32, 20, 15, 13, c);
-        g.rect(18, 22, 6, 17, c);
-        g.rect(40, 22, 6, 17, c);
-        g.ellipse(32, 26, 10, 9, skin);
-        // right-side shade plane and side falloff
-        g.rect(41, 24, 4, 14, hairSh);
-        g.rect(19, 24, 3, 14, shade(c, 0.12));
-        // highlight strands along the crown
-        g.set(25, 11, hi); g.set(26, 12, hi); g.set(27, 12, hi);
-        g.set(39, 13, hi); g.set(40, 14, hi);
-        g.set(18, 30, hi);
-        break;
-      case "receding":
-        g.ellipse(32, 17, 13, 9, c);
-        g.ellipse(32, 25, 11, 10, skin);
-        g.rect(41, 14, 3, 10, hairSh);
-        g.set(24, 10, hi); g.set(25, 11, hi); g.set(26, 11, hi);
-        g.set(38, 12, hi);
-        break;
-      case "tied":
-        g.ellipse(32, 18, 14, 11, c);
-        g.ellipse(32, 25, 11, 10, skin);
-        g.rect(18, 20, 4, 14, c);
-        g.rect(42, 20, 4, 14, c);
-        g.ellipse(32, 6, 5, 4, c);
-        g.set(31, 3, hi);
-        g.rect(43, 22, 2, 11, hairSh);
-        g.set(21, 14, hi); g.set(22, 15, hi);
-        break;
-      case "sidepart":
-        g.ellipse(32, 17, 14, 10, c);
-        g.ellipse(32, 25, 11, 10, skin);
-        g.rect(19, 16, 8, 6, c);
-        g.rect(42, 15, 3, 12, hairSh);
-        g.set(24, 8, hi); g.set(25, 9, hi); g.set(26, 9, hi); g.set(27, 10, hi);
-        g.set(44, 14, c); g.set(45, 15, c);
-        break;
-      case "curls":
-        for (const [cx, cy, r] of [[22, 13, 6], [30, 10, 7], [40, 12, 6], [18, 19, 5], [46, 19, 5]] as const) {
-          g.ellipse(cx, cy, r, r - 1, c);
-        }
-        g.ellipse(32, 25, 10, 9, skin);
-        g.set(30, 6, hi); g.set(38, 8, hi); g.set(17, 17, hi);
-        g.set(45, 17, hairSh);
-        break;
-      case "combed":
-        g.ellipse(32, 16, 14, 10, c);
-        g.ellipse(32, 24, 11, 10, skin);
-        g.rect(17, 17, 4, 5, c); g.rect(43, 17, 4, 5, c);
-        g.rect(43, 14, 3, 10, hairSh);
-        g.set(22, 9, hi); g.set(23, 10, hi); g.set(24, 10, hi); g.set(25, 11, hi);
-        break;
-      case "white":
-        g.ellipse(32, 16, 14, 10, c);
-        g.ellipse(32, 24, 11, 10, skin);
-        g.rect(17, 17, 4, 6, c); g.rect(43, 17, 4, 6, c);
-        g.rect(43, 14, 3, 10, shade(c, 0.14));
-        g.set(22, 9, hi); g.set(40, 10, hi); g.set(24, 10, tint(c, 0.4));
-        break;
-      case "short":
-      default:
-        g.ellipse(32, 15, 14, 11, c);
-        g.ellipse(32, 24, 11, 10, skin);
-        g.rect(17, 18, 4, 5, c); g.rect(43, 18, 4, 5, c);
-        g.rect(42, 13, 3, 11, hairSh);
-        g.set(22, 8, hi); g.set(23, 9, hi); g.set(41, 11, hi); g.set(42, 12, hi);
-        break;
+  g.rect(0, 0, 96, 44, spec.bg[0]);
+  g.rect(0, 44, 96, 52, spec.bg[1]);
+  g.ellipse(48, 42, 34, 30, spec.bg[1]);
+  for (let y = 0; y < 48; y++) {
+    for (let x = 0; x < 48; x++) {
+      const c = sprite[y + 2][x + 8];
+      if (c) g.rect(x * 2, y * 2, 2, 2, c);
     }
   }
-  if (spec.hijab) {
-    g.ellipse(32, 19, 17, 15, spec.hijab.c);
-    g.rect(15, 24, 6, 26, spec.hijab.c);
-    g.rect(43, 24, 6, 26, spec.hijab.c);
-    g.rect(15, 24, 2, 26, spec.hijab.hi);
-    g.rect(16, 8, 8, 2, spec.hijab.hi);
-    g.ellipse(32, 26, 13, 12, skin);
-    g.rect(21, 16, 22, 5, spec.hijab.c);
-    g.rect(15, 48, 34, 4, spec.hijab.c);
-    g.rect(43, 26, 2, 22, shade(spec.hijab.c, 0.2));
-    g.set(26, 8, tint(spec.hijab.c, 0.3)); g.set(27, 9, tint(spec.hijab.c, 0.3));
-  }
-  if (spec.songkok) {
-    g.ellipse(32, 12, 14, 7, spec.songkok);
-    g.rect(18, 8, 28, 4, spec.songkok);
-    g.rect(18, 11, 28, 2, "#c9a96a");
-    g.rect(22, 8, 6, 1, "#2b323e");
-    g.rect(43, 10, 2, 6, shade(spec.songkok, 0.25));
-    g.set(24, 9, tint(spec.songkok, 0.25));
-  }
-  if (spec.kopiah) {
-    g.ellipse(32, 12, 14, 7, spec.kopiah);
-    g.rect(18, 8, 28, 4, spec.kopiah);
-    g.rect(18, 11, 28, 2, "#8f8a7c");
-    for (const x of [26, 32, 38]) g.rect(x, 8, 1, 4, "#8f8a7c");
-    g.rect(43, 10, 2, 6, shade(spec.kopiah, 0.25));
-  }
-
-  // brows â€” tapered, a step down toward the temple
-  const brow = spec.older ? skinSh : "#26222a";
-  g.rect(24, 21, 6, 1, brow);
-  g.set(30, 21, brow); g.set(30, 20, brow);
-  g.rect(25, 20, 4, 1, shade(brow, 0.1));
-  g.rect(33, 20, 5, 1, brow);
-  g.set(33, 21, brow);
-  g.rect(34, 21, 6, 1, brow);
-  g.rect(35, 20, 4, 1, shade(brow, 0.1));
-
-  // eyes: sclera, iris, pupil, glint, lids
-  g.ellipse(27, 25, 3, 2, "#f6f2e8");
-  g.ellipse(37, 25, 3, 2, "#f6f2e8");
-  g.rect(26, 24, 2, 2, "#23303e");
-  g.rect(36, 24, 2, 2, "#23303e");
-  g.rect(26, 25, 2, 1, "#12171d");
-  g.rect(36, 25, 2, 1, "#12171d");
-  g.set(27, 24, "#4d5f72");
-  g.set(37, 24, "#4d5f72");
-  g.rect(24, 23, 7, 1, "#241f26");
-  g.rect(34, 23, 7, 1, "#241f26");
-  g.set(25, 27, skinSh);
-  g.set(39, 27, skinSh);
-  if (spec.older) {
-    g.set(23, 22, skinSh); g.set(24, 22, skinSh);
-    g.set(41, 22, skinSh); g.set(40, 22, skinSh);
-    g.set(31, 19, skinSh); g.set(32, 19, skinSh);
-  }
-
-  // nose: side plane, tip light, nostrils
-  g.rect(31, 26, 1, 7, skinSh);
-  g.rect(32, 30, 1, 2, skinHi);
-  g.set(30, 33, skinSh);
-  g.set(33, 33, skinSh);
-
-  // cheeks
-  g.ellipse(24, 30, 3, 2, skinHi);
-  g.ellipse(41, 31, 3, 2, skinSh);
-
-  // mouth
-  const mouth = spec.mouth ?? "firm";
-  if (mouth === "set") {
-    g.rect(28, 37, 8, 1, "#4d3230");
-  } else if (mouth === "soft") {
-    g.rect(28, 36, 8, 1, "#4d3230");
-    g.rect(29, 37, 6, 1, "#4d3230");
-  } else {
-    g.rect(28, 36, 8, 1, "#4d3230");
-    g.rect(27, 36, 1, 1, "#4d3230"); g.rect(36, 36, 1, 1, "#4d3230");
-    g.rect(30, 38, 4, 1, skinHi);
-  }
-
-  // expression pass â€” drawn over the authored face, never random (see cast.ts)
-  if (expression !== "neutral") applyExpression(g, expression, skin);
-
-  if (spec.facial) {
-    const grey = spec.facial.includes("grey");
-    const fc = grey ? "#a7aca4" : "#232833";
-    if (spec.facial.startsWith("moustache")) {
-      g.rect(26, 34, 12, 2, fc);
-      g.rect(25, 35, 3, 1, fc); g.rect(36, 35, 3, 1, fc);
-    } else {
-      g.rect(23, 36, 18, 7, fc);
-      g.rect(25, 34, 3, 2, fc); g.rect(36, 34, 3, 2, fc);
-      g.rect(29, 37, 6, 3, skinSh);
-      g.rect(28, 42, 8, 2, fc);
-      if (grey) g.rect(24, 40, 3, 1, "#c9cdc6");
-    }
-  }
-
-  if (spec.glasses) {
-    // outline-only frames: the refined eyes stay visible through the lenses
-    const f = "#39414c";
-    // left lens
-    g.rect(22, 22, 10, 1, f);
-    g.rect(22, 28, 10, 1, f);
-    g.rect(22, 23, 1, 5, f);
-    g.rect(31, 23, 1, 5, f);
-    // right lens
-    g.rect(32, 22, 10, 1, f);
-    g.rect(32, 28, 10, 1, f);
-    g.rect(32, 23, 1, 5, f);
-    g.rect(41, 23, 1, 5, f);
-    // bridge and temples
-    g.rect(31, 24, 1, 1, f);
-    g.rect(16, 23, 6, 1, f);
-    g.rect(42, 23, 6, 1, f);
-    // lens glint, upper-left of each lens
-    g.set(24, 23, "#d7e2ec");
-    g.set(34, 23, "#d7e2ec");
-    // frames sit on the nose: a small shadow under each lens
-    g.rect(24, 29, 6, 1, skinSh);
-    g.rect(35, 29, 5, 1, skinSh);
-  }
-
-  if (spec.earrings) { g.rect(19, 33, 2, 2, "#e6cd8e"); g.rect(43, 33, 2, 2, "#e6cd8e"); }
-  if (spec.bindi) g.rect(31, 17, 2, 2, "#b3452e");
-
-  // rim light: a short catch along the hair edge on the lamp side
-  g.rect(21, 14, 1, 9, skinHi);
-  g.set(20, 12, skinHi);
-
   return g.cells;
 }
-
 const cache = new Map<string, string>();
 
 function render(spec: PixelSpec, expression: Expression = "neutral"): string {
-  const cells = draw(spec, expression);
+  const cells = drawBustCells(spec, expression);
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -433,47 +159,6 @@ export function specById(id: string): PixelSpec {
 export type Expression = "neutral" | "concerned" | "pleased" | "stern" | "weary" | "surprised";
 
 const MOUTH = "#4d3230";
-
-function applyExpression(g: Grid, expression: Expression, skin: string) {
-  const brow = "#26222a";
-  // clear the authored mouth before redrawing it (face skin underneath)
-  g.rect(27, 35, 11, 5, skin);
-  if (expression === "pleased") {
-    // corners up, gentle closed smile
-    g.rect(28, 37, 8, 1, MOUTH);
-    g.set(27, 36, MOUTH);
-    g.set(36, 36, MOUTH);
-  } else if (expression === "concerned") {
-    // inner brow tips lifted, mouth pulled flat and small
-    g.set(29, 19, brow);
-    g.set(30, 19, brow);
-    g.set(33, 19, brow);
-    g.set(34, 19, brow);
-    g.rect(29, 37, 6, 1, MOUTH);
-    g.set(28, 38, MOUTH);
-    g.set(35, 38, MOUTH);
-  } else if (expression === "weary") {
-    // heavy lids, brow flat and low, mouth pulled down at the corners
-    g.rect(25, 23, 6, 1, brow);
-    g.rect(33, 23, 6, 1, brow);
-    g.rect(26, 24, 6, 1, skin); // droop the upper lid
-    g.rect(35, 24, 6, 1, skin);
-    g.rect(29, 37, 7, 1, MOUTH);
-    g.set(28, 36, MOUTH);
-    g.set(36, 36, MOUTH);
-  } else if (expression === "surprised") {
-    // brows high, mouth a small open ellipse
-    g.rect(25, 18, 6, 1, brow);
-    g.rect(33, 18, 6, 1, brow);
-    g.rect(28, 36, 8, 3, MOUTH);
-    g.rect(29, 37, 6, 1, "#3a1f22");
-  } else {
-    // stern: brows pressed flat and low, mouth a straight line
-    g.rect(25, 22, 5, 1, brow);
-    g.rect(34, 22, 5, 1, brow);
-    g.rect(28, 37, 8, 1, MOUTH);
-  }
-}
 
 /* ------------------------------------------------------------------ */
 /* Full-body sprites (v2, plan C/D): 48x64, same specs and palette     */
@@ -633,6 +318,25 @@ export function drawSprite(
     g.vline(32, collarY + 2, torsoH - 4, shade(a.shirt, 0.14));
     g.rect(30, collarY - 1, 4, 2, a.accent ?? a.trim);
   }
+  if (a.kind === "baju") {
+    // baju Melayu: two-button placket and the folded sampin sash across the hip
+    g.vline(32, collarY + 1, torsoH - 3, shade(a.shirt, 0.16));
+    g.set(31, collarY + 2, a.accent ?? a.trim);
+    g.set(31, collarY + 4, a.accent ?? a.trim);
+    const sashY = legTop - 9;
+    for (let s = 0; s < 6; s++) {
+      const x = 32 - Math.round(geom.ww * 0.5) + s * 2;
+      g.rect(x - 2, sashY + s, Math.max(4, geom.ww + 2 - s), 2, s % 2 === 0 ? shade(a.trim, 0.1) : a.trim);
+    }
+  }
+  if (a.kind === "sherwani") {
+    // full-length placket with buttons, stand collar, hem edging
+    g.rect(31, collarY, 3, torsoH - 2, shade(a.shirt, 0.1));
+    for (let b = 0; b < 4; b++) g.set(32, collarY + 3 + b * 4, a.accent ?? a.trim);
+    g.rect(32 - Math.round(geom.sw * 0.5) - 2, collarY, 2, torsoH - 2, a.trim);
+    g.rect(32 + Math.round(geom.sw * 0.5) + 1, collarY, 2, torsoH - 2, a.trim);
+    g.rect(30, collarY - 1, 5, 2, a.trim);
+  }
 
   // belt
   g.rect(32 - geom.ww - 2, legTop - 6, geom.ww * 2 + 4, 3, shade(a.c, 0.4));
@@ -692,6 +396,29 @@ export function drawSprite(
     g.rect(armRX, armY, armW, armLen, shade(a.c, 0.12));
     g.rect(armLX, armY + armLen, armW, 3, skin);
     g.rect(armRX, armY + armLen, armW, 3, skin);
+  }
+
+  // --- props (D-17): carried in the stand pose, hand-level -----------------
+  if (pose === "stand" && spec.prop) {
+    const handY = armY + armLen;
+    const handX = 32 + geom.sw + 1; // the right hand line, outside the torso
+    if (spec.prop === "folder") {
+      g.rect(handX - 2, handY - 7, 8, 7, "#c9a96a");
+      g.rect(handX - 1, handY - 6, 6, 2, "#f2ede1");
+      g.vline(handX + 5, handY - 7, 7, shade("#c9a96a", 0.3));
+    } else if (spec.prop === "phone") {
+      g.rect(handX, handY - 3, 3, 6, "#12171d");
+      g.set(handX + 1, handY - 2, "#d7e2ec");
+    } else if (spec.prop === "tablet") {
+      g.rect(32 - 5, handY - 9, 10, 8, "#12171d");
+      g.rect(32 - 4, handY - 8, 8, 5, "#2b3a4a");
+      g.set(32 - 3, handY - 7, "#4d7a9e");
+    } else if (spec.prop === "cane") {
+      const caneX = handX + armW;
+      g.vline(caneX, handY - 2, SPRITE_H - 6 - handY, "#6b472a");
+      g.rect(caneX - 1, handY - 4, 3, 2, "#6b472a");
+      g.rect(handX, handY, armW, 3, skin);
+    }
   }
 
   // --- head ----------------------------------------------------------------
@@ -1066,6 +793,8 @@ export const AVATAR_ATTIRE: Array<{ id: string; kind: PixelSpec["attire"]["kind"
   { id: "suitGrey", kind: "suit", c: "#3a3f4a", trim: "#5a6070", shirt: "#dde2e8", tie: "#6e3440", accent: "#c9a96a" },
   { id: "batik", kind: "open", c: "#223026", trim: "#3f5a48", shirt: "#c6cdc2" },
   { id: "mandarin", kind: "mandarin", c: "#1f232c", trim: "#c9a96a", shirt: "#d9d2c0", accent: "#e6cd8e" },
+  { id: "bajuCream", kind: "baju", c: "#efe9dc", trim: "#c9a96a", shirt: "#efe9dc", accent: "#8f8a7c" },
+  { id: "sherwani", kind: "sherwani", c: "#2d4a3a", trim: "#c9a96a", shirt: "#d9d2c0", accent: "#e6cd8e" },
 ];
 
 const avatarCache = new Map<string, string>();
@@ -1117,6 +846,7 @@ const SPECS: Record<string, PixelSpec> = {
     attire: { kind: "suit", c: "#2a3140", trim: "#4a5468", shirt: "#e9e2d2", tie: "#8a6c1f", accent: "#c9a96a" },
     hair: { c: "#1d222c", hi: "#4d5a6e", style: "bob" },
     mouth: "soft",
+    prop: "folder",
     body: "slim",
     heightAdj: 1,
     face: { brow: "arched", chin: "taper", nose: "slim" },
@@ -1165,6 +895,7 @@ const SPECS: Record<string, PixelSpec> = {
     attire: { kind: "suit", c: "#2c3d5c", trim: "#51678c", shirt: "#ece9e0", tie: "#1d2740", accent: "#e6cd8e" },
     hair: { c: "#2a2f38", hi: "#8b93a1", style: "sidepart" },
     glasses: true,
+    prop: "phone",
     older: true,
     mouth: "firm",
     body: "slim",
@@ -1231,12 +962,13 @@ const SPECS: Record<string, PixelSpec> = {
   "sup-palaceSecretary": {
     skin: ["#c49a72", "#8a6244", "#e2ba92"],
     bg: ["#241f18", "#14100c"],
-    attire: { kind: "open", c: "#d9d2c0", trim: "#b8ad93", shirt: "#efe9dc" },
+    attire: { kind: "baju", c: "#d9d2c0", trim: "#b8ad93", shirt: "#efe9dc", accent: "#8f8a7c" },
     hair: { c: "#e5e2da", hi: "#f7f5ef", style: "combed" },
     songkok: "#3a3f4a",
     facial: "moustache-grey",
     older: true,
     stoop: true,
+    prop: "cane",
     mouth: "soft",
     body: "average",
     face: { brow: "straight", chin: "taper", nose: "slim" },
@@ -1281,7 +1013,7 @@ const SPECS: Record<string, PixelSpec> = {
   "sup-kelantanLeader": {
     skin: ["#bd8a5e", "#835a38", "#d9ad82"],
     bg: ["#24201a", "#14110d"],
-    attire: { kind: "open", c: "#e6dfcd", trim: "#c4bda6", shirt: "#efe9dc" },
+    attire: { kind: "baju", c: "#e6dfcd", trim: "#c4bda6", shirt: "#efe9dc", accent: "#8f8a7c" },
     hair: { c: "#8f8f8c", hi: "#c4c4c0", style: "short" },
     songkok: "#1f232c",
     facial: "beard-grey",
@@ -1322,6 +1054,7 @@ const SPECS: Record<string, PixelSpec> = {
     attire: { kind: "open", c: "#2d4a3a", trim: "#3f6b57", shirt: "#c6cdc2" },
     hair: { c: "#262b30", hi: "#6e747c", style: "curls" },
     earrings: true,
+    prop: "tablet",
     mouth: "firm",
     body: "slim",
     stance: "cross",
