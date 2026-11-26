@@ -10,6 +10,10 @@ export interface StateDef {
   rulerTitle: "Menteri Besar" | "Chief Minister" | "Premier";
   ruling: string;
   relation: number;
+  /** Fictional figures for the map's bottom-sheet card. */
+  population?: string;
+  industry?: string;
+  issues?: string[];
   note: string;
 }
 

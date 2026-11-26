@@ -13,7 +13,8 @@
     "build": "tsc --noEmit && node scripts/check-assets.mjs && vite build",
     "typecheck": "tsc --noEmit",
     "build:sprites": "tsx scripts/build-sprites.ts",
-    "build:office-overlays": "node scripts/build-office-overlays.mjs"
+    "build:office-overlays": "node scripts/build-office-overlays.mjs",
+    "build:map-plate": "tsx scripts/build-map-plate.ts"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

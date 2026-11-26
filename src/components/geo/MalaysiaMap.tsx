@@ -1,20 +1,13 @@
-import { useEffect, useState, type KeyboardEvent } from "react";
+﻿import { useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { Maximize2 } from "lucide-react";
-import { STATES, type StateDef } from "../../data/states";
-import { GEO_Brunei, GEO_Indonesia, GEO_Malaysia, GEO_Papua_New_Guinea, GEO_Philippines, GEO_Singapore, GEO_Thailand, GEO_East_Timor, GEO_Vietnam, GEO_Taiwan, GEO_China, GEO_VIEWBOX, type GeoRing } from "../../data/geo-paths";
+import { STATES } from "../../data/states";
+import { GEO_STATES } from "../../data/geo-states";
+import { GEO_VIEWBOX, type GeoRing } from "../../data/geo-paths";
 import { coalitionById } from "../../data/parties";
+import { cardFor } from "../../data/state-cards";
 import { useT } from "../../i18n/store";
+import { prefersReducedMotion } from "../../hooks/usePortalOverlay";
 import { cn } from "../../utils/cn";
-
-/**
- * Real geography (Natural Earth 1:50m, public domain) of Malaysia and its
- * immediate neighbours, rendered as a pixel-art chart: the static layer is
- * rasterized to ⅓ scale and upscaled crisp. Each federated
- * state is an interactive token placed at its real-world centroid; the state
- * shapes themselves are not drawn (admin-1 polygons are a separate dataset)
- * — hover and selection light a stepped ground tint under the token, and the
- * token itself carries colour, focus and the state file.
- */
 
 interface Props {
   selectedId: string | null;
@@ -52,7 +45,22 @@ const project = (() => {
   ];
 })();
 
-function ringPath(ring: GeoRing): string {
+const ABBR: Record<string, string> = {
+  "negeri-sembilan": "N9",
+  "kuala-lumpur": "KL",
+  putrajaya: "PJY",
+  labuan: "LBN",
+};
+
+/** Federal territories and unaligned seats: the neutral stone tone. */
+const NEUTRAL_FILL = "#8a8478";
+
+function fillFor(ruling: string): string {
+  if (ruling === "federal") return NEUTRAL_FILL;
+  return coalitionById(ruling)?.color ?? NEUTRAL_FILL;
+}
+
+function ringPath(ring: number[][] | GeoRing): string {
   let d = "";
   for (let i = 0; i < ring.length; i++) {
     const [x, y] = ring[i];
@@ -61,120 +69,24 @@ function ringPath(ring: GeoRing): string {
   return d + "Z";
 }
 
-function Country({ rings, fill, stroke, strokeWidth, opacity }: { rings: GeoRing[]; fill: string; stroke?: string; strokeWidth?: number; opacity?: number }) {
-  return (
-    <g fill={fill} stroke={stroke} strokeWidth={strokeWidth} opacity={opacity} strokeLinejoin="round">
-      {rings.map((r, i) => (
-        <path key={i} d={ringPath(r)} />
-      ))}
-    </g>
-  );
-}
+const TERRAIN_PLATE = "/art/pixel/map-federation.png";
 
-/** Federal territories and unaligned seats: the neutral stone tone. */
-const NEUTRAL_FILL = "#8a8478";
-
-function fillFor(state: StateDef): string {
-  if (state.ruling === "federal") return NEUTRAL_FILL;
-  return coalitionById(state.ruling)?.color ?? NEUTRAL_FILL;
-}
-
-const ABBR: Record<string, string> = {
-  "negeri-sembilan": "N9",
-  "kuala-lumpur": "KL",
-  putrajaya: "PJY",
-  labuan: "LBN",
-};
-
-/* The static layer — sea, neighbours, the federation — serialized once and
-   rasterized to ⅓ scale, then upscaled with pixelated rendering. */
-let staticPixelUrl: string | null = null;
-
-function staticMapSvgString(): string {
-  const { width, height } = GEO_VIEWBOX;
-  const country = (rings: GeoRing[], fill: string, stroke: string, sw: number) =>
-    `<g fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round">${rings
-      .map((r) => `<path d="${ringPath(r)}"/>`)
-      .join("")}</g>`;
-  // each neighbour its own paper tone, so the region reads as atlas plates
-  const thailand = "#e3e0d3";
-  const indonesia = "#e0dcc9";
-  const vietnam = "#e6e2d6";
-  const philippines = "#ded9c4";
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">` +
-    `<rect width="${width}" height="${height}" fill="#bfd7ea"/>` +
-    // shore halo: two flat, lighter bands radiating from the federation
-    country(GEO_Malaysia, "none", "#cfe3f2", 26) +
-    country(GEO_Malaysia, "none", "#d8eaf6", 12) +
-    country(GEO_Thailand, thailand, "#c9c2ae", 2.4) +
-    country(GEO_Indonesia, indonesia, "#c9c2ae", 2.4) +
-    country(GEO_Vietnam, vietnam, "#c9c2ae", 2.4) +
-    country(GEO_Philippines, philippines, "#c9c2ae", 2.4) +
-    country(GEO_Brunei, "#efe9dc", "#c9c2ae", 2.2) +
-    country(GEO_Singapore, "#efe9dc", "#c9c2ae", 2) +
-    country(GEO_China, "#dcd8c8", "#c9c2ae", 2) +
-    country(GEO_Taiwan, "#dcd8c8", "#c9c2ae", 2) +
-    country(GEO_Papua_New_Guinea, "#dcd8c8", "#c9c2ae", 2) +
-    country(GEO_East_Timor, "#dcd8c8", "#c9c2ae", 2) +
-    country(GEO_Malaysia, "#f7f4ec", "#1a1e6e", 4) +
-    "</svg>"
-  );
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`pixelate: failed to load ${src}`));
-    img.src = src;
-  });
-}
-
-function useStaticPixelMap(): string | null {
-  const [url, setUrl] = useState<string | null>(staticPixelUrl);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    if (url || failed) return;
-    const { width, height } = GEO_VIEWBOX;
-    const w = Math.round(width / 3);
-    const h = Math.round(height / 3);
-    const blob = new Blob([staticMapSvgString()], { type: "image/svg+xml" });
-    const objectUrl = URL.createObjectURL(blob);
-    (async () => {
-      try {
-        const img = await loadImage(objectUrl);
-        // pass 1 — full-resolution raster of the chart, then pass 2 —
-        // nearest-neighbour downsample onto the pixel grid
-        const full = document.createElement("canvas");
-        full.width = width;
-        full.height = height;
-        const fctx = full.getContext("2d");
-        if (!fctx) return;
-        fctx.drawImage(img, 0, 0, width, height);
-        const out = document.createElement("canvas");
-        out.width = w;
-        out.height = h;
-        const octx = out.getContext("2d");
-        if (!octx) return;
-        octx.imageSmoothingEnabled = false;
-        octx.drawImage(full, 0, 0, w, h);
-        staticPixelUrl = out.toDataURL("image/png");
-        URL.revokeObjectURL(objectUrl);
-        setUrl(staticPixelUrl);
-      } catch {
-        URL.revokeObjectURL(objectUrl);
-        setFailed(true);
-      }
-    })();
-  }, [url, failed]);
-  return failed ? null : url;
-}
-
+/**
+ * The federation map (v2): a build-time terrain plate with state-shape
+ * overlays from Natural Earth admin-1 polygons (decision D-11). Shapes fill
+ * on hover and selection; tokens stay the precise clickable layer; wheel and
+ * drag zoom/pan when zoomed; a bottom sheet opens with the selected state's
+ * card. All ambient animation stills under reduced motion.
+ */
 export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }: Props) {
   const { t, lang } = useT();
   const [hoverId, setHoverId] = useState<string | null>(null);
-  const staticMapUrl = useStaticPixelMap();
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+  const reduced = prefersReducedMotion();
+
+  const activeId = selectedId ?? hoverId;
   const toggle = (id: string) => onSelect(selectedId === id ? null : id);
   const keyHandler = (id: string) => (e: KeyboardEvent<SVGGElement>) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -183,10 +95,43 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
     }
   };
 
-  const sea = expanded ? "#a9c4dd" : "#bfd7ea";
-  // the hovered or selected token renders last, so SVG stacking never buries
-  // it under a dense neighbour (Selangor/KL/Putrajaya)
-  const activeId = selectedId ?? hoverId;
+  const clampPan = (x: number, y: number): { x: number; y: number } => {
+    const maxX = (zoom - 1) * GEO_VIEWBOX.width;
+    const maxY = (zoom - 1) * GEO_VIEWBOX.height;
+    return { x: Math.max(-maxX, Math.min(0, x)), y: Math.max(-maxY, Math.min(0, y)) };
+  };
+
+  const onWheel = (e: ReactWheelEvent<HTMLDivElement>) => {
+    if (reduced) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const fx = (e.clientX - rect.left) / rect.width;
+    const fy = (e.clientY - rect.top) / rect.height;
+    const next = Math.max(1, Math.min(3, zoom - e.deltaY * 0.0015));
+    if (next === zoom) return;
+    const worldX = (fx * GEO_VIEWBOX.width - pan.x) / zoom;
+    const worldY = (fy * GEO_VIEWBOX.height - pan.y) / zoom;
+    setZoom(next);
+    setPan(clampPan(-worldX * next + fx * GEO_VIEWBOX.width, -worldY * next + fy * GEO_VIEWBOX.height));
+  };
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (zoom <= 1) return;
+    dragRef.current = { x: e.clientX, y: e.clientY, px: pan.x, py: pan.y };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const scale = GEO_VIEWBOX.width / rect.width;
+    const dx = (e.clientX - dragRef.current.x) * scale;
+    const dy = (e.clientY - dragRef.current.y) * scale;
+    setPan(clampPan(dragRef.current.px + dx, dragRef.current.py + dy));
+  };
+  const endDrag = () => { dragRef.current = null; };
+
+  const selectedState = STATES.find((s) => s.id === selectedId);
+  const card = selectedState ? cardFor(selectedState) : null;
+  const selectedBloc = selectedState ? coalitionById(selectedState.ruling) : null;
 
   return (
     <section
@@ -196,168 +141,166 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
         expanded ? "rounded-none border-0 h-full w-full" : "rounded-panel",
       )}
     >
-      <div className={cn("relative", expanded ? "flex-1 min-h-0" : "")}>
-        <svg
-          viewBox={`0 0 ${GEO_VIEWBOX.width} ${GEO_VIEWBOX.height}`}
-          preserveAspectRatio={expanded ? "xMidYMid meet" : undefined}
-          className={cn("block w-full h-auto", expanded && "h-full w-full")}
-          role="group"
-          aria-label={lang === "ms" ? "Negeri-negeri persekutuan" : "States of the federation"}
+      <div className={cn("relative overflow-hidden", expanded ? "flex-1 min-h-0" : "")}>
+        <div
+          className="relative"
+          style={reduced ? undefined : { transition: "transform 200ms ease-out", transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}
+          onWheel={onWheel}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerLeave={endDrag}
         >
-          {staticMapUrl ? (
-            <image href={staticMapUrl} x={0} y={0} width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} />
-          ) : (
-            <>
-              <defs>
-                <pattern id="sea-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-                  <path d="M48 0H0v48" fill="none" stroke="#a9c4dd" strokeWidth="0.5" opacity="0.5" />
-                </pattern>
-                <radialGradient id="sea-glow" cx="0.5" cy="0.35" r="0.8">
-                  <stop offset="0" stopColor="#d3e4f2" />
-                  <stop offset="1" stopColor={sea} />
-                </radialGradient>
-              </defs>
+          <svg
+            viewBox={`0 0 ${GEO_VIEWBOX.width} ${GEO_VIEWBOX.height}`}
+            className={cn("block w-full h-auto", expanded && "h-full w-full")}
+            role="group"
+            aria-label={lang === "ms" ? "Negeri-negeri persekutuan" : "States of the federation"}
+          >
+            {/* terrain plate: built at build time from the same polygons */}
+            <image href={TERRAIN_PLATE} x={0} y={0} width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} />
 
-              <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-glow)" />
-              <rect width={GEO_VIEWBOX.width} height={GEO_VIEWBOX.height} fill="url(#sea-grid)" />
+            {/* state shapes: real polygons, fill on hover/selection */}
+            {STATES.map((state) => {
+              const rings = GEO_STATES[state.id];
+              if (!rings) return null;
+              const selected = selectedId === state.id;
+              const hovered = hoverId === state.id;
+              const fill = fillFor(state.ruling);
+              return (
+                <path
+                  key={`shape-${state.id}`}
+                  d={rings.map((ring) => ringPath(ring)).join(" ")}
+                  fill={fill}
+                  fillOpacity={selected ? 0.5 : hovered ? 0.32 : 0.14}
+                  stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
+                  strokeWidth={selected || hovered ? 3 : 1.6}
+                  className="cursor-pointer transition-[fill-opacity] duration-150"
+                  pointerEvents="none"
+                />
+              );
+            })}
 
-              {/* shore halo: two flat, lighter bands radiating from the federation */}
-              <Country rings={GEO_Malaysia} fill="none" stroke="#cfe3f2" strokeWidth={26} />
-              <Country rings={GEO_Malaysia} fill="none" stroke="#d8eaf6" strokeWidth={12} />
-
-              {/* neighbours and context, real geometry */}
-              <Country rings={GEO_Thailand} fill="#e3e0d3" stroke="#c9c2ae" strokeWidth={2.4} />
-              <Country rings={GEO_Indonesia} fill="#e0dcc9" stroke="#c9c2ae" strokeWidth={2.4} />
-              <Country rings={GEO_Vietnam} fill="#e6e2d6" stroke="#c9c2ae" strokeWidth={2.4} />
-              <Country rings={GEO_Philippines} fill="#ded9c4" stroke="#c9c2ae" strokeWidth={2.4} />
-              <Country rings={GEO_Brunei} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={2.2} />
-              <Country rings={GEO_Singapore} fill="#efe9dc" stroke="#c9c2ae" strokeWidth={2} />
-              <Country rings={GEO_China} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
-              <Country rings={GEO_Taiwan} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
-              <Country rings={GEO_Papua_New_Guinea} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
-              <Country rings={GEO_East_Timor} fill="#dcd8c8" stroke="#c9c2ae" strokeWidth={2} />
-
-              {/* the federation: real coastline, canton-lined */}
-              <g strokeLinejoin="round">
-                <Country rings={GEO_Malaysia} fill="#f7f4ec" stroke="#1a1e6e" strokeWidth={4} />
-              </g>
-            </>
-          )}
-
-          {/* state tokens at real centroids */}
-          {STATES.slice()
-          .sort((a, b) => Number(b.id === activeId) - Number(a.id === activeId))
-          .map((state) => {
-            const c = CENTROIDS[state.id];
-            if (!c) return null;
-            const [cx, cy] = project(c.lon, c.lat);
-            const x = cx + (c.dx ?? 0);
-            const y = cy + (c.dy ?? 0);
-            const selected = selectedId === state.id;
-            const hovered = hoverId === state.id;
-            const fill = fillFor(state);
-            const isTerritory = ["kuala-lumpur", "putrajaya", "labuan"].includes(state.id);
-            const abbr = ABBR[state.id] ?? state.name.toUpperCase().slice(0, 3);
-            const handle = () => toggle(state.id);
-            const label = `${state.name} — ${t("overview.mapHint")}`;
-            return (
-              <g
-                key={state.id}
-                role="button"
-                tabIndex={0}
-                aria-label={label}
-                aria-pressed={selected}
-                onClick={handle}
-                onKeyDown={keyHandler(state.id)}
-                onMouseEnter={() => setHoverId(state.id)}
-                onMouseLeave={() => setHoverId(null)}
-                onFocus={() => setHoverId(state.id)}
-                onBlur={() => setHoverId(null)}
-                className="cursor-pointer outline-none"
-              >
-                {/* the state's area lights up: a stepped, pixel-grid tint under
-                    the token. Admin-1 polygons are a separate dataset (see the
-                    header note), so the highlight marks ground, not coastline. */}
-                {(selected || hovered) && (
-                  <g fill={fill} opacity={0.26} pointerEvents="none">
-                    <rect x={x - 21} y={y - 21} width={42} height={42} />
-                    <rect x={x - 29} y={y - 11} width={58} height={22} />
-                    <rect x={x - 11} y={y - 29} width={22} height={58} />
+            {/* tokens at real centroids â€” the clickable layer */}
+            {STATES.slice()
+              .sort((a, b) => Number(b.id === activeId) - Number(a.id === activeId))
+              .map((state) => {
+                const c = CENTROIDS[state.id];
+                if (!c) return null;
+                const [cx, cy] = project(c.lon, c.lat);
+                const x = cx + (c.dx ?? 0);
+                const y = cy + (c.dy ?? 0);
+                const selected = selectedId === state.id;
+                const hovered = hoverId === state.id;
+                const fill = fillFor(state.ruling);
+                const isTerritory = ["kuala-lumpur", "putrajaya", "labuan"].includes(state.id);
+                const abbr = ABBR[state.id] ?? state.name.toUpperCase().slice(0, 3);
+                const label = `${state.name} â€” ${t("overview.mapHint")}`;
+                return (
+                  <g
+                    key={state.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={label}
+                    aria-pressed={selected}
+                    onClick={() => toggle(state.id)}
+                    onKeyDown={keyHandler(state.id)}
+                    onMouseEnter={() => setHoverId(state.id)}
+                    onMouseLeave={() => setHoverId(null)}
+                    onFocus={() => setHoverId(state.id)}
+                    onBlur={() => setHoverId(null)}
+                    className="cursor-pointer outline-none"
+                  >
+                    {(selected || hovered) && (
+                      <g fill={fill} opacity={0.26} pointerEvents="none">
+                        <rect x={x - 21} y={y - 21} width={42} height={42} />
+                        <rect x={x - 29} y={y - 11} width={58} height={22} />
+                        <rect x={x - 11} y={y - 29} width={22} height={58} />
+                      </g>
+                    )}
+                    {(() => {
+                      const size = selected ? 30 : hovered ? 26 : 20;
+                      const half = size / 2;
+                      return (
+                        <>
+                          <rect x={x - half - 2} y={y - half - 2} width={size + 4} height={size + 4} fill="#f7f4ec" />
+                          <rect
+                            x={x - half}
+                            y={y - half}
+                            width={size}
+                            height={size}
+                            fill={fill}
+                            fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
+                            stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
+                            strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
+                            style={{ transition: "fill-opacity 140ms ease" }}
+                          />
+                        </>
+                      );
+                    })()}
+                    {isTerritory ? (
+                      <rect x={x - 3} y={y - 3} width={6} height={6} fill="#cc0001" />
+                    ) : (
+                      <text
+                        x={x}
+                        y={y + 4}
+                        textAnchor="middle"
+                        fill="#14163a"
+                        fontSize="12"
+                        fontWeight="700"
+                        fontFamily="Public Sans, sans-serif"
+                        pointerEvents="none"
+                      >
+                        {abbr}
+                      </text>
+                    )}
+                    {(selected || hovered) && (
+                      <text
+                        x={x}
+                        y={y - 18}
+                        textAnchor="middle"
+                        fill="#1a1e6e"
+                        fontSize="13"
+                        fontWeight="700"
+                        fontFamily="Public Sans, sans-serif"
+                        stroke="#f7f4ec"
+                        strokeWidth="3"
+                        paintOrder="stroke"
+                        pointerEvents="none"
+                      >
+                        {state.name}
+                      </text>
+                    )}
                   </g>
-                )}
-                {/* the token: a pixel square on a paper gap ring, snapped to the grid */}
-                {(() => {
-                  const size = selected ? 30 : hovered ? 26 : 20;
-                  const half = size / 2;
-                  return (
-                    <>
-                      <rect
-                        x={x - half - 2}
-                        y={y - half - 2}
-                        width={size + 4}
-                        height={size + 4}
-                        fill="#f7f4ec"
-                      />
-                      <rect
-                        x={x - half}
-                        y={y - half}
-                        width={size}
-                        height={size}
-                        fill={fill}
-                        fillOpacity={selected ? 0.95 : hovered ? 0.88 : 0.75}
-                        stroke={selected || hovered ? "#1a1e6e" : "#5a7ea6"}
-                        strokeWidth={selected ? 2.5 : hovered ? 2 : 1.2}
-                        style={{ transition: "fill-opacity 140ms ease" }}
-                      />
-                    </>
-                  );
-                })()}
-                {isTerritory ? (
-                  <rect x={x - 3} y={y - 3} width={6} height={6} fill="#cc0001" />
-                ) : (
-                  <text
-                    x={x}
-                    y={y + 4}
-                    textAnchor="middle"
-                    fill="#14163a"
-                    fontSize="12"
-                    fontWeight="700"
-                    fontFamily="Public Sans, sans-serif"
-                    pointerEvents="none"
-                  >
-                    {abbr}
-                  </text>
-                )}
-                {(selected || hovered) && (
-                  <text
-                    x={x}
-                    y={y - 18}
-                    textAnchor="middle"
-                    fill="#1a1e6e"
-                    fontSize="13"
-                    fontWeight="700"
-                    fontFamily="Public Sans, sans-serif"
-                    stroke="#f7f4ec"
-                    strokeWidth="3"
-                    paintOrder="stroke"
-                    pointerEvents="none"
-                  >
-                    {state.name}
-                  </text>
-                )}
-              </g>
-            );
-          })}
+                );
+              })}
 
-          {/* sea labels at real positions */}
-          <g fill="#5a7ea6" fontFamily="Public Sans, sans-serif" fontSize="14" letterSpacing="5">
-            <text x={project(112.5, 12.8)[0]} y={project(112.5, 12.8)[1]}>SOUTH CHINA SEA</text>
-            <text x={project(97.6, 1.2)[0]} y={project(97.6, 1.2)[1]} transform={`rotate(-72 ${project(97.6, 1.2)[0]} ${project(97.6, 1.2)[1]})`}>
-              STRAIT OF MALACCA
-            </text>
-            <text x={project(120.5, -6.5)[0]} y={project(120.5, -6.5)[1]}>CELEBES SEA</text>
-          </g>
-        </svg>
+            {/* sea labels at real positions */}
+            <g fill="#5a7ea6" fontFamily="Public Sans, sans-serif" fontSize="14" letterSpacing="5" pointerEvents="none">
+              <text x={project(112.5, 12.8)[0]} y={project(112.5, 12.8)[1]}>SOUTH CHINA SEA</text>
+              <text x={project(97.6, 1.2)[0]} y={project(97.6, 1.2)[1]} transform={`rotate(-72 ${project(97.6, 1.2)[0]} ${project(97.6, 1.2)[1]})`}>
+                STRAIT OF MALACCA
+              </text>
+              <text x={project(120.5, -6.5)[0]} y={project(120.5, -6.5)[1]}>CELEBES SEA</text>
+            </g>
+          </svg>
+        </div>
+
+        {/* bottom-sheet card: the selected state's dossier */}
+        {selectedState && card && (
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-paper border-t-2 border-gold shadow-lift px-4 py-3" role="region" aria-label={selectedState.name}>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="display text-base font-semibold">{selectedState.name}</h3>
+              <span className="kicker text-[9px]">
+                {selectedState.capital} Â· {card.population} Â· {card.industry}
+              </span>
+            </div>
+            <p className="text-xs text-muted mt-1">
+              {t("overview.relations")}: {selectedState.relation} Â· {selectedBloc ? `${selectedBloc.abbr} (${selectedBloc.seats})` : selectedState.ruling}
+              {card.issues.length > 0 && ` Â· ${card.issues.join(" Â· ")}`}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="px-4 py-3 border-t border-rule flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
@@ -367,6 +310,11 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
           <LegendSwatch label={t("overview.legendOpp")} color={coalitionById("pn")?.color ?? NEUTRAL_FILL} />
           <LegendSwatch label={t("overview.legendOther")} color={NEUTRAL_FILL} />
           <p className="text-xs text-muted">{t("overview.mapHint")}</p>
+          <div className="flex items-center gap-1" role="group" aria-label="Zoom">
+            <ZoomButton label="Zoom in" onZoom={() => setZoom(Math.min(3, zoom + 0.5))} glyph="+" />
+            <ZoomButton label="Zoom out" onZoom={() => setZoom(Math.max(1, zoom - 0.5))} glyph="âˆ’" />
+            <ZoomButton label="Reset view" onZoom={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} glyph="â¤¾" />
+          </div>
           {!expanded && onExpand && (
             <button
               type="button"
@@ -385,11 +333,25 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
   );
 }
 
+function ZoomButton({ label, onZoom, glyph }: { label: string; onZoom(): void; glyph: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onZoom}
+      aria-label={label}
+      title={label}
+      className="w-7 h-7 flex items-center justify-center border border-rule-strong rounded-[2px] text-ink text-xs font-bold hover:border-gold hover:text-gold-text transition-colors"
+    >
+      {glyph}
+    </button>
+  );
+}
+
 function LegendSwatch({ label, color }: { label: string; color: string }) {
   return (
-    <span className="flex items-center gap-1.5">
-      <span aria-hidden="true" className={cn("w-3.5 h-3.5 rounded-[1px] border border-gold/40")} style={{ backgroundColor: color }} />
-      <span className="text-xs text-muted">{label}</span>
+    <span className="flex items-center gap-1.5 text-xs text-muted">
+      <span aria-hidden="true" className="w-2.5 h-2.5 rounded-[1px] border border-rule-strong" style={{ backgroundColor: color }} />
+      {label}
     </span>
   );
 }

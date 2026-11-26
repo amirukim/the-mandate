@@ -2986,6 +2986,17 @@
       "source": "authored",
       "licence": "original",
       "note": "Office dynamic overlay (v2 Phase 5)."
+    },
+    {
+      "id": "map.federation",
+      "kind": "map",
+      "src": "/art/pixel/map-federation.png",
+      "width": 1200,
+      "height": 640,
+      "scale": 1,
+      "source": "authored",
+      "licence": "original",
+      "note": "Terrain plate built from Natural Earth geometry (build:map-plate)."
     }
   ]
 }
