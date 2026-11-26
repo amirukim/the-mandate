@@ -37,8 +37,8 @@ const APPS: HomeApp[][] = [
     { id: "history", to: "/game/history", icon: "history", labelKey: "nav.history" },
   ],
   [
-    { id: "policy", to: "/game/policy", icon: "policy", labelKey: "nav.policyDossier", soon: true },
-    { id: "budget", to: "/game/budget", icon: "budget", labelKey: "nav.budgetOffice", soon: true },
+    { id: "policy", to: "/game/policy", icon: "policy", labelKey: "nav.policyDossier" },
+    { id: "budget", to: "/game/budget", icon: "budget", labelKey: "nav.budgetOffice" },
     { id: "saves", to: "/game/saves", icon: "saves", labelKey: "nav.saves" },
     { id: "settings", to: "/game/settings", icon: "settings", labelKey: "nav.settings" },
     { id: "office", to: "/game/office", icon: "briefing", labelKey: "nav.office" },

@@ -4,6 +4,7 @@ import { clamp, dateLabel, round1, stateIsFallen } from "./calendar";
 import { applyEffects } from "./effects";
 import { makeRng, type Rng } from "./rng";
 import { ensureMutable } from "./array-guard";
+import { tickCoalitionMood } from "./policy";
 
 export type { Movement, TurnReport } from "../types/game";
 
@@ -151,6 +152,9 @@ export function endTurn(state: GameState): TurnReport {
     0,
     100,
   );
+
+  // --- v2 systems: coalition mood cools, fragile blocs leak defectors ---
+  tickCoalitionMood(state, rng.range(0, 1));
 
   // --- Security, diplomacy, federal ---
   const sec = state.security;

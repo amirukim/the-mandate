@@ -32,6 +32,12 @@ const Economy = lazy(() =>
 const Overview = lazy(() =>
   import("./pages/Overview").then((m) => ({ default: m.Overview })),
 );
+const PolicyDossier = lazy(() =>
+  import("./pages/PolicyDossier").then((m) => ({ default: m.PolicyDossier })),
+);
+const BudgetOffice = lazy(() =>
+  import("./pages/BudgetOffice").then((m) => ({ default: m.BudgetOffice })),
+);
 
 export default function App() {
   const init = useAuthStore((s) => s.init);
@@ -73,6 +79,8 @@ export default function App() {
             <Route path="overview" element={<Overview />} />
             <Route path="cabinet" element={<Cabinet />} />
             <Route path="parliament" element={<Parliament />} />
+            <Route path="policy" element={<PolicyDossier />} />
+            <Route path="budget" element={<BudgetOffice />} />
             <Route path="economy" element={<Economy />} />
             <Route path="parties" element={<Parties />} />
             <Route path="states" element={<FederalStateRelations />} />

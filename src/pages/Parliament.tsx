@@ -7,6 +7,7 @@ import { PoliticalIndicators } from "../components/ui/PoliticalIndicators";
 import { Stat } from "../components/ui/Stat";
 import { ParliamentChart } from "../components/charts/ParliamentChart";
 import { PixelScene } from "../components/game/PixelScene";
+import { OrderPaper } from "../features/parliament/OrderPaper";
 import { useT } from "../i18n/store";
 import { coalitionText } from "../i18n/data";
 import { cn } from "../utils/cn";
@@ -65,6 +66,24 @@ export function Parliament() {
           </p>
         </div>
       </section>
+
+      {/* The order paper: bills, forecasts, divisions, confidence. */}
+      <div className="grid gap-6 lg:grid-cols-5 mt-6">
+        <div className="lg:col-span-3 min-w-0">
+          <Panel kicker={t("parliament.orderTitle")} title={t("parliament.orderKicker")}>
+            <OrderPaper />
+          </Panel>
+        </div>
+        <div className="lg:col-span-2 min-w-0">
+          <Panel kicker={t("parliament.arithmetic")} title={t("parliament.arithmetic")}>
+            <p className="text-sm text-muted leading-relaxed">
+              {lang === "ms"
+                ? "Blok kerajaan melompat kepada kuarang apabila kemarahan melebihi 30; blok yang diurbulkan berkurang kekecohan; pengikut raja memihak kepada kerajaan yang bertahan. Garisan blok di bawah ialah fungsi itu."
+                : "Government blocs defect to abstention as anger rises past 30; courted blocs soften; kingmakers back a government that holds. The bloc lines in the order paper are that function."}
+            </p>
+          </Panel>
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-5 mt-6">
         <div className="lg:col-span-3 min-w-0 space-y-6">

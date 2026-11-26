@@ -4,6 +4,7 @@ import { Meter } from "../components/ui/Meter";
 import { PixelSprite } from "../components/game/PixelSprite";
 import { PartyFlag } from "../components/ui/PartyFlag";
 import { PixelScene } from "../components/game/PixelScene";
+import { CabinetTable } from "../features/cabinet/CabinetTable";
 import { prefersReducedMotion } from "../hooks/usePortalOverlay";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
@@ -159,6 +160,15 @@ export function Cabinet() {
           <div className="rule mt-4" />
         </div>
       </header>
+
+      {/* v2: the working table — posts, appointments, faction anger */}
+      <section id="appointments" aria-label={t("cabinet.appointments")} className="mb-2 scroll-mt-6">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h2 className="kicker kicker-gold">{t("cabinet.appointments")}</h2>
+        </div>
+        <div className="rule-gold mt-2 mb-4" />
+        <CabinetTable />
+      </section>
 
       {sections.map((section) => (
         <section key={section.id} id={section.id} aria-label={section.label} className="mt-10 first:mt-0 scroll-mt-6">
