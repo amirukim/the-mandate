@@ -10,6 +10,7 @@ import { Panel } from "../components/ui/Panel";
 import { dateLabel, chapterTitle } from "../engine/calendar";
 import { useT } from "../i18n/store";
 import { characterText } from "../i18n/data";
+import { OfficeDynamic } from "../components/game/OfficeDynamic";
 import { ENVIRONMENTS } from "../data/art";
 
 const COUNSELABLE = ["chiefOfStaff", "finance", "economicAdviser", "nationalSecurity", "foreign", "home"] as const;
@@ -99,7 +100,10 @@ export function Office() {
           </span>
         </p>
 
-        {/* the hotspots, aligned to the visible art crop */}
+        {/* the office's living layer */}
+      <OfficeDynamic state={game} />
+
+      {/* the hotspots, aligned to the visible art crop */}
         <SceneLayer art={ENVIRONMENTS.officeHub} className="hidden sm:block">
           {HOTSPOTS.map((h) => {
             const isClock = h.action === "endMonth";

@@ -511,6 +511,22 @@ px.vline(183, 151, 4, C.gold);
 px.hline(186, 152, 16, C.burgDk);
 px.hline(186, 151, 12, C.paperLt);
 
+// policy laptop: open, screen glowing
+px.rect(161, 141, 17, 12, C.ink);
+px.rect(163, 143, 13, 8, "#1d2a3c");
+px.hline(164, 145, 11, C.gold);
+px.vline(174, 146, 4, C.gold);
+px.rect(161, 152, 17, 4, C.walnutLt);
+px.hline(161, 152, 17, C.paperDeep);
+px.hline(161, 155, 17, C.walnutDk);
+
+// budget ledger: bound volume standing on the sideboard
+px.rect(40, 152, 17, 12, C.burgDk);
+px.vline(41, 152, 12, C.gold);
+px.vline(55, 153, 10, C.paperLt);
+px.hline(42, 155, 11, "#6a363c");
+px.rect(43, 157, 9, 2, C.goldLt);
+
 // the briefing folders, the one red accent of the room
 px.rect(214, 149, 43, 7, C.burgDk);
 px.frame(214, 149, 43, 7, C.ink);
@@ -529,6 +545,13 @@ px.rect(262, 152, 18, 2, C.ink);
 px.hline(262, 155, 10, C.panel);
 px.hline(262, 157, 14, C.panel);
 px.rect(281, 152, 7, 4, C.paperDeep);
+
+// coffee: the mug that never empties, desk's right edge
+px.rect(333, 149, 8, 6, C.moss);
+px.rect(333, 149, 8, 1, C.mossDk);
+px.hline(334, 150, 6, "#3a2a20");
+px.rect(341, 150, 2, 4, C.moss);
+px.ellipse(337, 156, 6, 1, C.paperLt);
 
 // ledger (economy)
 px.rect(291, 153, 21, 8, C.moss);

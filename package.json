@@ -12,7 +12,8 @@
     "build:plate": "node scripts/build-pixel-plate.mjs",
     "build": "tsc --noEmit && node scripts/check-assets.mjs && vite build",
     "typecheck": "tsc --noEmit",
-    "build:sprites": "tsx scripts/build-sprites.ts"
+    "build:sprites": "tsx scripts/build-sprites.ts",
+    "build:office-overlays": "node scripts/build-office-overlays.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

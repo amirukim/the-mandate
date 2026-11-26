@@ -839,6 +839,35 @@ export function pmAvatarDataUrl(avatar: AvatarCustomisation, expression: Express
   return url;
 }
 
+/** Full-body sprite data URL for any spec (transparent). */
+export function spriteDataUrl(spec: PixelSpec, expression: Expression, opts: { pose?: "stand" | "walk"; frame?: number; blink?: boolean } = {}): string {
+  const key = JSON.stringify(spec) + `:${expression}:${opts.pose ?? "stand"}:${opts.frame ?? 0}:${opts.blink ? 1 : 0}`;
+  const hit = avatarCache.get(key);
+  if (hit !== undefined) return hit;
+  const cells = drawSprite(spec, expression, opts);
+  const canvas = document.createElement("canvas");
+  canvas.width = SPRITE_W;
+  canvas.height = SPRITE_H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  for (let y = 0; y < SPRITE_H; y++) {
+    for (let x = 0; x < SPRITE_W; x++) {
+      const cell = cells[y][x];
+      if (!cell) continue;
+      if (cell.startsWith("rgba(")) {
+        const nums = cell.slice(5, -1).split(",").map((s) => parseFloat(s.trim()));
+        ctx.fillStyle = `rgba(${nums[0]},${nums[1]},${nums[2]},${nums[3] ?? 1})`;
+      } else {
+        ctx.fillStyle = cell;
+      }
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+  const url = canvas.toDataURL("image/png");
+  avatarCache.set(key, url);
+  return url;
+}
+
 
 const SPECS: Record<string, PixelSpec> = {
   chiefOfStaff: {
