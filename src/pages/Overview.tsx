@@ -213,16 +213,25 @@ export function Overview() {
         lead={tf("overview.lead", { n: game.turn + 1, seats: gov, margin: Math.max(0, gov - MAJORITY) })}
       />
 
-      {/* Situation room: the federation map beside the mandate dossier. */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Situation room: the federation map leads the page, full width. */}
+      <MalaysiaMap
+        selectedId={selectedState}
+        onSelect={setSelectedState}
+        onExpand={() => setMapTheatre(true)}
+      />
+
+      {mapTheatre && (
+        <MapTheatre
+          selectedId={selectedState}
+          onSelect={setSelectedState}
+          onClose={() => setMapTheatre(false)}
+          state={state}
+          onClearState={() => setSelectedState(null)}
+        />
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-5 mt-6">
         <div className="lg:col-span-2 min-w-0">
-          <MalaysiaMap
-            selectedId={selectedState}
-            onSelect={setSelectedState}
-            onExpand={() => setMapTheatre(true)}
-          />
-        </div>
-        <div className="lg:col-span-1 min-w-0">
           {displayState ? (
             <StateFile state={displayState} lang={lang} onClear={() => setSelectedState(null)} />
           ) : (
@@ -236,19 +245,7 @@ export function Overview() {
             />
           )}
         </div>
-      </div>
 
-      {mapTheatre && (
-        <MapTheatre
-          selectedId={selectedState}
-          onSelect={setSelectedState}
-          onClose={() => setMapTheatre(false)}
-          state={state}
-          onClearState={() => setSelectedState(null)}
-        />
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-5 mt-6">
         <div className="lg:col-span-3 space-y-5">
           <Panel kicker={t("overview.deskKicker")} title={t("overview.deskTitle")}>
             {queued.length === 0 ? (
@@ -300,8 +297,10 @@ export function Overview() {
             <TrendChart history={game.history} series={TREND_SERIES[trendKey]} height={180} />
           </Panel>
         </div>
+      </div>
 
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid gap-6 lg:grid-cols-3 mt-6">
+        <div className="min-w-0">
           <Panel kicker={t("overview.ledgerKicker")} title={t("overview.ledgerTitle")}>
             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
               <Stat label={t("overview.gdp")} value={game.economy.gdpGrowth} previous={prev?.gdpGrowth} unit="%" />
@@ -312,7 +311,9 @@ export function Overview() {
               <Stat label={t("overview.debt")} value={game.economy.debtToGdp} unit="% GDP" goodDirection="down" />
             </div>
           </Panel>
+        </div>
 
+        <div className="min-w-0">
           <Panel kicker={t("overview.moodKicker")} title={t("overview.moodTitle")} variant="inset">
             <div className="divide-y divide-rule">
               <div className="pb-4 space-y-4">
@@ -325,7 +326,9 @@ export function Overview() {
               </div>
             </div>
           </Panel>
+        </div>
 
+        <div className="min-w-0">
           <Panel kicker={t("overview.wireKicker")} title={t("overview.wireTitle")} variant="inset">
             <NewsList items={game.news.slice(-3).reverse()} lang={lang} />
             <div className="mt-3">
