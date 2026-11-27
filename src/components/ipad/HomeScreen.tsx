@@ -69,7 +69,7 @@ function AppIcon({ app, autoFocus }: { app: HomeApp; autoFocus?: boolean }) {
       />
       <span
         className={cn(
-          "font-pixel text-[10px] leading-tight text-center text-paper [text-shadow:0_1px_0_rgb(0_0_0/0.7)]",
+          "font-pixel text-[8px] leading-tight text-center text-paper [text-shadow:0_1px_0_rgb(0_0_0/0.7)]",
           app.soon && "opacity-70",
         )}
       >

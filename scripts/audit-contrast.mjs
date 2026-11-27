@@ -52,6 +52,7 @@ function ratio(fg, bg) {
 const PAIRS = [
   ["paper scheme: ink on paper", paper, "ink", "paper", 4.5],
   ["paper scheme: muted on paper", paper, "muted", "paper", 4.5],
+  ["paper scheme: kicker-ink on paper", paper, "kicker-ink", "paper", 4.5],
   ["paper scheme: gold-text on paper", paper, "gold-text", "paper", 4.5],
   ["paper scheme: brick-text on paper", paper, "brick-text", "paper", 4.5],
   ["paper scheme: moss-text on paper", paper, "moss-text", "paper", 4.5],
@@ -59,6 +60,7 @@ const PAIRS = [
   ["paper scheme: muted on paper-deep", paper, "muted", "paper-deep", 4.5],
   ["night scheme: ink on paper(midnight)", night, "ink", "paper", 4.5],
   ["night scheme: muted on paper(midnight)", night, "muted", "paper", 4.5],
+  ["night scheme: kicker-ink on paper(midnight)", night, "kicker-ink", "paper", 4.5],
   ["night scheme: gold-text on paper(midnight)", night, "gold-text", "paper", 4.5],
   ["night scheme: brick-text on paper(midnight)", night, "brick-text", "paper", 4.5],
   ["night scheme: moss-text on paper(midnight)", night, "moss-text", "paper", 4.5],

@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { playSfx } from "../../engine/sound";
 import { cn } from "../../utils/cn";
 
 type Variant = "primary" | "outline" | "ghost" | "danger";
@@ -19,10 +20,18 @@ const variantStyles: Record<Variant, string> = {
     "bg-brick/15 border border-brick text-brick-text hover:bg-brick hover:text-ink disabled:opacity-45",
 };
 
-export function Button({ variant = "primary", size = "md", className, type, ...rest }: ButtonProps) {
+export function Button({ variant = "primary", size = "md", className, type, onClick, onMouseEnter, ...rest }: ButtonProps) {
   return (
     <button
       type={type ?? "button"}
+      onClick={(event) => {
+        playSfx(variant === "danger" ? "error" : variant === "primary" ? "confirm" : "tap");
+        onClick?.(event);
+      }}
+      onMouseEnter={(event) => {
+        playSfx("hover");
+        onMouseEnter?.(event);
+      }}
       className={cn(
         "inline-flex items-center justify-center gap-2 font-sans font-semibold uppercase tracking-[0.1em] rounded-control transition-[background-color,border-color,color,transform] duration-150 min-h-[44px] active:translate-y-[1px]",
         size === "sm" ? "px-3 text-[10px]" : "px-5 text-[11px]",

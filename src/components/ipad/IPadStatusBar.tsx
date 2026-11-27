@@ -21,7 +21,7 @@ function Readout({
   return (
     <span className="flex items-center gap-1.5" title={label}>
       <Icon size={13} aria-hidden="true" className="text-chrome-ink/70 shrink-0" />
-      <span className={cn("font-pixel text-[11px] font-normal", color)}>{value}</span>
+      <span className={cn("font-pixel text-[8px] font-normal", color)}>{value}</span>
     </span>
   );
 }
@@ -59,7 +59,7 @@ export function IPadStatusBar({ turn, chapter, approval, coalition, seats, queue
     >
       {/* date + chapter */}
       <div className="flex items-baseline gap-2.5 min-w-0">
-        <span className="font-pixel text-[12px] whitespace-nowrap text-chrome-gold">{dateLabel(turn, lang)}</span>
+        <span className="font-pixel text-[16px] whitespace-nowrap text-chrome-gold">{dateLabel(turn, lang)}</span>
         <span className="kicker hidden lg:inline whitespace-nowrap text-chrome-ink/70">{chapterTitle(chapter, lang)}</span>
       </div>
 

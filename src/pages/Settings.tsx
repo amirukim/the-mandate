@@ -3,6 +3,7 @@ import { useUiStore } from "../stores/ui-store";
 import { useAuthStore } from "../stores/auth-store";
 import { useGameStore } from "../stores/game-store";
 import { useLocale, useT } from "../i18n/store";
+import { playSfx, setSoundMuted, setSoundVolume, useSoundPrefs } from "../engine/sound";
 import { PRIMER } from "../data/historical-data/primer";
 import { SAVE_VERSION } from "../types/game";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -20,8 +21,11 @@ function clearLocalData(): void {
 export function Settings() {
   const theme = useUiStore((s) => s.theme);
   const bodySize = useUiStore((s) => s.bodySize);
+  const scanlines = useUiStore((s) => s.scanlines);
   const setTheme = useUiStore((s) => s.setTheme);
   const setBodySize = useUiStore((s) => s.setBodySize);
+  const setScanlines = useUiStore((s) => s.setScanlines);
+  const sound = useSoundPrefs();
   const lang = useLocale((s) => s.lang);
   const setLang = useLocale((s) => s.setLang);
   const { t, tf } = useT();
@@ -126,6 +130,68 @@ export function Settings() {
               <span className="text-sm font-semibold">{option.label}</span>
             </label>
           ))}
+        </div>
+
+        {/* scanline overlay: restrained, off by default */}
+        <button
+          type="button"
+          aria-pressed={scanlines}
+          onClick={() => setScanlines(!scanlines)}
+          className={cn(
+            "mt-4 w-full sm:w-auto min-h-[44px] flex items-center justify-between gap-3 border rounded-[2px] px-3 py-2 text-sm font-semibold transition-colors",
+            scanlines ? "border-gold bg-gold/10 text-gold-text" : "border-rule bg-paper-deep text-muted hover:border-rule-strong",
+          )}
+        >
+          {t("settings.scanlines")}
+          <span className={cn("font-pixel text-[8px]", scanlines ? "text-gold-text" : "text-muted")}>
+            {scanlines ? "ON" : "OFF"}
+          </span>
+        </button>
+      </Panel>
+
+      <Panel kicker={t("settings.sound")} title={t("settings.soundTitle")} className="mt-4">
+        <p className="text-xs text-muted leading-relaxed">{t("settings.soundLead")}</p>
+        <div className="mt-4 space-y-4">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!sound.muted}
+            onClick={() => {
+              const next = !sound.muted;
+              setSoundMuted(next);
+              if (!next) playSfx("confirm");
+            }}
+            className={cn(
+              "w-full sm:w-auto min-h-[44px] flex items-center justify-between gap-3 border rounded-[2px] px-3 py-2 text-sm font-semibold transition-colors",
+              sound.muted ? "border-rule bg-paper-deep text-muted" : "border-gold bg-gold/10 text-gold-text",
+            )}
+          >
+            {sound.muted ? t("settings.soundOff") : t("settings.soundOn")}
+            <span aria-hidden="true" className={cn("font-pixel text-[8px]", sound.muted ? "text-muted" : "text-gold-text")}>
+              {sound.muted ? "OFF" : "ON"}
+            </span>
+          </button>
+
+          <div>
+            <label htmlFor="sound-volume" className="kicker block mb-1.5">
+              {t("settings.soundVolume")}: {Math.round(sound.volume * 100)}%
+            </label>
+            <input
+              id="sound-volume"
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(sound.volume * 100)}
+              onChange={(e) => setSoundVolume(Number(e.target.value) / 100)}
+              onPointerUp={() => playSfx("tap")}
+              className="pixel-range w-full max-w-xs"
+              disabled={sound.muted}
+            />
+          </div>
+
+          <Button variant="outline" size="sm" onClick={() => playSfx("confirm")}>
+            {t("settings.soundTest")}
+          </Button>
         </div>
       </Panel>
 

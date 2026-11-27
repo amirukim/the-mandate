@@ -10,6 +10,7 @@ import { Meter } from "../components/ui/Meter";
 import { Stat } from "../components/ui/Stat";
 import { PoliticalIndicators, type PoliticalIndicator } from "../components/ui/PoliticalIndicators";
 import { PartyFlag } from "../components/ui/PartyFlag";
+import { SegmentGauge } from "../components/ui/SegmentGauge";
 import { TrendChart } from "../components/charts/TrendChart";
 import { NewsList } from "../components/news/NewsList";
 import { MalaysiaMap } from "../components/geo/MalaysiaMap";
@@ -35,6 +36,8 @@ function MandateDossier({
   opposition,
   queueCount,
   dateText,
+  prevApproval,
+  prevCoalition,
 }: {
   approval: number;
   coalition: number;
@@ -42,6 +45,8 @@ function MandateDossier({
   opposition: number;
   queueCount: number;
   dateText: string;
+  prevApproval?: number;
+  prevCoalition?: number;
 }) {
   const { t, tf } = useT();
   const approvalVerdict = t(
@@ -92,6 +97,12 @@ function MandateDossier({
         <p className="kicker text-[10px]">{dateText}</p>
       </div>
       <PoliticalIndicators variant="dossier" items={items} ariaLabel={t("overview.mandate")} className="flex-1" />
+
+      {/* v3a: the same numbers as segmented gauges with delta arrows */}
+      <div className="px-4 py-3 border-t border-rule space-y-4">
+        <SegmentGauge label={t("overview.approval")} value={approval} previous={prevApproval} tone="gold" />
+        <SegmentGauge label={t("overview.coalition")} value={coalition} previous={prevCoalition} tone="navy" />
+      </div>
 
       {/* who the majority actually runs through */}
       <div className="px-4 py-3 border-t border-rule">
@@ -242,6 +253,8 @@ export function Overview() {
               opposition={game.politics.oppositionStrength}
               queueCount={queued.length}
               dateText={dateLabel(game.turn, lang)}
+              prevApproval={prev?.approval}
+              prevCoalition={prev?.coalitionStability}
             />
           )}
         </div>

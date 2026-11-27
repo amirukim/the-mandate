@@ -32,7 +32,7 @@ export function VoteResultCard({
         <h4 className="display text-sm font-semibold">{title}</h4>
         <span
           className={cn(
-            "font-pixel text-[10px] px-2 py-1 rounded-[2px] tracking-wider",
+            "font-pixel text-[8px] px-2 py-1 rounded-[2px] tracking-wider",
             passed ? "bg-gold/15 text-gold-text border border-gold/50" : "bg-brick/10 text-brick-text border border-brick/50",
           )}
         >

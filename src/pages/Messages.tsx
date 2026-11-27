@@ -145,7 +145,7 @@ export function Messages() {
                   <h2 className="display text-base font-semibold leading-tight">{openedDisplay.name}</h2>
                   <p className="kicker text-[9px]">{openedDisplay.role}</p>
                 </div>
-                <span className="ml-auto font-pixel text-[11px] text-gold-text shrink-0">
+                <span className="ml-auto font-pixel text-[8px] text-gold-text shrink-0">
                   {openedState?.relationship ?? 50}
                 </span>
               </header>

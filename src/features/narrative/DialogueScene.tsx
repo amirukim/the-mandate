@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CHARACTERS } from "../../data/characters";
 import { SUPPORTING_CAST } from "../../data/cast-v2";
 import { characterText } from "../../i18n/data";
@@ -110,7 +110,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
                 <PixelSprite characterId={info.spriteId} expression={expression} scale={3} className="shrink-0 rounded-[2px] bg-navy/90 border border-rule" />
               ) : (
                 <div className="shrink-0 w-[96px] h-[128px] rounded-[2px] bg-navy/90 border border-rule flex items-center justify-center">
-                  <span aria-hidden="true" className="font-pixel text-[10px] text-gold/80 text-center px-1">PM</span>
+                  <span aria-hidden="true" className="font-pixel text-[8px] text-gold/80 text-center px-1">PM</span>
                 </div>
               )}
               <div className="min-w-0">

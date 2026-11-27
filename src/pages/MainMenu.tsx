@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { useGameStore } from "../stores/game-store";
 import { useAuthStore } from "../stores/auth-store";
 import { loadLocal } from "../services/save-service";
 import { ENVIRONMENTS } from "../data/art";
 import { SceneBackground } from "../components/game/SceneBackground";
 import { prefersReducedMotion } from "../hooks/usePortalOverlay";
+import { attachSoundUnlock } from "../engine/sound";
 import { useT } from "../i18n/store";
 import { cn } from "../utils/cn";
 import type { GameSave } from "../types/game";
@@ -36,6 +38,8 @@ export function MainMenu() {
 
   const autosave: GameSave | null = loadLocal(0);
   const hasAutosave = autosave !== null;
+
+  useEffect(() => attachSoundUnlock(), []);
 
   const fade = (delay: number) => ({
     initial: { opacity: 0, y: 14 },
@@ -116,13 +120,13 @@ export function MainMenu() {
                   />
                   <span
                     className={cn(
-                      "font-pixel text-[12px] leading-tight flex-1 [text-shadow:0_1px_0_rgb(0_0_0/0.75)]",
+                      "font-pixel text-[16px] leading-tight flex-1 [text-shadow:0_1px_0_rgb(0_0_0/0.75)]",
                       item.accent ? "text-gold" : "text-paper",
                     )}
                   >
                     {t(item.labelKey)}
                   </span>
-                  <span aria-hidden="true" className={cn("font-pixel text-[12px] shrink-0 [text-shadow:0_1px_0_rgb(0_0_0/0.75)]", item.accent ? "text-gold" : "text-paper/70")}>
+                  <span aria-hidden="true" className={cn("font-pixel text-[16px] shrink-0 [text-shadow:0_1px_0_rgb(0_0_0/0.75)]", item.accent ? "text-gold" : "text-paper/70")}>
                     →
                   </span>
                 </>
@@ -146,9 +150,9 @@ export function MainMenu() {
                   )}
                   {item.accent && autosave && (
                     <div className="px-2.5 pb-1.5 -mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 [text-shadow:0_1px_0_rgb(0_0_0/0.7)]">
-                      <span className="font-pixel text-[9px] text-paper">{autosave.summary.campaignName}</span>
-                      <span className="font-pixel text-[9px] text-paper/70">{autosave.summary.dateLabel}</span>
-                      <span className="font-pixel text-[9px] text-gold">
+                      <span className="font-pixel text-[8px] text-paper">{autosave.summary.campaignName}</span>
+                      <span className="font-pixel text-[8px] text-paper/70">{autosave.summary.dateLabel}</span>
+                      <span className="font-pixel text-[8px] text-gold">
                         {autosave.summary.approval}% {t("common.approval")}
                       </span>
                     </div>

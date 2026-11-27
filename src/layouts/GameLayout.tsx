@@ -27,6 +27,7 @@ import { IPadFrame } from "../components/ipad/IPadFrame";
 import { IPadStatusBar } from "../components/ipad/IPadStatusBar";
 import { HomeScreen } from "../components/ipad/HomeScreen";
 import { NotificationBanner, type BannerItem } from "../components/ipad/NotificationBanner";
+import { attachSoundUnlock } from "../engine/sound";
 
 /**
  * The v2 shell: the game runs inside an iPad frame (full-bleed on touch and
@@ -45,6 +46,9 @@ export function GameLayout() {
   const [seenQueue, setSeenQueue] = useState<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // the sound kit unlocks on the first real gesture (D-21)
+  useEffect(() => attachSoundUnlock(), []);
 
   const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
     {

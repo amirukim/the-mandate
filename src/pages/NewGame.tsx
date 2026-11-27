@@ -223,7 +223,7 @@ export function NewGame() {
               )}
             >
               <span className="kicker text-[10px]">{t("avatar.glasses")}</span>
-              <span className={cn("font-pixel text-[10px]", avatar.glasses ? "text-gold-text" : "text-muted")}>
+              <span className={cn("font-pixel text-[8px]", avatar.glasses ? "text-gold-text" : "text-muted")}>
                 {avatar.glasses ? "ON" : "OFF"}
               </span>
             </button>
