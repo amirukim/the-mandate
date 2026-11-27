@@ -533,6 +533,46 @@ input[type="range"].pixel-range::-webkit-slider-thumb {
 /* pixel scrollbar */
 * { scrollbar-width: thin; scrollbar-color: var(--rule-strong) var(--paper-deep); }
 
+/* ---- v3a title-screen ambience (phase 5) ---------------------------- */
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+@keyframes drift_cloud {
+  from { transform: translateX(20vw); }
+  to { transform: translateX(-30vw); }
+}
+
+@keyframes flicker {
+  0%, 60%, 100% { opacity: 0.9; }
+  62% { opacity: 0.25; }
+  64% { opacity: 0.9; }
+  70% { opacity: 0.4; }
+  72% { opacity: 0.9; }
+}
+
+@keyframes flyby {
+  from { left: -6vw; }
+  to { left: 106vw; }
+}
+
+@keyframes birdflap {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes daydusk {
+  0%, 28% { opacity: 0; }
+  46%, 62% { opacity: 0.16; }
+  80%, 100% { opacity: 0; }
+}
+
+@keyframes titlecard-out {
+  to { opacity: 0; visibility: hidden; }
+}
+
 .ipad-backdrop {
   background: var(--ipad-screen);
 }

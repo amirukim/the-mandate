@@ -135,6 +135,8 @@ export const MS_DICT: Dict = {
     footerFiction:
       "Malaysia: The Mandate ialah karya fiksyen politik. Institusi, undang-undang dan geografi diambil daripada Malaysia sebenar; setiap pemegang jawatan, keputusan pilihan raya, statistik dan tajuk berita dalam permainan ini adalah rekaan, dan tiada insan sebenar digambarkan.",
     footerOffline: "Boleh dimainkan luar talian · Simpanan awan pilihan",
+    pressAnyKey: "TEKAN SEBARANG KEKUNCI",
+    credits: "Kredit",
     drawnNote:
       "Boulevard dan kubah dilakar, bukan fotografi, supaya skrin tajuk kekal sebagai karya fiksyen tentang tempat sebenar.",
   },

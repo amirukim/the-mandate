@@ -134,6 +134,8 @@ export const EN_DICT = {
     footerFiction:
       "Malaysia: The Mandate is a work of political fiction. Institutions, laws and geography draw on the real Malaysia; every officeholder, election result, statistic and headline in the game is fictional, and no real person is depicted.",
     footerOffline: "Playable offline · Cloud saves optional",
+    pressAnyKey: "PRESS ANY KEY",
+    credits: "Credits",
     drawnNote:
       "The boulevard and the dome are drawn, not photographic, so the title screen stays a work of fiction about a real place.",
   },
