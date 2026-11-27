@@ -23,7 +23,7 @@ export function Panel({ kicker, title, children, className, bodyClassName, varia
   return (
     <section
       className={cn(
-        variant === "panel" && "bg-card border border-rule rounded-panel",
+        variant === "panel" && "bg-card border-2 border-rule-strong rounded-[4px] shadow-[inset_0_2px_0_rgb(255_255_255/0.05),inset_0_-2px_0_rgb(0_0_0/0.18),3px_3px_0_rgb(0_0_0/0.22)]",
         variant === "inset" && "bg-paper-deep border border-rule rounded-panel",
         className,
       )}

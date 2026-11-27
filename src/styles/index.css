@@ -247,7 +247,7 @@ body::after {
 
 .stamp {
   @apply inline-block font-sans font-bold uppercase;
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   letter-spacing: 0.22em;
   color: var(--brick-text);
   border: 1px solid var(--brick);
@@ -434,7 +434,7 @@ body::after {
   font-family: var(--font-pixel);
   letter-spacing: 0.04em;
   /* D-06/D-16: Silkscreen at integer multiples of its native 8 px only. */
-  font-size: 0.5rem; /* 8 px default; override only with 16 px / 24 px */
+  /* readability floor (D-23): 12 px minimum in practice */
   font-variant-ligatures: none;
 }
 

@@ -15,7 +15,7 @@ const EDITION_NAME = "The Federal Desk";
 function SectionTag({ category }: { category: NewsCategory }) {
   const { t } = useT();
   return (
-    <span className="kicker text-[10px] border border-rule-strong px-1.5 py-0.5 rounded-[1px]">
+    <span className="kicker text-[12px] border border-rule-strong px-1.5 py-0.5 rounded-[1px]">
       {t(`category.${category}`)}
     </span>
   );
@@ -41,7 +41,7 @@ function FrontPage({ items, outlet, onOpen }: FrontPageProps) {
   return (
     <DocumentViewer>
       {/* honesty strip */}
-      <p className="kicker text-[9px] text-center">{t("news.honesty")}</p>
+      <p className="kicker text-[11px] text-center">{t("news.honesty")}</p>
 
       {/* nameplate */}
       <header className="mt-4 text-center">
@@ -88,7 +88,7 @@ function FrontPage({ items, outlet, onOpen }: FrontPageProps) {
               <div key={item.id} className="break-inside-avoid mb-6 pb-6 border-b border-rule last:border-b-0">
                 <div className="flex items-center justify-between gap-2">
                   <SectionTag category={item.category} />
-                  <span className="kicker text-[9px]">
+                  <span className="kicker text-[11px]">
                     {OUTLETS[item.outlet].name} · {shortDateLabel(item.turn, lang)}
                   </span>
                 </div>
@@ -105,9 +105,9 @@ function FrontPage({ items, outlet, onOpen }: FrontPageProps) {
       )}
 
       <footer className="mt-8 pt-4 border-t-[3px] border-double border-rule-strong flex flex-wrap items-center justify-between gap-2">
-        <span className="kicker text-[9px]">{t("news.printedIn")}</span>
-        <span className="kicker text-[9px]">{paperName} · {t("news.fictionTag")}</span>
-        <span className="kicker text-[9px] tabular">{t("news.pageOf")}</span>
+        <span className="kicker text-[11px]">{t("news.printedIn")}</span>
+        <span className="kicker text-[11px]">{paperName} · {t("news.fictionTag")}</span>
+        <span className="kicker text-[11px] tabular">{t("news.pageOf")}</span>
       </footer>
     </DocumentViewer>
   );
@@ -136,7 +136,7 @@ function ArticleView({ item, siblings, onBack, onOpen }: ArticleProps) {
         </button>
         <div className="nameplate-rule mt-4" />
         <p className="display text-2xl sm:text-3xl font-semibold mt-3">{OUTLETS[item.outlet].name}</p>
-        <p className="kicker text-[9px] mt-1">
+        <p className="kicker text-[11px] mt-1">
           {shortDateLabel(item.turn, lang)} · {t(OUTLETS[item.outlet].noteKey)}
         </p>
       </header>
@@ -174,7 +174,7 @@ function ArticleView({ item, siblings, onBack, onOpen }: ArticleProps) {
                   onClick={() => onOpen(s)}
                   className="group w-full text-left py-2.5 flex items-baseline gap-3"
                 >
-                  <span className="kicker text-[9px] shrink-0 w-20">{shortDateLabel(s.turn, lang)}</span>
+                  <span className="kicker text-[11px] shrink-0 w-20">{shortDateLabel(s.turn, lang)}</span>
                   <span className="display text-sm font-semibold group-hover:text-[var(--gold-text)] transition-colors">
                     {s.headline}
                   </span>

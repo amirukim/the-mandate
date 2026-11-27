@@ -35,7 +35,7 @@ export function NotificationBanner({ banner, onDismiss }: NotificationBannerProp
           <div className="flex items-start gap-3 px-4 py-3">
             <span aria-hidden="true" className="mt-1 h-2.5 w-2.5 shrink-0 rounded-[2px] bg-gold" />
             <div className="min-w-0 flex-1">
-              <p className="kicker text-[9px] text-gold-text">
+              <p className="kicker text-[11px] text-gold-text">
                 {banner.kind === "briefing" ? t("home.notifBriefing") : t("home.notifWire")}
               </p>
               <p className="text-sm font-semibold leading-snug mt-0.5">{banner.title}</p>

@@ -48,7 +48,7 @@ export function CharacterSprite({ speaker, role, characterId, expression = "neut
           {coalitionId && <PartyFlag coalitionId={coalitionId} size={14} className="shrink-0" />}
           {speaker}
         </p>
-        <p className="kicker text-[10px] mt-0.5">{role}</p>
+        <p className="kicker text-[12px] mt-0.5">{role}</p>
       </div>
     </div>
   );

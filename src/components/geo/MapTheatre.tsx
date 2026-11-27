@@ -119,16 +119,16 @@ function StateFileCard({ state, lang, onClear }: { state: StateDef; lang: "en" |
           {bloc && <PartyFlag coalitionId={bloc.id} size={30} />}
           <div className="min-w-0">
             <h2 className="display text-2xl font-semibold leading-tight">{state.name}</h2>
-            <p className="kicker text-[10px] mt-0.5">{state.capital}</p>
+            <p className="kicker text-[12px] mt-0.5">{state.capital}</p>
           </div>
         </div>
         <dl className="mt-4 divide-y divide-rule border-y border-rule">
           <div className="py-2.5 flex items-baseline justify-between gap-3">
-            <dt className="kicker text-[10px]">{t("overview.headOfGov")}</dt>
+            <dt className="kicker text-[12px]">{t("overview.headOfGov")}</dt>
             <dd className="text-sm font-semibold text-right">{state.rulerTitle}</dd>
           </div>
           <div className="py-2.5 flex items-baseline justify-between gap-3">
-            <dt className="kicker text-[10px]">{t("overview.alignment")}</dt>
+            <dt className="kicker text-[12px]">{t("overview.alignment")}</dt>
             <dd className="text-sm font-semibold text-right flex items-center justify-end gap-1.5">
               {bloc && (
                 <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: bloc.color }} />

@@ -103,7 +103,7 @@ export function BudgetOffice() {
           <Panel kicker={season ? t("budget.season") : t("budget.supplementary")} title={season ? t("budget.season") : t("budget.supplementary")}>
             {lastSupply && (
               <p className="text-xs mb-3">
-                <span className="kicker text-[10px] mr-2">{t("budget.passedOn")}</span>
+                <span className="kicker text-[12px] mr-2">{t("budget.passedOn")}</span>
                 <span className={cn("font-semibold", lastSupply.passed ? "text-gold-text" : "text-brick-text")}>
                   {lastSupply.passed ? t("parliament.passed") : t("parliament.defeated")} · {lastSupply.votes.for}–{lastSupply.votes.against}
                 </span>

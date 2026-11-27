@@ -84,7 +84,7 @@ export function History() {
           <DocumentViewer label={t("history.title")}>
             {/* the bound sheet: spine rule, then the minute entries */}
             <div className="border-l-2 border-rule-strong pl-5 sm:pl-7">
-              <p className="kicker text-[9px]">{t("history.recordTag")}</p>
+              <p className="kicker text-[11px]">{t("history.recordTag")}</p>
               <ol ref={listRef} id="decision-record" className="mt-5 space-y-6" aria-label={t("history.lead")}>
                 {chapters
                   .filter((n) => chapter === "all" || n === chapter)
@@ -128,7 +128,7 @@ export function History() {
                     </li>
                   ))}
               </ol>
-              <p className="kicker text-[9px] mt-8">{t("history.recordEnd")}</p>
+              <p className="kicker text-[11px] mt-8">{t("history.recordEnd")}</p>
             </div>
           </DocumentViewer>
         </>

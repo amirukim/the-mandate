@@ -44,12 +44,12 @@ export function CabinetTable() {
                   {holderDef ? (
                     <div className="text-right shrink-0">
                       <p className="text-sm font-semibold">{characterText(holderDef, lang).name}</p>
-                      <p className="kicker text-[9px] text-muted">
+                      <p className="kicker text-[11px] text-muted">
                         {blocOfCharacter(holderDef.id).toUpperCase()} · {post.fit.includes(holderDef.id) ? t("cabinet.fitGood") : t("cabinet.fitPoor")}
                       </p>
                     </div>
                   ) : (
-                    <span className="kicker text-[9px] text-muted shrink-0 px-1.5 py-0.5 border border-rule rounded-[2px]">{t("cabinet.vacancy")}</span>
+                    <span className="kicker text-[11px] text-muted shrink-0 px-1.5 py-0.5 border border-rule rounded-[2px]">{t("cabinet.vacancy")}</span>
                   )}
                 </div>
 

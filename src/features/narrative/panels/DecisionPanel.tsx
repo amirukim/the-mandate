@@ -60,7 +60,7 @@ export function DecisionPanel({ options, selected, onPick, onBackToBriefing }: D
             <button
               type="button"
               onClick={onBackToBriefing}
-              className="kicker text-[9px] text-muted hover:text-gold-bright underline underline-offset-4"
+              className="kicker text-[11px] text-muted hover:text-gold-bright underline underline-offset-4"
             >
               {t("scene.file")}
             </button>

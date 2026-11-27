@@ -56,7 +56,7 @@ export function MonthTransition({ dateLabel, chapterTitle, onDone }: MonthTransi
         <p className="kicker text-[11px] text-chrome-gold">{entering}</p>
         <p className="display text-4xl sm:text-6xl font-semibold mt-3 tracking-tight text-chrome-ink">{dateLabel}</p>
         <div className="rule-gold mt-6 max-w-xs mx-auto" />
-        <p className="kicker text-[10px] text-chrome-ink/60">{chapterTitle}</p>
+        <p className="kicker text-[12px] text-chrome-ink/60">{chapterTitle}</p>
       </motion.div>
     </motion.div>,
     container,

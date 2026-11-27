@@ -65,7 +65,7 @@ function CharacterCard({ id, tier }: CharacterCardProps) {
             <PartyFlag coalitionId={FIGURE_PARTY[id]} size={20} className="self-center" />
           )}
           <h3 className="display text-lg font-semibold leading-tight">{display.name}</h3>
-          <p className="kicker text-[10px]">
+          <p className="kicker text-[12px]">
             {tier === "cabinet" ? t("cabinet.tagCabinet") : tier === "adviser" ? t("cabinet.tagInner") : t("cabinet.tagCoalition")}
           </p>
         </div>

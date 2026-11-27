@@ -28,9 +28,9 @@ export function DialoguePanel({ speaker, role, shown, text, done, lineIdx, total
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <div className="flex flex-wrap items-baseline gap-x-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-bright">{speaker}</p>
-          <p className="kicker text-[10px]">{role}</p>
+          <p className="kicker text-[12px]">{role}</p>
         </div>
-        <p className="tabular kicker text-[10px] text-muted">
+        <p className="tabular kicker text-[12px] text-muted">
           {lineIdx + 1} / {total}
         </p>
       </div>

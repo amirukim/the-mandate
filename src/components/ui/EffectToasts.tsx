@@ -81,7 +81,7 @@ export function EffectToasts({ chosen }: { chosen: ChosenOutcome }) {
           <span className="font-pixel text-[12px] text-gold">
             {toast.delta > 0 ? `+${toast.delta}` : toast.delta}
           </span>
-          <span className="kicker text-[9px] text-paper">
+          <span className="kicker text-[11px] text-paper">
             {t(toast.label)}
           </span>
         </motion.div>

@@ -2,16 +2,17 @@
 
 A browser-based political simulation (React + TypeScript + Vite). Narrative/data modules live in
 `src/data/` and `src/engine/`; simulation logic is pure TypeScript and must stay engine-agnostic.
-Always run `npx.cmd tsc --noEmit`, `npm.cmd test` (22/22) and `npm.cmd run build` after changes.
+Always run `npx.cmd tsc --noEmit`, `npm.cmd test` (23/23) and `npm.cmd run build` after changes.
 Game-dev skills for this project live in `.opencode/skills/` (router + curated set, from
 gamedev-skills/awesome-gamedev-agent-skills, Apache-2.0 — see `.opencode/skills/LICENSE`/`NOTICE`).
 
 ## Gates (v2)
 
 - `npx.cmd tsc --noEmit` — typecheck
-- `npm.cmd test` — 22 engine self-checks (effects, playthrough, save migration + v2 slices,
-  dialogue graphs, EN/MS parity, policy/parliament/budget/cabinet, graph content + scheduler)
-- `npm.cmd run check:assets` — manifest integrity (269 assets)
+- `npm.cmd test` — 23 engine self-checks (effects, playthrough, save migration + v2 slices,
+  dialogue graphs, EN/MS parity, policy/parliament/budget/cabinet, graph content + scheduler,
+  character art: expression delta >= 3%, silhouette IoU gate)
+- `npm.cmd run check:assets` — manifest integrity (308 assets incl. 247 sprites + QA sheets)
 - `npm.cmd run build` — includes check:assets
 
 ## v2 art builders (all reproducible)

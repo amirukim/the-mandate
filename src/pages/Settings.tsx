@@ -143,7 +143,7 @@ export function Settings() {
           )}
         >
           {t("settings.scanlines")}
-          <span className={cn("font-pixel text-[8px]", scanlines ? "text-gold-text" : "text-muted")}>
+          <span className={cn("font-pixel text-[12px]", scanlines ? "text-gold-text" : "text-muted")}>
             {scanlines ? "ON" : "OFF"}
           </span>
         </button>
@@ -167,7 +167,7 @@ export function Settings() {
             )}
           >
             {sound.muted ? t("settings.soundOff") : t("settings.soundOn")}
-            <span aria-hidden="true" className={cn("font-pixel text-[8px]", sound.muted ? "text-muted" : "text-gold-text")}>
+            <span aria-hidden="true" className={cn("font-pixel text-[12px]", sound.muted ? "text-muted" : "text-gold-text")}>
               {sound.muted ? "OFF" : "ON"}
             </span>
           </button>

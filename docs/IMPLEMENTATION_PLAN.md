@@ -229,6 +229,7 @@ The critical path is **art production**, not code. Code extraction is predictabl
 | D-20 | Accurate culture wardrobe (tudung/hijab draped scarf, songkok, kopiah, batik, kebaya, baju Melayu, sherwani, sarong) with per-character signature colours | **Approved (v3a)** - phase 3 |
 | D-21 | Web Audio sound kit, synthesised, muted until first gesture, silent under reduced motion | **Approved (v3a)** - phase 4 |
 | D-22 | Playwright (existing devDependency, D-10) as the before/after screenshot tool | **Approved (v3a)** |
+| D-23 | Readability floor overrides the Silkscreen integer-multiple rule: 12 px minimum for chrome labels (8 px proved illegible in play); kickers floor at 12 px with modifiers >= 11 px; Button label sizes bumped to 12/13 px | **Approved (v3a phase 6)** — measured illegibility beats the strict rule |
 
 ---
 

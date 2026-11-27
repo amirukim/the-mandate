@@ -69,7 +69,7 @@ function AppIcon({ app, autoFocus }: { app: HomeApp; autoFocus?: boolean }) {
       />
       <span
         className={cn(
-          "font-pixel text-[8px] leading-tight text-center text-paper [text-shadow:0_1px_0_rgb(0_0_0/0.7)]",
+          "font-pixel text-[12px] leading-tight text-center text-paper [text-shadow:0_1px_0_rgb(0_0_0/0.7)]",
           app.soon && "opacity-70",
         )}
       >
@@ -145,7 +145,7 @@ export function HomeScreen() {
                 height={52}
                 className="w-[52px] h-[52px] pixelated rounded-[8px] transition-transform group-hover:scale-110 group-active:scale-95"
               />
-              <span className="font-pixel text-[8px] text-paper/85 [text-shadow:0_1px_0_rgb(0_0_0/0.7)] mt-1">
+              <span className="font-pixel text-[12px] text-paper/85 [text-shadow:0_1px_0_rgb(0_0_0/0.7)] mt-1">
                 {t(app.labelKey)}
               </span>
             </Link>

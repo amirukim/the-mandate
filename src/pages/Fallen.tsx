@@ -56,7 +56,7 @@ export function Fallen() {
         <dl className="divide-y divide-rule">
           {grades.map((g) => (
             <div key={g.labelKey} className="py-2 flex items-baseline justify-between gap-3">
-              <dt className="kicker text-[10px]">{t(g.labelKey)}</dt>
+              <dt className="kicker text-[12px]">{t(g.labelKey)}</dt>
               <dd
                 className={cn(
                   "font-pixel text-sm",

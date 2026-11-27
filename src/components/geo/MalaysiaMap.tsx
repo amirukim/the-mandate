@@ -1,4 +1,4 @@
-﻿import { useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
+import { useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { Maximize2 } from "lucide-react";
 import { STATES } from "../../data/states";
 import { GEO_STATES } from "../../data/geo-states";
@@ -378,7 +378,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
             style={{ left: tip.x + 16, top: tip.y + 18 }}
           >
             <p className="display text-xs font-semibold leading-none">{activeState.name}</p>
-            <p className="kicker text-[9px] mt-1">
+            <p className="kicker text-[11px] mt-1">
               {t("overview.relationShort")}: {Math.round(activeState.relation)}
             </p>
           </div>
@@ -389,7 +389,7 @@ export function MalaysiaMap({ selectedId, onSelect, expanded = false, onExpand }
           <div className="absolute inset-x-0 bottom-0 z-20 bg-paper border-t-2 border-gold shadow-lift px-4 py-3" role="region" aria-label={selectedState.name}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="display text-base font-semibold">{selectedState.name}</h3>
-              <span className="kicker text-[9px]">
+              <span className="kicker text-[11px]">
                 {selectedState.capital} · {card.population} · {card.industry}
               </span>
             </div>

@@ -110,7 +110,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
                 <PixelSprite characterId={info.spriteId} expression={expression} scale={3} className="shrink-0 rounded-[2px] bg-navy/90 border border-rule" />
               ) : (
                 <div className="shrink-0 w-[96px] h-[128px] rounded-[2px] bg-navy/90 border border-rule flex items-center justify-center">
-                  <span aria-hidden="true" className="font-pixel text-[8px] text-gold/80 text-center px-1">PM</span>
+                  <span aria-hidden="true" className="font-pixel text-[12px] text-gold/80 text-center px-1">PM</span>
                 </div>
               )}
               <div className="min-w-0">
@@ -118,7 +118,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
                   <h2 className="display text-lg font-semibold">{info.name}</h2>
                   {info.bloc && <PartyFlag coalitionId={info.bloc} size={16} />}
                 </div>
-                {info.role && <p className="kicker text-[10px] mt-0.5">{info.role}</p>}
+                {info.role && <p className="kicker text-[12px] mt-0.5">{info.role}</p>}
                 <p className="text-sm leading-relaxed text-ink/90 mt-3">{lang === "ms" ? current.text.ms : current.text.en}</p>
               </div>
             </div>
@@ -159,7 +159,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
                     )}
                   >
                     <span className={cn("text-sm font-semibold", choice.locked ? "text-muted" : "text-ink")}>{label}</span>
-                    {choice.locked && <span className="kicker text-[9px] text-brick-text shrink-0">{reason ?? ""}</span>}
+                    {choice.locked && <span className="kicker text-[11px] text-brick-text shrink-0">{reason ?? ""}</span>}
                   </button>
                 </li>
               );
@@ -191,7 +191,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
         </div>
       )}
 
-      {!reduced && <p className="kicker text-[9px] text-muted">{t("scene.recorded")}</p>}
+      {!reduced && <p className="kicker text-[11px] text-muted">{t("scene.recorded")}</p>}
     </div>
   );
 }

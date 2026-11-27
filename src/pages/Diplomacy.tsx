@@ -105,7 +105,7 @@ function DialRow({
     >
       <FlagChip id={brief.key} size={26} />
       <span className="min-w-0 flex-1">
-        <span className="kicker text-[10px] block truncate">{brief.label}</span>
+        <span className="kicker text-[12px] block truncate">{brief.label}</span>
         <span className="meter mt-1 h-1 overflow-hidden rounded-[1px] block" aria-hidden="true">
           <span
             className={cn("block h-full", value >= 55 ? "bg-moss" : value >= 40 ? "bg-gold" : "bg-brick")}
@@ -171,7 +171,7 @@ export function Diplomacy() {
                   <FlagChip id={brief.key} size={34} />
                   <div>
                     <h2 className="display text-2xl font-semibold leading-tight">{brief.label}</h2>
-                    <p className={cn("kicker text-[10px] mt-0.5", stance.tone === "moss" ? "text-moss-text" : stance.tone === "brick" ? "text-brick-text" : "text-gold-text")}>
+                    <p className={cn("kicker text-[12px] mt-0.5", stance.tone === "moss" ? "text-moss-text" : stance.tone === "brick" ? "text-brick-text" : "text-gold-text")}>
                       {stance.label}
                     </p>
                   </div>

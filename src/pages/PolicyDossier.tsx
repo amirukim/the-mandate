@@ -33,11 +33,11 @@ function MeasureRow({ measure }: { measure: PolicyMeasure }) {
           <p className="text-xs text-muted mt-1 leading-relaxed">{tx(measure.summary, lang)}</p>
         </div>
         {enacted ? (
-          <span className="kicker text-[9px] shrink-0 px-1.5 py-0.5 bg-gold/15 text-gold-text border border-gold/50 rounded-[2px]">
+          <span className="kicker text-[11px] shrink-0 px-1.5 py-0.5 bg-gold/15 text-gold-text border border-gold/50 rounded-[2px]">
             {t("policy.enacted")} · {tx(measure.title, lang) === measure.title.en ? "" : ""}{game.policy?.enacted[measure.id] !== undefined ? `T${game.policy.enacted[measure.id] + 1}` : ""}
           </span>
         ) : blocked ? (
-          <span className="kicker text-[9px] shrink-0 px-1.5 py-0.5 border border-rule text-muted rounded-[2px]">
+          <span className="kicker text-[11px] shrink-0 px-1.5 py-0.5 border border-rule text-muted rounded-[2px]">
             {t("policy.lockedConflict")} {measure.conflicts?.filter((c) => isEnacted(game, c)).map((c) => c).join(", ")}
           </span>
         ) : (

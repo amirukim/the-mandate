@@ -35,7 +35,7 @@ export function PoliticalIndicators({ items, variant = "meters", ariaLabel, clas
         {items.map((item) => (
           <div key={item.label} className="px-4 py-3 flex items-center justify-between gap-4">
             <span className="min-w-0">
-              <span className="kicker text-[10px] block">{item.label}</span>
+              <span className="kicker text-[12px] block">{item.label}</span>
               {item.detail && <span className="block text-[11px] text-gold-text mt-0.5 leading-tight">{item.detail}</span>}
             </span>
             <span className="flex items-center gap-3 min-w-[7.5rem] justify-end">

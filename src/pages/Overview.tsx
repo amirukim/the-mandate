@@ -94,7 +94,7 @@ function MandateDossier({
     <div className="bg-card border border-rule rounded-panel overflow-hidden h-full flex flex-col">
       <div className="px-4 py-3 border-b border-rule flex items-baseline justify-between gap-2">
         <p className="kicker kicker-gold">{t("overview.mandate")}</p>
-        <p className="kicker text-[10px]">{dateText}</p>
+        <p className="kicker text-[12px]">{dateText}</p>
       </div>
       <PoliticalIndicators variant="dossier" items={items} ariaLabel={t("overview.mandate")} className="flex-1" />
 
@@ -106,7 +106,7 @@ function MandateDossier({
 
       {/* who the majority actually runs through */}
       <div className="px-4 py-3 border-t border-rule">
-        <p className="kicker text-[10px] mb-2">{t("overview.partners")}</p>
+        <p className="kicker text-[12px] mb-2">{t("overview.partners")}</p>
         <ul className="flex flex-wrap gap-1.5" aria-label={t("overview.partners")}>
           {partners.map((c) => (
             <li key={c.id}>
@@ -125,7 +125,7 @@ function MandateDossier({
       </div>
 
       <div className="px-4 py-3 border-t border-rule flex items-center justify-between gap-3">
-        <span className="kicker text-[10px]">{t("overview.deskBriefings")}</span>
+        <span className="kicker text-[12px]">{t("overview.deskBriefings")}</span>
         <Link
           to="/game/briefing"
           className="text-sm font-semibold text-gold-text hover:text-gold-bright transition-colors"
@@ -161,17 +161,17 @@ function StateFile({ state, lang, onClear }: { state: StateDef; lang: "en" | "ms
           {bloc && <PartyFlag coalitionId={bloc.id} size={30} />}
           <div className="min-w-0">
             <h2 className="display text-2xl font-semibold leading-tight">{state.name}</h2>
-            <p className="kicker text-[10px] mt-0.5">{state.capital}</p>
+            <p className="kicker text-[12px] mt-0.5">{state.capital}</p>
           </div>
         </div>
 
         <dl className="mt-4 divide-y divide-rule border-y border-rule">
           <div className="py-2.5 flex items-baseline justify-between gap-3">
-            <dt className="kicker text-[10px]">{t("overview.headOfGov")}</dt>
+            <dt className="kicker text-[12px]">{t("overview.headOfGov")}</dt>
             <dd className="text-sm font-semibold text-right">{state.rulerTitle}</dd>
           </div>
           <div className="py-2.5 flex items-baseline justify-between gap-3">
-            <dt className="kicker text-[10px]">{t("overview.alignment")}</dt>
+            <dt className="kicker text-[12px]">{t("overview.alignment")}</dt>
             <dd className="text-sm font-semibold text-right flex items-center justify-end gap-1.5">
               {bloc && (
                 <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: bloc.color }} />

@@ -92,7 +92,7 @@ export function Parliament() {
             title={lang === "ms" ? "Dewan" : "The chamber"}
             bodyClassName="min-w-0"
           >
-            <p className="kicker text-[10px] mb-2">{t("parliament.selectHint")}</p>
+            <p className="kicker text-[12px] mb-2">{t("parliament.selectHint")}</p>
             <ParliamentChart selected={selectedBloc} onSelect={setSelectedBloc} />
           </Panel>
 
@@ -113,11 +113,11 @@ export function Parliament() {
               </div>
               <dl className="mt-4 divide-y divide-rule border-y border-rule">
                 <div className="py-2.5 flex items-baseline justify-between gap-3">
-                  <dt className="kicker text-[10px]">{lang === "ms" ? "Ketua" : "Leader"}</dt>
+                  <dt className="kicker text-[12px]">{lang === "ms" ? "Ketua" : "Leader"}</dt>
                   <dd className="text-sm font-semibold text-right">{selectedDisplay.leader}</dd>
                 </div>
                 <div className="py-2.5 flex items-start justify-between gap-3">
-                  <dt className="kicker text-[10px] shrink-0 pt-0.5">{lang === "ms" ? "Kedudukan" : "Stance"}</dt>
+                  <dt className="kicker text-[12px] shrink-0 pt-0.5">{lang === "ms" ? "Kedudukan" : "Stance"}</dt>
                   <dd className="text-sm text-right leading-relaxed">{selectedDisplay.stance}</dd>
                 </div>
               </dl>
@@ -154,7 +154,7 @@ export function Parliament() {
             />
 
             {/* who the majority actually runs through */}
-            <p className="kicker text-[10px] mt-5 mb-2">{t("parliament.partners")}</p>
+            <p className="kicker text-[12px] mt-5 mb-2">{t("parliament.partners")}</p>
             <ul className="flex flex-wrap gap-1.5" aria-label={t("parliament.partners")}>
               {partners.map((c) => (
                 <li key={c.id}>
@@ -179,7 +179,7 @@ export function Parliament() {
 
             <div className="rule mt-4" />
             <div className="mt-3 flex items-baseline justify-between gap-3">
-              <span className="kicker text-[10px]">{t("parliament.collapse")}</span>
+              <span className="kicker text-[12px]">{t("parliament.collapse")}</span>
               <span className="tabular text-base font-semibold text-brick-text">{margin + 1}</span>
             </div>
             <p className="text-xs text-muted mt-4 leading-relaxed">
@@ -219,7 +219,7 @@ export function Parliament() {
                 );
               })}
             </ul>
-            <p className="kicker text-[9px] mt-3 text-muted">{t("parliament.selectHint")}</p>
+            <p className="kicker text-[11px] mt-3 text-muted">{t("parliament.selectHint")}</p>
           </Panel>
         </div>
       </div>

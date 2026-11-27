@@ -40,7 +40,7 @@ export function BriefingPanel({ briefing, cast, onProceed }: BriefingPanelProps)
       </div>
       <div className="flex items-center justify-between gap-3 mt-6">
         {cast.length > 0 && (
-          <p className="kicker text-[9px] text-muted">{cast.map((c) => c.speaker).join(" · ")}</p>
+          <p className="kicker text-[11px] text-muted">{cast.map((c) => c.speaker).join(" · ")}</p>
         )}
         <Button onClick={onProceed}>{t("scene.proceed")} &rarr;</Button>
       </div>

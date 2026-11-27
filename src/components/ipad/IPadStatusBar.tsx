@@ -21,7 +21,7 @@ function Readout({
   return (
     <span className="flex items-center gap-1.5" title={label}>
       <Icon size={13} aria-hidden="true" className="text-chrome-ink/70 shrink-0" />
-      <span className={cn("font-pixel text-[8px] font-normal", color)}>{value}</span>
+      <span className={cn("font-pixel text-[12px] font-normal", color)}>{value}</span>
     </span>
   );
 }

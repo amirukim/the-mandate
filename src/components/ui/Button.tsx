@@ -34,7 +34,7 @@ export function Button({ variant = "primary", size = "md", className, type, onCl
       }}
       className={cn(
         "inline-flex items-center justify-center gap-2 font-sans font-semibold uppercase tracking-[0.1em] rounded-control transition-[background-color,border-color,color,transform] duration-150 min-h-[44px] active:translate-y-[1px]",
-        size === "sm" ? "px-3 text-[10px]" : "px-5 text-[11px]",
+        size === "sm" ? "px-3 text-[12px]" : "px-5 text-[13px]",
         variantStyles[variant],
         className,
       )}

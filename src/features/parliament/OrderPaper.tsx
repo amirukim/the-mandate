@@ -46,7 +46,7 @@ export function OrderPaper() {
                   </div>
                   <span
                     className={cn(
-                      "kicker text-[9px] shrink-0 px-1.5 py-0.5 border rounded-[2px]",
+                      "kicker text-[11px] shrink-0 px-1.5 py-0.5 border rounded-[2px]",
                       bill.kind === "constitution" ? "border-gold/60 text-gold-text" : bill.kind === "supply" ? "border-brick/50 text-brick-text" : "border-rule text-muted",
                     )}
                   >
@@ -56,7 +56,7 @@ export function OrderPaper() {
 
                 {open && (
                   <div className="mt-3 border-t border-rule pt-3">
-                    <p className="kicker text-[10px] mb-1.5">{t("parliament.forecast")}</p>
+                    <p className="kicker text-[12px] mb-1.5">{t("parliament.forecast")}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-2">
                       <span className="text-[#3f6b57] font-semibold">{t("parliament.forVotes")}: <span className="tabular">{forecast.forVotes}</span></span>
                       <span className="text-[#8f4038] font-semibold">{t("parliament.againstVotes")}: <span className="tabular">{forecast.againstVotes}</span></span>
@@ -94,7 +94,7 @@ export function OrderPaper() {
       {/* the chamber's record */}
       {parliament.bills.length > 0 && (
         <div>
-          <p className="kicker text-[10px] mb-2">{t("parliament.orderKicker")}</p>
+          <p className="kicker text-[12px] mb-2">{t("parliament.orderKicker")}</p>
           <ul className="divide-y divide-rule border-y border-rule">
             {[...parliament.bills].reverse().map((b) => (
               <li key={`${b.id}-${b.turn}`} className="py-2 flex items-center justify-between gap-3">
@@ -135,7 +135,7 @@ export function OrderPaper() {
         <p className="text-xs text-muted mt-1 leading-relaxed">{t("parliament.confidenceHint")}</p>
         {confidenceRecord && (
           <p className="text-xs mt-2">
-            <span className="kicker text-[10px] mr-2">{t("parliament.confidenceLast")}</span>
+            <span className="kicker text-[12px] mr-2">{t("parliament.confidenceLast")}</span>
             <span className={cn("font-semibold", confidenceRecord.passed ? "text-gold-text" : "text-brick-text")}>
               {confidenceRecord.passed ? t("parliament.passed") : t("parliament.defeated")} · {confidenceRecord.votes.for}–{confidenceRecord.votes.against}
             </span>

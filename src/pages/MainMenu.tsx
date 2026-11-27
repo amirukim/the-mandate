@@ -175,7 +175,7 @@ export function MainMenu() {
         <div className="max-w-6xl mx-auto px-6 sm:px-10 py-4 flex items-center justify-between gap-4">
           <p className="kicker kicker-gold">{t("menu.kicker")}</p>
           {/* fixed: readable on the dark sky */}
-          <p className="font-pixel text-[8px] text-paper/90 [text-shadow:0_1px_0_rgb(0_0_0/0.8)]">
+          <p className="font-pixel text-[12px] text-paper/90 [text-shadow:0_1px_0_rgb(0_0_0/0.8)]">
             {t("menu.tag")}
           </p>
         </div>
@@ -217,7 +217,7 @@ export function MainMenu() {
                   {item.hotkey && (
                     <span
                       aria-hidden="true"
-                      className="font-pixel text-[8px] text-paper/60 border border-paper/30 rounded-[2px] px-1 py-0.5 shrink-0"
+                      className="font-pixel text-[12px] text-paper/60 border border-paper/30 rounded-[2px] px-1 py-0.5 shrink-0"
                     >
                       {item.hotkey}
                     </span>
@@ -281,9 +281,9 @@ export function MainMenu() {
                           className="pixelated rounded-[3px] border border-paper/30"
                         />
                       )}
-                      <span className="font-pixel text-[8px] text-paper">{autosave.summary.campaignName}</span>
-                      <span className="font-pixel text-[8px] text-paper/70">{autosave.summary.dateLabel}</span>
-                      <span className="font-pixel text-[8px] text-gold">
+                      <span className="font-pixel text-[12px] text-paper">{autosave.summary.campaignName}</span>
+                      <span className="font-pixel text-[12px] text-paper/70">{autosave.summary.dateLabel}</span>
+                      <span className="font-pixel text-[12px] text-gold">
                         {autosave.summary.approval}% {t("common.approval")}
                       </span>
                     </div>
@@ -322,15 +322,15 @@ export function MainMenu() {
               <p className="font-pixel text-[16px] text-gold">{t("menu.credits")}</p>
               <dl className="mt-3 space-y-2 text-xs text-paper/90">
                 <div>
-                  <dt className="kicker text-[10px] text-paper/60">{lang === "ms" ? "Reka bentuk, kod & seni" : "Design, code & art"}</dt>
+                  <dt className="kicker text-[12px] text-paper/60">{lang === "ms" ? "Reka bentuk, kod & seni" : "Design, code & art"}</dt>
                   <dd>{lang === "ms" ? "Studio Jalur — pasukan rekaan" : "Studio Jalur — a fictional team"}</dd>
                 </div>
                 <div>
-                  <dt className="kicker text-[10px] text-paper/60">{lang === "ms" ? "Fon" : "Typefaces"}</dt>
+                  <dt className="kicker text-[12px] text-paper/60">{lang === "ms" ? "Fon" : "Typefaces"}</dt>
                   <dd>Fraunces · Public Sans · Silkscreen (OFL)</dd>
                 </div>
                 <div>
-                  <dt className="kicker text-[10px] text-paper/60">{lang === "ms" ? "Geografi" : "Geography"}</dt>
+                  <dt className="kicker text-[12px] text-paper/60">{lang === "ms" ? "Geografi" : "Geography"}</dt>
                   <dd>Natural Earth (public domain)</dd>
                 </div>
               </dl>
@@ -348,7 +348,7 @@ export function MainMenu() {
       <motion.footer {...fade(0.4)} className="relative z-10 max-w-6xl w-full mx-auto px-6 sm:px-10 pb-6">
         <p className="text-[11px] text-muted leading-relaxed max-w-xl">{t("menu.footerFiction")}</p>
         <p className="text-[11px] text-muted mt-1">{t("menu.footerOffline")}</p>
-        <p className="font-pixel text-[8px] text-muted mt-2">v{APP_VERSION}</p>
+        <p className="font-pixel text-[12px] text-muted mt-2">v{APP_VERSION}</p>
       </motion.footer>
     </div>
   );

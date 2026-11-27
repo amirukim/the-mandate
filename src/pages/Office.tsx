@@ -94,7 +94,7 @@ export function Office() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-paper/35 via-transparent to-paper/10" />
 
         {/* hint */}
-        <p className="pointer-events-none absolute bottom-3 left-4 sm:left-7 kicker text-[9px] hidden sm:block">
+        <p className="pointer-events-none absolute bottom-3 left-4 sm:left-7 kicker text-[11px] hidden sm:block">
           <span className="inline-block rounded-[2px] border border-rule/70 bg-paper/85 px-2 py-1">
             {t("office.hubHint")}
           </span>

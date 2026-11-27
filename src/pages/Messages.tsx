@@ -88,8 +88,8 @@ export function Messages() {
               )}
             >
               <span className="display text-sm font-semibold block">{lang === "ms" ? a.title.ms : a.title.en}</span>
-              <span className="kicker text-[9px] block mt-0.5">{display?.name ?? a.characterId}</span>
-              <span className={cn("kicker text-[9px] mt-1 block", done ? "text-gold-text" : "text-muted")}>
+              <span className="kicker text-[11px] block mt-0.5">{display?.name ?? a.characterId}</span>
+              <span className={cn("kicker text-[11px] mt-1 block", done ? "text-gold-text" : "text-muted")}>
                 {done
                   ? (lang === "ms" ? "Telah dimainkan" : "Played")
                   : locked
@@ -123,7 +123,7 @@ export function Messages() {
                     <CharacterPortrait characterId={id} size="md" className="shrink-0" />
                     <span className="min-w-0 flex-1">
                       <span className="display text-sm font-semibold block truncate">{display.name}</span>
-                      <span className="kicker text-[9px] block truncate">{display.role}</span>
+                      <span className="kicker text-[11px] block truncate">{display.role}</span>
                     </span>
                     <span
                       aria-hidden="true"
@@ -143,15 +143,15 @@ export function Messages() {
                 <CharacterPortrait characterId={opened.id} size="md" className="shrink-0" />
                 <div className="min-w-0">
                   <h2 className="display text-base font-semibold leading-tight">{openedDisplay.name}</h2>
-                  <p className="kicker text-[9px]">{openedDisplay.role}</p>
+                  <p className="kicker text-[11px]">{openedDisplay.role}</p>
                 </div>
-                <span className="ml-auto font-pixel text-[8px] text-gold-text shrink-0">
+                <span className="ml-auto font-pixel text-[12px] text-gold-text shrink-0">
                   {openedState?.relationship ?? 50}
                 </span>
               </header>
 
               <div className="flex-1 px-4 py-5 space-y-3 overflow-y-auto">
-                <p className="text-center kicker text-[9px] text-muted">
+                <p className="text-center kicker text-[11px] text-muted">
                   {t("messages.today")} · {game.turn + 1}
                 </p>
                 {thread.length === 0 ? (

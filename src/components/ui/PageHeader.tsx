@@ -20,7 +20,7 @@ export function PageHeader({ kicker, title, lead, dense = false }: PageHeaderPro
       <header className="mb-5">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <h1 className="display text-2xl sm:text-3xl font-semibold leading-tight">{title}</h1>
-          <p className="kicker text-[10px]">{kicker}</p>
+          <p className="kicker text-[12px]">{kicker}</p>
         </div>
         <div className="rule mt-3" />
         {lead && <p className="text-sm text-muted leading-relaxed mt-3 max-w-4xl">{lead}</p>}

@@ -110,7 +110,7 @@ export function NewGame() {
     props: { label: string; value: string; onPrev(): void; onNext(): void },
   ) => (
     <div className="flex items-center justify-between gap-2 min-h-[44px] border border-rule rounded-[2px] px-2 bg-paper-deep">
-      <span className="kicker text-[10px] shrink-0">{props.label}</span>
+      <span className="kicker text-[12px] shrink-0">{props.label}</span>
       <span className="flex items-center gap-1">
         <button
           type="button"
@@ -222,8 +222,8 @@ export function NewGame() {
                 avatar.glasses ? "border-gold bg-gold/10 text-gold-text" : "border-rule bg-paper-deep text-muted hover:border-rule-strong",
               )}
             >
-              <span className="kicker text-[10px]">{t("avatar.glasses")}</span>
-              <span className={cn("font-pixel text-[8px]", avatar.glasses ? "text-gold-text" : "text-muted")}>
+              <span className="kicker text-[12px]">{t("avatar.glasses")}</span>
+              <span className={cn("font-pixel text-[12px]", avatar.glasses ? "text-gold-text" : "text-muted")}>
                 {avatar.glasses ? "ON" : "OFF"}
               </span>
             </button>
