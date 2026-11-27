@@ -187,7 +187,7 @@ export function NewGame() {
                 src={previewUrl}
                 alt=""
                 className="pixelated"
-                style={{ width: SPRITE_PREVIEW, height: SPRITE_PREVIEW * 1.5, imageRendering: "pixelated" }}
+                style={{ width: "100%", height: "auto", imageRendering: "pixelated" }}
               />
               <div className="w-full h-2 bg-[#c9a96a]/70" aria-hidden="true" />
             </div>
@@ -358,5 +358,4 @@ export function NewGame() {
   );
 }
 
-/** Live-preview sprite width in px (3x of the 64-wide sheet, D-16). */
-const SPRITE_PREVIEW = 192;
+/** Live preview fills the panel width at the sprite's intrinsic aspect. */

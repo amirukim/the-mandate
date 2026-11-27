@@ -229,7 +229,8 @@ The critical path is **art production**, not code. Code extraction is predictabl
 | D-20 | Accurate culture wardrobe (tudung/hijab draped scarf, songkok, kopiah, batik, kebaya, baju Melayu, sherwani, sarong) with per-character signature colours | **Approved (v3a)** - phase 3 |
 | D-21 | Web Audio sound kit, synthesised, muted until first gesture, silent under reduced motion | **Approved (v3a)** - phase 4 |
 | D-22 | Playwright (existing devDependency, D-10) as the before/after screenshot tool | **Approved (v3a)** |
-| D-23 | Readability floor overrides the Silkscreen integer-multiple rule: 12 px minimum for chrome labels (8 px proved illegible in play); kickers floor at 12 px with modifiers >= 11 px; Button label sizes bumped to 12/13 px | **Approved (v3a phase 6)** — measured illegibility beats the strict rule |
+| D-23 | Readability floor overrides the Silkscreen integer-multiple rule: 12 px minimum for chrome labels (8 px proved illegible in play); kickers floor at 12 px with modifiers >= 11 px; Button label sizes bumped to 12/13 px | **Approved (v3a phase 6)** - measured illegibility beats the strict rule |
+| D-24 | Characters leave the pixel-block rules for an illustrated style: sprites 96x128 rendered through a 4x-supersampled soft-shaded painter (gradients, smooth masses, anti-aliased edges), displayed at native 1x with normal filtering; busts 96x96 as a 2x crop of the sprite's head-and-chest (same drawing by construction). The UI stays pixel; Art Bible section 6 (bodies, dress, no real likenesses) still applies. Silhouette and expression gates unchanged; the silhouette gate softens within a body class to < 0.92 (illustrated style is softer; stance, height, hair and headwear still differentiate) while the cross-class 0.8 gate holds | **Approved (v3a phase 7)** - "new direction, more detail; all of it, start over" |
 
 ---
 

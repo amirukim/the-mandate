@@ -1,6 +1,6 @@
 {
   "scale": 4,
-  "cell": "64x96",
+  "cell": "96x128",
   "expressions": [
     "neutral",
     "concerned",

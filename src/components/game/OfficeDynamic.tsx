@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { isMonsoonTurn } from "../../engine/calendar";
 import { prefersReducedMotion } from "../../hooks/usePortalOverlay";
 import { specFromAvatar, spriteDataUrl } from "../../data/pixel-portraits";
@@ -190,7 +190,7 @@ export function OfficeDynamic({ state }: { state: GameState }) {
           style={{
             left: `${(visitorLeft / 480) * 100}%`,
             top: `${(180 / 253) * 100}%`,
-            width: `${(64 / 480) * 100}%`,
+            width: `${(96 / 480) * 100}%`,
             transition: reduced ? "none" : "left 1400ms ease-out",
           }}
         />
@@ -201,9 +201,9 @@ export function OfficeDynamic({ state }: { state: GameState }) {
         aria-hidden="true"
         className="absolute overflow-hidden"
         style={{
-          left: `${(196 / 480) * 100}%`,
+          left: `${(184 / 480) * 100}%`,
           top: "0%",
-          width: `${(64 / 480) * 100}%`,
+          width: `${(96 / 480) * 100}%`,
           height: `${(156 / 253) * 100}%`,
         }}
       >

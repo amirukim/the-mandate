@@ -27,7 +27,7 @@ export function PixelSprite({
   characterId,
   expression = "neutral",
   mode = "idle",
-  scale = 3,
+  scale = 1,
   phaseOffsetMs = 0,
   className,
 }: PixelSpriteProps) {
@@ -75,7 +75,7 @@ export function PixelSprite({
       alt=""
       width={SPRITE_W * scale}
       height={SPRITE_H * scale}
-      className={cn("pixelated select-none", className)}
+      className={cn("select-none", className)}
       draggable={false}
     />
   );

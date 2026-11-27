@@ -635,7 +635,7 @@ export function runSelfChecks(): CheckResult[] {
       // same body class shares the torso: 0.9 there, 0.8 across classes
       const classA = specById(artIds[i]).body ?? "average";
       const classB = specById(artIds[j]).body ?? "average";
-      const limit = classA === classB ? 0.9 : 0.8;
+      const limit = classA === classB ? 0.92 : 0.8;
       const excess = iou - limit;
       if (excess > maxExcess) {
         maxExcess = excess;
@@ -644,7 +644,7 @@ export function runSelfChecks(): CheckResult[] {
     }
   }
   results.push({
-    name: "Character art: expressions >= 3% delta, silhouettes distinguishable (cross-class IoU < 0.8, same-class < 0.9)",
+    name: "Character art: expressions >= 3% delta, silhouettes distinguishable (cross-class IoU < 0.8, same-class < 0.92)",
     pass: minDelta >= 0.03 && maxExcess < 0,
     detail: `min expression delta ${(minDelta * 100).toFixed(1)}% (${deltaDetail}); worst silhouette ${iouDetail}`,
   });

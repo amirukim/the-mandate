@@ -107,7 +107,7 @@ export function DialogueScene({ graphId, onDone }: { graphId: string; onDone: ()
           <div className="bg-card border border-rule rounded-panel p-5">
             <div className="flex gap-4">
               {info.spriteId ? (
-                <PixelSprite characterId={info.spriteId} expression={expression} scale={3} className="shrink-0 rounded-[2px] bg-navy/90 border border-rule" />
+                <PixelSprite characterId={info.spriteId} expression={expression} scale={1} className="shrink-0 rounded-[2px] bg-navy/90 border border-rule" />
               ) : (
                 <div className="shrink-0 w-[96px] h-[128px] rounded-[2px] bg-navy/90 border border-rule flex items-center justify-center">
                   <span aria-hidden="true" className="font-pixel text-[12px] text-gold/80 text-center px-1">PM</span>

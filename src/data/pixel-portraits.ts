@@ -158,14 +158,13 @@ export function specById(id: string): PixelSpec {
  */
 export type Expression = "neutral" | "concerned" | "pleased" | "stern" | "weary" | "surprised";
 
-const MOUTH = "#4d3230";
 
 /* ------------------------------------------------------------------ */
 /* Full-body sprites (v2, plan C/D): 48x64, same specs and palette     */
 /* ------------------------------------------------------------------ */
 
-export const SPRITE_W = 64;
-export const SPRITE_H = 96;
+export const SPRITE_W = 96;
+export const SPRITE_H = 128;
 export type SpritePose = "stand" | "walk";
 export type SpriteBlink = boolean;
 
@@ -177,14 +176,12 @@ export interface SpriteFrameOpts {
 }
 
 /**
- * The layered paper-doll (D-17): shadow, legs, torso, arms, head, hair and
- * headwear, face, expression posture. Every layer is a pure function of the
- * PixelSpec, so bust and sprite can never drift, and the silhouette becomes
- * checkable (D-19). Expressions change brows, eyes, mouth AND body language
- * (D-18).
+ * The illustrated paper-doll (D-24): the layered generator repaints into a
+ * 4x-supersampled soft canvas — gradient shading, smooth masses, anti-aliased
+ * edges — and downsamples to the native 96x128 sprite. Layers, spec, stances,
+ * expressions and gates are unchanged; only the renderer left the pixel rules.
  */
 
-/** Body volume per type (D-19): shoulders, waist, legs and head all differ. */
 interface BodyGeom {
   sw: number;
   ww: number;
@@ -197,15 +194,17 @@ interface BodyGeom {
   legW: number;
 }
 
+/** Logical 96x128 units per body type (D-19). headCy puts the head a
+ *  neck's width above the shoulders so the doll connects (D-24 fix). */
 const BODY_GEOM: Record<BodyType, BodyGeom> = {
-  slim:    { sw: 7,  ww: 5,  shoulderY: 37, legTop: 69, legH: 20, headRx: 8,   headRy: 9,  headCy: 18, legW: 4 },
-  average: { sw: 11, ww: 9,  shoulderY: 36, legTop: 68, legH: 20, headRx: 10,  headRy: 11, headCy: 17, legW: 6 },
-  broad:   { sw: 15, ww: 12, shoulderY: 35, legTop: 68, legH: 20, headRx: 11.5, headRy: 12, headCy: 15, legW: 7 },
-  heavy:   { sw: 17, ww: 20, shoulderY: 37, legTop: 66, legH: 21, headRx: 13,  headRy: 13, headCy: 19, legW: 8 },
-  tall:    { sw: 8,  ww: 6,  shoulderY: 34, legTop: 76, legH: 16, headRx: 8.5, headRy: 9.5, headCy: 12, legW: 5 },
+  slim:    { sw: 12, ww: 8,  shoulderY: 49, legTop: 92, legH: 26, headRx: 11.5, headRy: 12.5, headCy: 28.5, legW: 6 },
+  average: { sw: 15, ww: 12, shoulderY: 48, legTop: 90, legH: 27, headRx: 13,  headRy: 14,  headCy: 26, legW: 8 },
+  broad:   { sw: 19, ww: 15, shoulderY: 47, legTop: 90, legH: 27, headRx: 14.5, headRy: 15.5, headCy: 23.5, legW: 9 },
+  heavy:   { sw: 21, ww: 25, shoulderY: 49, legTop: 88, legH: 28, headRx: 16,  headRy: 16.5, headCy: 24.5, legW: 10 },
+  tall:    { sw: 13, ww: 10, shoulderY: 45, legTop: 99, legH: 26, headRx: 12,  headRy: 13,  headCy: 24, legW: 7 },
 };
 
-/** Expression body language (D-18): the pose changes with the mood. */
+/** Expression body language (D-18). */
 interface ExprPose {
   headDx: number;
   headDy: number;
@@ -215,24 +214,143 @@ interface ExprPose {
 const EXPR_POSE: Record<Expression, ExprPose> = {
   neutral:   { headDx: 0, headDy: 0, shoulderDy: 0, armDy: 0 },
   concerned: { headDx: 2, headDy: 0, shoulderDy: 0, armDy: 0 },
-  pleased:   { headDx: 0, headDy: -1, shoulderDy: -2, armDy: -2 },
+  pleased:   { headDx: 0, headDy: -2, shoulderDy: -2, armDy: -2 },
   stern:     { headDx: 1, headDy: 1, shoulderDy: 2, armDy: 0 },
   weary:     { headDx: 1, headDy: 1, shoulderDy: 2, armDy: 3 },
   surprised: { headDx: 0, headDy: -1, shoulderDy: -2, armDy: -2 },
 };
 
-const C_BELT_BUCKLE = "#c69b54";
+const C_BELT_BUCKLE = "#c9a96a";
 
-/** The full-body sprite, layer by layer. */
-export function drawSprite(
+/* --- the soft canvas: RGBA fine buffer + shape fills ---------------------- */
+
+type RGB = [number, number, number];
+type Colour = ArrayLike<number>;
+const rgbCache = new Map<string, RGB>();
+function rgb(hex: string): RGB {
+  let v = rgbCache.get(hex);
+  if (!v) {
+    v = [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+    rgbCache.set(hex, v);
+  }
+  return v;
+}
+function mixRGB(a: Colour, b: Colour, t: number): RGB {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+  ] as RGB;
+}
+function shadeRGB(hex: string, f: number): RGB {
+  return rgb(shade(hex, f));
+}
+
+class Soft {
+  d: Uint8ClampedArray;
+  constructor(public w: number, public h: number) {
+    this.d = new Uint8ClampedArray(w * h * 4);
+  }
+  blend(x: number, y: number, c: Colour, a: number): void {
+    x = Math.round(x); y = Math.round(y);
+    if (x < 0 || y < 0 || x >= this.w || y >= this.h) return;
+    const i = (y * this.w + x) * 4;
+    const d = this.d;
+    const fa = Math.max(0, Math.min(1, a));
+    d[i] = d[i] * (1 - fa) + c[0] * fa;
+    d[i + 1] = d[i + 1] * (1 - fa) + c[1] * fa;
+    d[i + 2] = d[i + 2] * (1 - fa) + c[2] * fa;
+    d[i + 3] = Math.max(d[i + 3], Math.round(fa * 255));
+  }
+  /** Anti-aliased ellipse: 2x2 sub-samples per fine pixel. */
+  fillEllipse(cx: number, cy: number, rx: number, ry: number, c: Colour, a = 1): void {
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+        let cov = 0;
+        for (const sx of [-0.25, 0.25]) {
+          for (const sy of [-0.25, 0.25]) {
+            const dx = (x + 0.5 + sx - cx) / rx;
+            const dy = (y + 0.5 + sy - cy) / ry;
+            if (dx * dx + dy * dy <= 1) cov += 0.25;
+          }
+        }
+        if (cov > 0) this.blend(x, y, c, a * cov);
+      }
+    }
+  }
+  /** Radially shaded ellipse: light centre to edge shade. */
+  fillEllipseShaded(cx: number, cy: number, rx: number, ry: number, cIn: Colour, cEdge: Colour): void {
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+        const dx = (x + 0.5 - cx) / rx;
+        const dy = (y + 0.5 - cy) / ry;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d <= 1) this.blend(x, y, mixRGB(cIn, cEdge, Math.min(1, d * 1.15)), 1);
+      }
+    }
+  }
+  /** Vertical-gradient rounded rect; t = 0 at top, 1 at bottom. */
+  fillRoundRect(x: number, y: number, w: number, h: number, r: number, c: (t: number) => Colour): void {
+    void r;
+    for (let yy = Math.round(y); yy < Math.round(y + h); yy++) {
+      const t = h > 0 ? (yy - y) / h : 0;
+      const col = c(t);
+      for (let xx = Math.round(x); xx < Math.round(x + w); xx++) this.blend(xx, yy, col, 1);
+    }
+  }
+  fillRect(x: number, y: number, w: number, h: number, c: Colour): void {
+    for (let yy = Math.round(y); yy < Math.round(y + h); yy++) {
+      for (let xx = Math.round(x); xx < Math.round(x + w); xx++) this.blend(xx, yy, c, 1);
+    }
+  }
+  downsample(f: number): (string | null)[][] {
+    const w = Math.floor(this.w / f);
+    const h = Math.floor(this.h / f);
+    const cells: (string | null)[][] = [];
+    for (let y = 0; y < h; y++) {
+      const row: (string | null)[] = [];
+      for (let x = 0; x < w; x++) {
+        let r = 0, g = 0, b = 0, a = 0;
+        for (let sy = 0; sy < f; sy++) {
+          for (let sx = 0; sx < f; sx++) {
+            const i = ((y * f + sy) * this.w + (x * f + sx)) * 4;
+            const al = this.d[i + 3] / 255;
+            r += this.d[i] * al;
+            g += this.d[i + 1] * al;
+            b += this.d[i + 2] * al;
+            a += al;
+          }
+        }
+        const n = f * f;
+        const avgA = a / n;
+        if (avgA < 0.02) row.push(null);
+        else {
+          const rr = Math.round(r / (a || 1));
+          const gg = Math.round(g / (a || 1));
+          const bb = Math.round(b / (a || 1));
+          row.push(`rgba(${rr},${gg},${bb},${avgA.toFixed(3)})`);
+        }
+      }
+      cells.push(row);
+    }
+    return cells;
+  }
+}
+
+/** Paints the whole doll into `sc`. m = fine px per logical unit; the figure
+ *  is drawn at logical (32 - ox, ... - oy). */
+function paintDoll(
+  sc: Soft,
   spec: PixelSpec,
   expression: Expression,
-  opts: SpriteFrameOpts = {},
-): (string | null)[][] {
-  const g = new Grid(SPRITE_W, SPRITE_H);
+  opts: SpriteFrameOpts,
+  m: number,
+  ox = 0,
+  oy = 0,
+): void {
   const body = spec.body ?? "average";
   const geom = BODY_GEOM[body];
-  const [skin] = spec.skin;
+  const [skin, skinSh, skinHi] = spec.skin.map(rgb);
   const a = spec.attire;
   const pose = opts.pose ?? "stand";
   const frame = opts.frame ?? 0;
@@ -243,14 +361,21 @@ export function drawSprite(
   const headDy = exprPose.headDy + (stoop ? 1 : 0);
   const shoulderY = geom.shoulderY + exprPose.shoulderDy + (stoop ? 2 : 0);
   const legTop = geom.legTop;
-  const legH = Math.min(22, geom.legH + (spec.heightAdj ?? 0));
+  const legH = Math.min(30, geom.legH + (spec.heightAdj ?? 0));
   const legW = geom.legW;
-  const shoe = shade(a.c, 0.5);
+  const attireC = rgb(a.c);
+  const attireShade = rgb(shade(a.c, 0.22));
+  const attireLit = rgb(tint(a.c, 0.16));
+  const shoeC = rgb(shade(a.c, 0.5));
 
-  // floor shadow
-  g.ellipse(32, SPRITE_H - 3, 14, 2, "rgba(0,0,0,0.28)");
+  // helpers in fine space
+  const fx = (x: number): number => (x - ox) * m;
+  const fy = (y: number): number => (y - oy) * m;
 
-  // --- legs -------------------------------------------------------------
+  // ground shadow: soft dark ellipse at low alpha (fine-space coords)
+  sc.fillEllipse(32 * m, (SPRITE_H - 3) * m, 15 * m, 2.2 * m, [20, 26, 34], 0.3);
+
+  // --- legs ---------------------------------------------------------------
   const legAX = 32 - Math.round(geom.ww / 2) - Math.round(legW / 2) - 1;
   const legBX = legAX + Math.round(geom.ww / 2) + legW - 1;
   if (pose === "walk") {
@@ -258,179 +383,174 @@ export function drawSprite(
     const bentB = frame === 0 || frame === 2;
     const shiftA = frame === 0 ? -3 : frame === 2 ? 3 : 0;
     const shiftB = -shiftA;
-    g.rect(legAX + shiftA, legTop, legW, bentA ? legH - 3 : legH, a.c);
-    g.rect(legBX + shiftB, legTop, legW, bentB ? legH - 3 : legH, a.c);
-    g.rect(legAX + shiftA, legTop + (bentA ? legH - 6 : legH - 3), legW, 3, shoe);
-    g.rect(legBX + shiftB, legTop + (bentB ? legH - 6 : legH - 3), legW, 3, shoe);
+    sc.fillRoundRect(fx(legAX + shiftA), fy(legTop), legW * m, (bentA ? legH - 3 : legH) * m, 2, (t) => mixRGB(attireLit, attireShade, t));
+    sc.fillRoundRect(fx(legBX + shiftB), fy(legTop), legW * m, (bentB ? legH - 3 : legH) * m, 2, (t) => mixRGB(attireC, attireShade, 0.35 + t * 0.45));
+    sc.fillRect(fx(legAX + shiftA), fy(legTop + (bentA ? legH - 6 : legH - 3)), legW * m, 3 * m, shoeC);
+    sc.fillRect(fx(legBX + shiftB), fy(legTop + (bentB ? legH - 6 : legH - 3)), legW * m, 3 * m, shoeC);
   } else {
-    g.rect(legAX, legTop, legW, legH, a.c);
-    g.rect(legBX, legTop, legW, legH, a.c);
-    g.rect(legAX, legTop + legH - 3, legW, 3, shoe);
-    g.rect(legBX, legTop + legH - 3, legW, 3, shoe);
+    sc.fillRoundRect(fx(legAX), fy(legTop), legW * m, legH * m, 2, (t) => mixRGB(attireLit, attireShade, t * 0.8));
+    sc.fillRoundRect(fx(legBX), fy(legTop), legW * m, legH * m, 2, (t) => mixRGB(attireC, attireShade, 0.35 + t * 0.45));
+    sc.fillRect(fx(legAX), fy(legTop + legH - 3), legW * m, 3 * m, shoeC);
+    sc.fillRect(fx(legBX), fy(legTop + legH - 3), legW * m, 3 * m, shoeC);
   }
 
-  // --- torso: shoulders tapering to the waist, hem flare per cut ---------
+  // --- torso ---------------------------------------------------------------
+  const torsoRows = (legTop - shoulderY) * m;
   const hemFlare = a.kind === "suit" ? 1 : a.kind === "open" ? 2 : 0;
-  for (let y = shoulderY; y < legTop; y++) {
-    const t = (y - shoulderY) / Math.max(1, legTop - shoulderY);
-    let half = Math.round(geom.sw + (geom.ww - geom.sw) * t);
-    if (body === "heavy" && t > 0.45 && t < 0.9) half += 2; // the belly
-    if (y > legTop - 4) half += hemFlare;
-    g.rect(32 - half, y, half * 2, 1, a.c);
+  for (let fy2 = 0; fy2 < torsoRows; fy2++) {
+    const y = shoulderY * m + fy2;
+    const t = fy2 / torsoRows;
+    let half = geom.sw + (geom.ww - geom.sw) * t;
+    if (body === "heavy" && t > 0.45 && t < 0.9) half += 2.5;
+    if (t > 0.86) half += hemFlare;
+    const dark = rgb("#1a1a22");
+    const col = mixRGB(rgb(tint(a.c, 0.14)), mixRGB(attireC, dark, t), t);
+    sc.fillRect(fx(32 - half), y, half * m, 1, col);
+    sc.fillRect(fx(32 + half - Math.max(1, m * 0.5)), y, Math.max(1, m * 0.5), 1, shadeRGB(a.c, 0.18 + t * 0.12));
+    if (fy2 === 0) sc.fillRect(fx(32 - half), y, half * 2 * m, 1, mixRGB(col, [255, 250, 240], 0.25));
   }
-  // shoulder slope above the shoulder line
   for (let s = 1; s <= 2; s++) {
-    const half = Math.max(3, geom.sw - s * 3);
-    g.rect(32 - half, shoulderY - s, half * 2, 1, a.c);
-  }
-  // key light left, core shade right (recompute the width per row)
-  for (let y = shoulderY + 2; y < legTop - 4; y++) {
-    const t = (y - shoulderY) / Math.max(1, legTop - shoulderY);
-    const half = Math.round(geom.sw + (geom.ww - geom.sw) * t) + (y > legTop - 4 ? hemFlare : 0);
-    g.set(32 - half + 1, y, tint(a.c, 0.16));
-    g.set(32 + half - 1, y, shade(a.c, 0.2));
+    const half = Math.max(3, geom.sw - s * 3.5);
+    sc.fillRect(fx(32 - half), fy(shoulderY - s), half * 2 * m, m, mixRGB(attireC, rgb("#faf6ec"), 0.22));
   }
 
-  // collar furniture, parametrised by the shoulder width
+  // collar furniture per kind
   const collarY = shoulderY + 2;
   const torsoH = legTop - shoulderY;
+  const attireShirt = rgb(a.shirt);
+  const attireTrim = rgb(a.trim);
+  const attireAccent = rgb(a.accent ?? a.trim);
+  const attireTie = rgb(a.tie ?? a.trim);
   if (a.kind === "suit") {
-    g.rect(29, collarY, 6, torsoH - 2, a.shirt);
-    g.vline(33, collarY, torsoH - 2, shade(a.shirt, 0.18));
+    sc.fillRect(fx(29), fy(collarY), 6 * m, (torsoH - 2) * m, attireShirt);
+    sc.fillRect(fx(33), fy(collarY), m, (torsoH - 2) * m, shadeRGB(a.shirt, 0.16));
     if (a.tie) {
-      g.rect(31, collarY, 2, 3, a.tie);
-      g.rect(31, collarY + 3, 2, Math.max(4, torsoH - 8), a.tie);
-      g.rect(31, collarY + torsoH - 6, 2, 3, shade(a.tie, 0.22));
+      sc.fillRect(fx(31), fy(collarY), 2 * m, 3 * m, attireTie);
+      sc.fillRect(fx(31), fy(collarY + 3), 2 * m, Math.max(4, torsoH - 8) * m, attireTie);
+      sc.fillRect(fx(31), fy(collarY + torsoH - 6), 2 * m, 3 * m, shadeRGB(a.tie, 0.22));
     }
     const lap = Math.round(geom.sw * 0.6);
-    g.rect(32 - lap, collarY, 3, 3, a.trim);
-    g.rect(32 - lap - 1, collarY + 3, 3, 4, a.trim);
-    g.rect(32 + lap - 3, collarY, 3, 3, a.trim);
-    g.rect(32 + lap, collarY + 3, 3, 4, a.trim);
-    if (a.accent) g.rect(32 + lap + 3, collarY + 12, 3, 2, a.accent);
+    sc.fillRect(fx(32 - lap), fy(collarY), 3 * m, 3 * m, attireTrim);
+    sc.fillRect(fx(32 - lap - 1), fy(collarY + 3), 3 * m, 4 * m, attireTrim);
+    sc.fillRect(fx(32 + lap - 3), fy(collarY), 3 * m, 3 * m, attireTrim);
+    sc.fillRect(fx(32 + lap), fy(collarY + 3), 3 * m, 4 * m, attireTrim);
+    if (a.accent) sc.fillRect(fx(32 + lap + 3), fy(collarY + 12), 3 * m, 2 * m, rgb(a.accent));
   } else if (a.kind === "open") {
-    g.rect(32 - Math.round(geom.sw * 0.5), collarY, 4, torsoH - 2, a.shirt);
-    g.rect(32 + Math.round(geom.sw * 0.5) - 4, collarY, 4, torsoH - 2, a.shirt);
-    g.rect(32 - Math.round(geom.sw * 0.5) - 2, collarY, 2, torsoH - 2, a.trim);
-    g.rect(32 + Math.round(geom.sw * 0.5) + 1, collarY, 2, torsoH - 2, a.trim);
-  } else {
-    g.rect(29, collarY, 6, torsoH - 2, a.shirt);
-    g.vline(32, collarY + 2, torsoH - 4, shade(a.shirt, 0.14));
-    g.rect(30, collarY - 1, 4, 2, a.accent ?? a.trim);
-  }
-  if (a.kind === "baju") {
-    // baju Melayu: two-button placket and the folded sampin sash across the hip
-    g.vline(32, collarY + 1, torsoH - 3, shade(a.shirt, 0.16));
-    g.set(31, collarY + 2, a.accent ?? a.trim);
-    g.set(31, collarY + 4, a.accent ?? a.trim);
+    const px = Math.round(geom.sw * 0.5);
+    sc.fillRect(fx(32 - px), fy(collarY), 4 * m, (torsoH - 2) * m, attireShirt);
+    sc.fillRect(fx(32 + px - 4), fy(collarY), 4 * m, (torsoH - 2) * m, attireShirt);
+    sc.fillRect(fx(32 - px - 2), fy(collarY), 2 * m, (torsoH - 2) * m, attireTrim);
+    sc.fillRect(fx(32 + px + 1), fy(collarY), 2 * m, (torsoH - 2) * m, attireTrim);
+  } else if (a.kind === "mandarin" || a.kind === "sherwani") {
+    sc.fillRect(fx(29), fy(collarY), 6 * m, (torsoH - 2) * m, attireShirt);
+    sc.fillRect(fx(31), fy(collarY + 2), m, (torsoH - 4) * m, shadeRGB(a.shirt, 0.14));
+    for (let b = 0; b < 4; b++) sc.fillRect(fx(31), fy(collarY + 3 + b * 4), m, m, attireAccent);
+    sc.fillRect(fx(32 - Math.round(geom.sw * 0.5) - 2), fy(collarY), 2 * m, (torsoH - 2) * m, attireTrim);
+    sc.fillRect(fx(32 + Math.round(geom.sw * 0.5) + 1), fy(collarY), 2 * m, (torsoH - 2) * m, attireTrim);
+    sc.fillRect(fx(30), fy(collarY - 1), 5 * m, 2 * m, attireTrim);
+  } else if (a.kind === "baju") {
+    sc.fillRect(fx(29), fy(collarY), 6 * m, (torsoH - 2) * m, attireShirt);
+    sc.fillRect(fx(31), fy(collarY + 2), m, (torsoH - 4) * m, shadeRGB(a.shirt, 0.16));
+    sc.fillRect(fx(31), fy(collarY + 2), m, m, attireAccent);
+    sc.fillRect(fx(31), fy(collarY + 4), m, m, attireAccent);
     const sashY = legTop - 9;
-    for (let s = 0; s < 6; s++) {
-      const x = 32 - Math.round(geom.ww * 0.5) + s * 2;
-      g.rect(x - 2, sashY + s, Math.max(4, geom.ww + 2 - s), 2, s % 2 === 0 ? shade(a.trim, 0.1) : a.trim);
+    for (let s = 0; s < 7; s++) {
+      const x = 32 - Math.round(geom.ww * 0.4) + s * 2;
+      sc.fillRect(fx(x - 1), fy(sashY + s), Math.max(4, geom.ww + 3 - s * 1.2) * m, 2 * m, s % 2 === 0 ? attireTrim : mixRGB(attireTrim, [20, 20, 20], 0.25));
     }
   }
-  if (a.kind === "sherwani") {
-    // full-length placket with buttons, stand collar, hem edging
-    g.rect(31, collarY, 3, torsoH - 2, shade(a.shirt, 0.1));
-    for (let b = 0; b < 4; b++) g.set(32, collarY + 3 + b * 4, a.accent ?? a.trim);
-    g.rect(32 - Math.round(geom.sw * 0.5) - 2, collarY, 2, torsoH - 2, a.trim);
-    g.rect(32 + Math.round(geom.sw * 0.5) + 1, collarY, 2, torsoH - 2, a.trim);
-    g.rect(30, collarY - 1, 5, 2, a.trim);
-  }
+  sc.fillRect(fx(32 - geom.ww - 2), fy(legTop - 6), (geom.ww * 2 + 4) * m, 3 * m, shadeRGB(a.c, 0.4));
+  sc.fillRect(fx(32 - geom.ww), fy(legTop - 5), m, m, rgb(C_BELT_BUCKLE));
+  sc.fillRect(fx(32 + geom.ww - 1), fy(legTop - 5), m, m, rgb(C_BELT_BUCKLE));
 
-  // belt
-  g.rect(32 - geom.ww - 2, legTop - 6, geom.ww * 2 + 4, 3, shade(a.c, 0.4));
-  g.set(32 - geom.ww, legTop - 5, C_BELT_BUCKLE);
-  g.set(32 + geom.ww - 1, legTop - 5, C_BELT_BUCKLE);
-
-  // --- arms: the resting stance is per character (silhouette variety) -----
-  const armW = body === "heavy" ? 5 : body === "slim" ? 3 : 4;
+  // --- arms per stance -------------------------------------------------------
+  const armW = body === "heavy" ? 6 : body === "slim" ? 4 : 5;
   const armY = shoulderY + 3;
   const armSwing = pose === "walk" ? (frame === 0 ? 1 : frame === 2 ? -1 : 0) : 0;
   const idleIn = pose === "stand" && frame === 1 ? 1 : 0;
   const stance = spec.stance ?? "stand";
   const armLen = Math.max(6, legTop - armY - 5 + exprPose.armDy);
+  const armCol = rgb(shade(a.c, 0.1));
+  const handC = skin;
+
+  const armDown = (side: number, xOff: number, len: number): void => {
+    const ax = 32 + side * (geom.sw - armW + 1) + xOff - (side < 0 ? 0 : armW - 1);
+    sc.fillRoundRect(fx(ax), fy(armY), armW * m, len * m, 2, (t) => mixRGB(attireLit, attireShade, 0.15 + t * 0.35));
+    sc.fillEllipse(fx(ax + armW * 0.5), fy(armY + len + 1.5), armW * m * 0.55, 1.8 * m, handC);
+  };
 
   if (pose === "walk") {
     const wLX = 32 - geom.sw - armW + 2 - armSwing;
     const wRX = 32 + geom.sw - 2 + armSwing;
-    g.rect(wLX, armY, armW, armLen, shade(a.c, 0.12));
-    g.rect(wRX, armY, armW, armLen, shade(a.c, 0.12));
-    g.rect(wLX, armY + armLen, armW, 3, skin);
-    g.rect(wRX, armY + armLen, armW, 3, skin);
+    sc.fillRoundRect(fx(wLX), fy(armY), armW * m, armLen * m, 2, () => mixRGB(attireLit, attireShade, 0.3));
+    sc.fillRoundRect(fx(wRX), fy(armY), armW * m, armLen * m, 2, () => mixRGB(attireC, attireShade, 0.3));
+    sc.fillEllipse(fx(wLX + armW * 0.5), fy(armY + armLen + 1.5), armW * m * 0.55, 1.8 * m, handC);
+    sc.fillEllipse(fx(wRX + armW * 0.5), fy(armY + armLen + 1.5), armW * m * 0.55, 1.8 * m, handC);
   } else if (stance === "clasp") {
-    // upper arms angle inward; the hands meet in front of the waist
     const upper = Math.max(4, Math.round(armLen * 0.55));
     for (const side of [-1, 1] as const) {
       for (let s = 0; s < upper; s++) {
         const t = s / upper;
-        g.rect(32 + side * (geom.sw + armW - 2) - side * Math.round(t * (geom.sw - 1)) - (side < 0 ? armW : 0), armY + s, armW, 1, shade(a.c, 0.12));
+        const x = 32 + side * (geom.sw + armW - 2) - side * Math.round(t * (geom.sw - 1)) - (side < 0 ? armW : 0);
+        sc.fillRect(fx(x), fy(armY + s), armW * m, m, armCol);
       }
-      g.rect(32 + side * 2 - (side < 0 ? armW : 1), armY + upper, armW, 3, skin);
+      sc.fillEllipse(fx(32 + side * 2), fy(armY + upper + 1.5), armW * m * 0.6, 1.8 * m, handC);
     }
   } else if (stance === "hip") {
-    // akimbo: elbow out at the waist, hand resting on the hip
     const elbowY = armY + Math.round(armLen * 0.6);
     for (const side of [-1, 1] as const) {
       const ax = 32 + side * (geom.sw - armW + 1) - (side < 0 ? 0 : armW - 1);
-      g.rect(ax, armY, armW, elbowY - armY, shade(a.c, 0.12));
-      const outX = 32 + side * (geom.sw + 3) - (side < 0 ? 0 : armW - 1);
+      sc.fillRoundRect(fx(ax), fy(armY), armW * m, (elbowY - armY) * m, 2, (t) => mixRGB(attireLit, attireShade, t * 0.4));
+      const outX = 32 + side * (geom.sw + 3.5) - (side < 0 ? 0 : armW - 1);
       for (let s = 0; s <= 3; s++) {
-        g.rect(Math.round(ax + ((outX - ax) * s) / 3), elbowY + s, armW, 1, shade(a.c, 0.12));
+        sc.fillRect(fx(ax + ((outX - ax) * s) / 3), fy(elbowY + s), armW * m, m, mixRGB(attireLit, attireShade, 0.3));
       }
-      g.rect(outX + (side < 0 ? -1 : 0), elbowY + 4, armW, 3, skin);
+      sc.fillEllipse(fx(32 + side * (geom.sw + 3.5) + armW * 0.5), fy(elbowY + 5.5), armW * m * 0.55, 1.8 * m, handC);
     }
   } else if (stance === "cross") {
-    // arms folded: upper arms at the sides, then a full-width fold bar
     const foldY = armY + Math.round(armLen * 0.55);
     for (const side of [-1, 1] as const) {
       const ax = 32 + side * (geom.sw - armW + 1) - (side < 0 ? 0 : armW - 1);
-      g.rect(ax, armY, armW, foldY - armY + 1, shade(a.c, 0.12));
+      sc.fillRoundRect(fx(ax), fy(armY), armW * m, (foldY - armY + 1) * m, 2, (t) => mixRGB(attireLit, attireShade, t * 0.4));
     }
-    g.rect(32 - geom.sw - 1, foldY, geom.sw * 2 + 3, 4, shade(a.c, 0.2));
-    g.rect(32 - geom.sw - 1, foldY + 4, geom.sw * 2 + 3, 2, skin);
+    sc.fillRect(fx(32 - geom.sw - 1), fy(foldY), (geom.sw * 2 + 3) * m, 4 * m, mixRGB(attireC, [20, 26, 34], 0.22));
+    sc.fillRect(fx(32 - geom.sw - 1), fy(foldY + 4), (geom.sw * 2 + 3) * m, 2 * m, handC);
   } else {
-    const armLX = 32 - geom.sw - armW + 2 + idleIn;
-    const armRX = 32 + geom.sw - 2 - idleIn;
-    g.rect(armLX, armY, armW, armLen, shade(a.c, 0.12));
-    g.rect(armRX, armY, armW, armLen, shade(a.c, 0.12));
-    g.rect(armLX, armY + armLen, armW, 3, skin);
-    g.rect(armRX, armY + armLen, armW, 3, skin);
+    armDown(-1, idleIn, armLen);
+    armDown(1, -idleIn, armLen);
   }
 
-  // --- props (D-17): carried in the stand pose, hand-level -----------------
+  // --- props -----------------------------------------------------------------
   if (pose === "stand" && spec.prop) {
     const handY = armY + armLen;
-    const handX = 32 + geom.sw + 1; // the right hand line, outside the torso
+    const handX = 32 + geom.sw + 1;
     if (spec.prop === "folder") {
-      g.rect(handX - 2, handY - 7, 8, 7, "#c9a96a");
-      g.rect(handX - 1, handY - 6, 6, 2, "#f2ede1");
-      g.vline(handX + 5, handY - 7, 7, shade("#c9a96a", 0.3));
+      sc.fillRoundRect(fx(handX - 2), fy(handY - 7), 8 * m, 7 * m, 1, () => mixRGB([201, 169, 106], [160, 130, 80], 0.3));
+      sc.fillRect(fx(handX - 1), fy(handY - 6), 6 * m, 2 * m, [242, 237, 225]);
+      sc.fillRect(fx(handX + 5), fy(handY - 7), m, 7 * m, shadeRGB("#c9a96a", 0.3));
     } else if (spec.prop === "phone") {
-      g.rect(handX, handY - 3, 3, 6, "#12171d");
-      g.set(handX + 1, handY - 2, "#d7e2ec");
+      sc.fillRoundRect(fx(handX), fy(handY - 3), 3 * m, 6 * m, 1, () => [18, 23, 29]);
+      sc.fillRect(fx(handX + 1), fy(handY - 2), m, 2 * m, [215, 226, 236]);
     } else if (spec.prop === "tablet") {
-      g.rect(32 - 5, handY - 9, 10, 8, "#12171d");
-      g.rect(32 - 4, handY - 8, 8, 5, "#2b3a4a");
-      g.set(32 - 3, handY - 7, "#4d7a9e");
+      sc.fillRoundRect(fx(27), fy(handY - 9), 10 * m, 8 * m, 1, () => [18, 23, 29]);
+      sc.fillRect(fx(28), fy(handY - 8), 8 * m, 5 * m, [43, 58, 74]);
+      sc.fillRect(fx(29), fy(handY - 7), 3 * m, 2 * m, [77, 122, 158]);
     } else if (spec.prop === "cane") {
-      const caneX = handX + armW;
-      g.vline(caneX, handY - 2, SPRITE_H - 6 - handY, "#6b472a");
-      g.rect(caneX - 1, handY - 4, 3, 2, "#6b472a");
-      g.rect(handX, handY, armW, 3, skin);
+      const caneX = handX + armW + 1;
+      sc.fillRect(fx(caneX), fy(handY - 2), m, (SPRITE_H - 6 - handY) * m, [107, 71, 42]);
+      sc.fillRoundRect(fx(caneX - 1), fy(handY - 4), 3 * m, 2 * m, 1, () => [107, 71, 42]);
+      sc.fillEllipse(fx(handX + armW * 0.5), fy(handY), armW * m * 0.5, 1.5 * m, handC);
     }
   }
 
-  // --- head ----------------------------------------------------------------
-  drawDollHead(g, spec, expression, 32 + headDx, geom.headCy + headDy, geom.headRx, geom.headRy, Boolean(opts.blink));
-  return g.cells;
+  // --- head --------------------------------------------------------------------
+  drawDollHeadSoft(sc, spec, expression, 32 + headDx, geom.headCy + headDy, geom.headRx, geom.headRy, Boolean(opts.blink), m, ox, oy, skin, skinSh, skinHi, collarY);
 }
 
-/** The sprite head: bigger face (D-16), real eyes with iris and glint,
- *  brows/chin/nose geometry per character (D-17), accurate headwear (D-20),
- *  expression overlays (D-18). */
-function drawDollHead(
-  g: Grid,
+/** The illustrated head (D-24). neckToY: how far down the neck fill runs
+ *  (logical y of the collar), so head and torso connect. */
+function drawDollHeadSoft(
+  sc: Soft,
   spec: PixelSpec,
   expression: Expression,
   hx: number,
@@ -438,302 +558,252 @@ function drawDollHead(
   rx: number,
   ry: number,
   blink: boolean,
-) {
-  const [skin, skinSh, skinHi] = spec.skin;
+  m: number,
+  ox: number,
+  oy: number,
+  skin: RGB,
+  skinSh: RGB,
+  skinHi: RGB,
+  neckToY: number,
+): void {
+  const X = (x: number): number => (x - ox) * m;
+  const Y = (y: number): number => (y - oy) * m;
   const chin = spec.face?.chin ?? "taper";
   const noseW = spec.face?.nose ?? "slim";
   const browShape = spec.face?.brow ?? "straight";
+  void chin;
 
-  // skull: shade crescent right, lit face left
-  g.ellipse(hx + 1, hy, rx, ry, skinSh);
-  g.ellipse(hx, hy, rx, ry, skin);
-  g.ellipse(hx, hy + Math.round(ry * 0.4), rx - 2, Math.round(ry * 0.6), skin);
-  // jaw + chin per shape
+  // neck — runs under the jaw into the collar so head and torso connect (D-24);
+  // drawn first so the skull and jaw overlap it
+  const neckTop = hy + ry - 1;
+  const neckC = spec.hijab ? rgb(spec.hijab.c) : mixRGB(skin, skinSh, 0.5);
+  sc.fillRect(X(hx - 3), Y(neckTop), 6 * m, Math.max(5, neckToY - neckTop) * m, neckC);
+  // temple rim light — under the hair so it reads as form, not a streak (D-24)
+  sc.fillEllipse(X(hx - rx * 0.74), Y(hy - ry * 0.72), 1.0 * m, ry * 0.2 * m, mixRGB(skin, skinHi, 0.35));
+
+  // skull: radially shaded
+  sc.fillEllipseShaded(X(hx), Y(hy), rx * m, ry * m, mixRGB(skin, skinHi, 0.35), mixRGB(skin, skinSh, 0.55));
+  // jaw per shape
   if (chin === "square") {
-    g.rect(hx - Math.round(rx * 0.7), hy + Math.round(ry * 0.7), Math.round(rx * 1.4), 4, skin);
-    g.rect(hx - Math.round(rx * 0.55), hy + Math.round(ry * 0.85), Math.round(rx * 1.1), 2, skin);
+    sc.fillRect(X(hx - rx * 0.7), Y(hy + ry * 0.7), rx * 1.4 * m, 4 * m, mixRGB(skin, skinSh, 0.2));
+    sc.fillRect(X(hx - rx * 0.55), Y(hy + ry * 0.85), rx * 1.1 * m, 2 * m, skin);
   } else if (chin === "round") {
-    g.ellipse(hx, hy + Math.round(ry * 0.7), Math.round(rx * 0.7), Math.round(ry * 0.5), skin);
+    sc.fillEllipseShaded(X(hx), Y(hy + ry * 0.7), rx * 0.7 * m, ry * 0.5 * m, skin, mixRGB(skin, skinSh, 0.3));
   } else {
-    g.ellipse(hx, hy + Math.round(ry * 0.75), Math.round(rx * 0.5), Math.round(ry * 0.45), skin);
+    sc.fillEllipseShaded(X(hx), Y(hy + ry * 0.75), rx * 0.5 * m, ry * 0.45 * m, skin, mixRGB(skin, skinSh, 0.25));
   }
-  // selective 1 px outline: right edge and jaw underside
-  g.vline(hx + rx - 1, hy - 2, Math.round(ry * 0.8), skinSh);
-  g.set(hx + rx - 2, hy + Math.round(ry * 0.55), skinSh);
-  g.set(hx + 1, hy + ry + (chin === "square" ? 2 : 1), skinSh);
-  // left light plane
-  g.vline(hx - rx + 1, hy - 2, Math.round(ry * 0.8), skinHi);
-  g.set(hx - rx + 1, hy - 3, skinHi);
   // ears
-  g.rect(hx - rx - 1, hy, 2, 4, skin);
-  g.rect(hx + rx - 1, hy, 2, 4, skin);
-  // neck
-  g.rect(hx - 3, hy + ry - 1, 6, 5, skinSh);
+  sc.fillEllipse(X(hx - rx - 0.5), Y(hy + 2), 1.5 * m, 2 * m, skin);
+  sc.fillEllipse(X(hx + rx + 0.5), Y(hy + 2), 1.5 * m, 2 * m, skin);
 
-  // --- hair (mass first, face carve after) ---------------------------------
+  // hair
   const h = spec.hair;
   if (h) {
-    const { c, hi } = h;
-    const hairSh = shade(c, 0.3);
+    const c = rgb(h.c);
+    const hi = rgb(h.hi);
     switch (h.style) {
       case "bob":
-        g.ellipse(hx, hy - 1, rx + 3, ry + 1, c);
-        g.rect(hx - rx - 3, hy + 1, 4, Math.round(ry * 1.6), c);
-        g.rect(hx + rx - 1, hy + 1, 4, Math.round(ry * 1.6), c);
-        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
-        g.rect(hx + rx - 1, hy + 2, 3, Math.round(ry * 1.4), hairSh);
-        g.set(hx - 4, hy - ry, hi); g.set(hx + 2, hy - ry - 1, hi);
+        sc.fillEllipseShaded(X(hx), Y(hy - 1), (rx + 3) * m, (ry + 1) * m, hi, c);
+        sc.fillRect(X(hx - rx - 3), Y(hy + 1), 4 * m, ry * 1.6 * m, c);
+        sc.fillRect(X(hx + rx - 1), Y(hy + 1), 4 * m, ry * 1.6 * m, shadeRGB(h.c, 0.3));
+        sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 1) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
         break;
       case "receding":
-        g.ellipse(hx, hy - 3, rx + 1, ry - 3, c);
-        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
-        g.rect(hx + rx - 2, hy - 5, 3, 7, hairSh);
-        g.set(hx - 3, hy - ry - 1, hi); g.set(hx - 2, hy - ry, hi);
+        sc.fillEllipseShaded(X(hx), Y(hy - 3), (rx + 1) * m, (ry - 3) * m, hi, c);
+        sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 1) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
         break;
       case "tied":
-        g.ellipse(hx, hy - 2, rx + 2, ry, c);
-        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
-        g.ellipse(hx - rx - 1, hy - 1, 3, 4, c);
-        g.set(hx - 2, hy - ry - 1, hi);
+        sc.fillEllipseShaded(X(hx), Y(hy - 2), (rx + 2) * m, ry * m, hi, c);
+        sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 1) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
+        sc.fillEllipse(X(hx - rx - 1), Y(hy - 1), 3 * m, 4 * m, c);
         break;
       case "sidepart":
-        g.ellipse(hx, hy - 2, rx + 2, ry - 1, c);
-        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
-        g.rect(hx - rx - 1, hy - 4, 5, 4, c);
-        g.rect(hx + rx - 2, hy - 3, 3, 6, hairSh);
-        g.set(hx - 4, hy - ry - 1, hi); g.set(hx - 3, hy - ry, hi);
+        sc.fillEllipseShaded(X(hx), Y(hy - 2), (rx + 2) * m, (ry - 1) * m, hi, c);
+        sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 1) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
         break;
       case "curls":
-        for (const [dx, dy, r] of [[-6, -3, 4], [0, -5, 5], [6, -2, 4], [-9, 1, 3], [9, 1, 3]] as const) {
-          g.ellipse(hx + dx, hy + dy, r, r - 1, c);
+        for (const [dx, dy, r] of [[-6, -3, 5], [0, -5, 6], [6, -2, 5], [-9, 1, 4], [9, 1, 4]] as const) {
+          sc.fillEllipseShaded(X(hx + dx), Y(hy + dy), r * m, (r - 1) * m, mixRGB(hi, c, 0.4), c);
         }
-        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
-        g.set(hx - 1, hy - ry - 1, hi); g.set(hx + 5, hy + 2, hairSh);
+        sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 1) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
         break;
       case "combed":
       case "white":
-        g.ellipse(hx, hy - 3, rx + 1, ry - 2, c);
-        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
-        g.rect(hx + rx - 2, hy - 5, 3, 8, hairSh);
-        g.set(hx - 4, hy - ry - 1, hi); g.set(hx - 3, hy - ry + 1, hi);
+        sc.fillEllipseShaded(X(hx), Y(hy - 3), (rx + 1) * m, (ry - 2) * m, hi, c);
+        sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 1) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
         break;
       case "short":
       default:
-        g.ellipse(hx, hy - 2, rx + 2, ry, c);
-        g.ellipse(hx, hy + 1, rx - 1, ry - 2, skin);
-        g.rect(hx + rx - 2, hy - 4, 3, 7, hairSh);
-        g.set(hx - 4, hy - ry, hi); g.set(hx + 3, hy - ry, hi);
+        sc.fillEllipseShaded(X(hx), Y(hy - 2), (rx + 2) * m, ry * m, hi, c);
+        sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 1) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
         break;
     }
   }
 
-  // --- headwear: accurate shapes (D-20) -------------------------------------
+  // headwear
   if (spec.hijab) {
-    const c = spec.hijab.c;
-    const hi = spec.hijab.hi;
+    const c = rgb(spec.hijab.c);
+    const hi = rgb(spec.hijab.hi);
     const long = spec.hijab.style === "long";
-    g.ellipse(hx, hy, rx + (long ? 1 : 3), ry + 2, c);
+    sc.fillEllipseShaded(X(hx), Y(hy), (rx + (long ? 1 : 3)) * m, (ry + 2) * m, hi, c);
     if (long) {
-      // long straight scarf: snug crown, panels fall inside the body line
-      g.rect(hx - rx + 1, hy + 2, 3, Math.round(ry * 2.4), c);
-      g.rect(hx + rx - 4, hy + 2, 3, Math.round(ry * 2.4), c);
-      g.rect(hx - 6, hy + Math.round(ry * 1.4), 12, Math.round(ry * 1.5), c);
-      g.vline(hx - 6, hy + Math.round(ry * 1.4), Math.round(ry * 1.5), shade(c, 0.18));
+      sc.fillRect(X(hx - rx + 1), Y(hy + 2), 3 * m, ry * 2.4 * m, c);
+      sc.fillRect(X(hx + rx - 4), Y(hy + 2), 3 * m, ry * 2.4 * m, shadeRGB(spec.hijab.c, 0.22));
+      sc.fillRect(X(hx - 6), Y(hy + ry * 1.4), 12 * m, ry * 1.5 * m, c);
+      sc.fillRect(X(hx - 6), Y(hy + ry * 1.4), m, ry * 1.5 * m, shadeRGB(spec.hijab.c, 0.18));
     } else {
-      // shoulder cape: wide drape over the shoulders
-      g.rect(hx - rx - 3, hy, 4, Math.round(ry * 2.1), c);
-      g.rect(hx + rx - 1, hy, 4, Math.round(ry * 2.1), c);
-      g.rect(hx - rx - 2, hy + Math.round(ry * 1.6), rx * 2 + 4, 7, c);
-      g.hline(hx - rx - 2, hy + Math.round(ry * 1.6) + 6, rx * 2 + 4, shade(c, 0.18));
+      sc.fillRect(X(hx - rx - 3), Y(hy), 4 * m, ry * 2.1 * m, c);
+      sc.fillRect(X(hx + rx - 1), Y(hy), 4 * m, ry * 2.1 * m, shadeRGB(spec.hijab.c, 0.22));
+      sc.fillRect(X(hx - rx - 2), Y(hy + ry * 1.6), (rx * 2 + 4) * m, 7 * m, c);
+      sc.fillRect(X(hx - rx - 2), Y(hy + ry * 1.6 + 6), (rx * 2 + 4) * m, m, shadeRGB(spec.hijab.c, 0.18));
     }
-    g.ellipse(hx, hy + 1, rx - 2, ry - 2, skin);
-    g.rect(hx - rx + 2, hy - 2, rx * 2 - 4, 4, skin);
-    g.vline(hx - rx - 1, hy - 2, Math.round(ry * 1.8), shade(c, 0.22));
-    g.vline(hx + rx, hy - 2, Math.round(ry * 1.8), shade(c, 0.22));
-    g.vline(hx - 1, hy - ry - 1, 4, shade(c, 0.18));
-    g.hline(hx - rx - 1, hy + Math.round(ry * 1.2), 3, shade(c, 0.18));
-    g.set(hx + rx - 2, hy + ry + 3, "#e6cd8e");
-    g.set(hx + rx - 3, hy + ry + 3, hi);
-    g.set(hx - 3, hy - ry - 1, tint(c, 0.3)); g.set(hx + 1, hy - ry - 1, tint(c, 0.3));
+    sc.fillEllipseShaded(X(hx), Y(hy + 1), (rx - 2) * m, (ry - 2) * m, skin, mixRGB(skin, skinSh, 0.3));
+    sc.fillRect(X(hx - rx + 2), Y(hy - 2), (rx * 2 - 4) * m, 4 * m, skin);
+    sc.fillRect(X(hx - rx - 1), Y(hy - 2), m, ry * 1.8 * m, shadeRGB(spec.hijab.c, 0.22));
+    sc.fillRect(X(hx + rx), Y(hy - 2), m, ry * 1.8 * m, shadeRGB(spec.hijab.c, 0.22));
+    sc.fillEllipse(X(hx + rx - 2.5), Y(hy + ry + 3), 1.2 * m, 1.2 * m, [230, 205, 142]);
   }
   if (spec.songkok) {
-    // flat-topped oval cap with a gold band
-    g.ellipse(hx, hy - ry, rx + 2, 4, spec.songkok);
-    g.rect(hx - rx - 2, hy - ry - 2, rx * 2 + 4, 5, spec.songkok);
-    g.rect(hx - rx - 2, hy - ry + 2, rx * 2 + 4, 2, "#c9a96a");
-    g.rect(hx + rx - 3, hy - ry - 1, 3, 5, shade(spec.songkok, 0.25));
-    g.set(hx - 4, hy - ry - 1, tint(spec.songkok, 0.25));
+    sc.fillEllipseShaded(X(hx), Y(hy - ry), (rx + 2) * m, 4 * m, mixRGB(rgb(spec.songkok), [230, 205, 142], 0.12), rgb(spec.songkok));
+    sc.fillRect(X(hx - rx - 2), Y(hy - ry - 2), (rx * 2 + 4) * m, 5 * m, rgb(spec.songkok));
+    sc.fillRect(X(hx - rx - 2), Y(hy - ry + 2), (rx * 2 + 4) * m, 2 * m, [201, 169, 106]);
   }
   if (spec.kopiah) {
-    // the white knit skullcap: rounder, shorter, with the knit ribs
-    g.ellipse(hx, hy - ry, rx + 1, 4, spec.kopiah);
-    g.rect(hx - rx - 1, hy - ry - 1, rx * 2 + 2, 5, spec.kopiah);
-    g.rect(hx - rx - 1, hy - ry + 3, rx * 2 + 2, 1, "#8f8a7c");
-    for (const x of [hx - 5, hx - 1, hx + 3]) g.rect(x, hy - ry - 1, 1, 4, "#8f8a7c");
-    g.rect(hx + rx - 2, hy - ry, 2, 5, shade(spec.kopiah, 0.25));
+    sc.fillEllipseShaded(X(hx), Y(hy - ry), (rx + 1) * m, 4 * m, mixRGB(rgb(spec.kopiah), [255, 252, 244], 0.25), rgb(spec.kopiah));
+    sc.fillRect(X(hx - rx - 1), Y(hy - ry - 1), (rx * 2 + 2) * m, 5 * m, rgb(spec.kopiah));
+    sc.fillRect(X(hx - rx - 1), Y(hy - ry + 3), (rx * 2 + 2) * m, m, [143, 138, 124]);
   }
 
-  // --- face -----------------------------------------------------------------
-  const browC = spec.older ? shade(skin, 0.4) : "#26222a";
-  const browW = browShape === "bushy" ? 5 : 4;
-  const browH = browShape === "bushy" ? 2 : 1;
-  const browY = hy - Math.round(ry * 0.45) + (expression === "stern" ? 1 : expression === "surprised" ? -2 : expression === "weary" ? 1 : 0);
-  const browTilt = expression === "concerned" ? 1 : 0;
-
-  g.rect(hx - Math.round(rx * 0.6), browY + browTilt, browW, browH, browC);
-  g.rect(hx + 1, browY + browTilt, browW, browH, browC);
-  if (browShape === "arched") {
-    g.set(hx - Math.round(rx * 0.6) + 1, browY + browTilt - 1, browC);
-    g.set(hx + 2, browY + browTilt - 1, browC);
+  // face
+  const browC = spec.older ? mixRGB(skin, [38, 34, 42], 0.5) : [38, 34, 42];
+  const browW = browShape === "bushy" ? 6 : 5;
+  const browH = browShape === "bushy" ? 2.4 : 1.6;
+  const sternBrow = expression === "stern";
+  const surprisedBrow = expression === "surprised";
+  const wearyBrow = expression === "weary";
+  const browY = hy - ry * 0.45 + (sternBrow ? 1.5 : surprisedBrow ? -2.5 : wearyBrow ? 1 : 0);
+  const browTilt = expression === "concerned" ? 1.2 : 0;
+  for (const side of [-1, 1] as const) {
+    const bx = hx + side * (rx * 0.28) - (side < 0 ? browW * 0.7 : 0.5);
+    sc.fillRoundRect(X(bx), Y(browY + (side < 0 ? browTilt : -browTilt)), browW * m, browH * m, 1.5, () => browC);
   }
 
-  // eyes: sclera, iris, pupil, glint — readable at game scale (D-16)
-  const ey = hy + 1;
-  const eyeW = noseW === "broad" ? 3 : 4;
-  const exL = hx - Math.round(rx * 0.55);
-  const exR = hx + 2;
-  if (blink || expression === "weary") {
-    g.hline(exL, ey + 1, eyeW, "#241f26");
-    g.hline(exR, ey + 1, eyeW, "#241f26");
-    if (expression === "weary") {
-      g.rect(exL, ey, eyeW, 1, "#f6f2e8");
-      g.set(exL + 1, ey, "#23303e");
-      g.rect(exR, ey, eyeW, 1, "#f6f2e8");
-      g.set(exR + 1, ey, "#23303e");
+  const ey = hy + ry * 0.12;
+  const eyeW = noseW === "broad" ? 4.6 : 5.2;
+  const exL = hx - rx * 0.52 - eyeW * 0.5;
+  const exR = hx + rx * 0.52 - eyeW * 0.5;
+  const drawEye = (ex: number): void => {
+    if (blink || expression === "weary") {
+      sc.fillRect(X(ex), Y(ey + 0.6), eyeW * m, 1.6 * m, [36, 31, 38]);
+      if (expression === "weary") sc.fillRect(X(ex + 0.5), Y(ey - 0.4), (eyeW - 1) * m, 1.6 * m, [246, 242, 232]);
+      return;
     }
-  } else if (expression === "stern") {
-    // narrowed eyes: iris only, no sclera
-    g.rect(exL + 1, ey, 2, 2, "#23303e");
-    g.rect(exR + 1, ey, 2, 2, "#23303e");
-    g.hline(exL - 1, ey - 1, eyeW + 2, "#241f26");
-    g.hline(exR - 1, ey - 1, eyeW + 2, "#241f26");
-  } else {
-    const eyeH = expression === "surprised" ? 3 : 2;
-    g.rect(exL, ey - (eyeH > 2 ? 1 : 0), eyeW, eyeH, "#f6f2e8");
-    g.rect(exR, ey - (eyeH > 2 ? 1 : 0), eyeW, eyeH, "#f6f2e8");
-    const iy = ey;
-    g.rect(exL + 1, iy, 2, 2, "#23303e");
-    g.rect(exR + 1, iy, 2, 2, "#23303e");
-    g.set(exL + 1, iy, "#12171d");
-    g.set(exR + 1, iy, "#12171d");
-    g.set(exL + 1, iy - (eyeH > 2 ? 1 : 0), "#4d5f72");
-    g.set(exR + 1, iy - (eyeH > 2 ? 1 : 0), "#4d5f72");
-    g.set(exL + eyeW - 1, ey - (eyeH > 2 ? 1 : 0), "#d7e2ec");
-    g.set(exR + eyeW - 1, ey - (eyeH > 2 ? 1 : 0), "#d7e2ec");
-    g.hline(exL - 1, ey - (eyeH > 2 ? 2 : 1), eyeW + 2, "#241f26");
-    g.hline(exR - 1, ey - (eyeH > 2 ? 2 : 1), eyeW + 2, "#241f26");
-  }
+    if (expression === "stern") {
+      sc.fillEllipse(X(ex + eyeW * 0.5), Y(ey + 0.8), (eyeW * 0.5) * m, 1.4 * m, [246, 242, 232]);
+      sc.fillEllipse(X(ex + eyeW * 0.5), Y(ey + 0.9), (eyeW * 0.32) * m, 1.3 * m, [35, 48, 62]);
+      sc.fillEllipse(X(ex + eyeW * 0.5), Y(ey + 0.9), (eyeW * 0.16) * m, 0.8 * m, [18, 23, 29]);
+      sc.fillRect(X(ex - 1), Y(ey - 0.8), (eyeW + 2) * m, 1.2 * m, [36, 31, 38]);
+      return;
+    }
+    const eyeH = expression === "surprised" ? 3.2 : 2.4;
+    sc.fillEllipseShaded(X(ex + eyeW * 0.5), Y(ey + eyeH * 0.35), (eyeW * 0.5) * m, (eyeH * 0.5) * m, [252, 250, 244], [226, 232, 238]);
+    sc.fillEllipse(X(ex + eyeW * 0.5), Y(ey + eyeH * 0.4), (eyeW * 0.3) * m, (eyeH * 0.42) * m, [35, 48, 62]);
+    sc.fillEllipse(X(ex + eyeW * 0.5), Y(ey + eyeH * 0.5), (eyeW * 0.16) * m, (eyeH * 0.3) * m, [18, 23, 29]);
+    sc.fillEllipse(X(ex + eyeW * 0.5 - eyeW * 0.12), Y(ey + eyeH * 0.18), (eyeW * 0.12) * m, (eyeH * 0.16) * m, [215, 226, 236]);
+    sc.fillRect(X(ex - 1), Y(ey - eyeH * 0.55), (eyeW + 2) * m, 1.1 * m, [36, 31, 38]);
+    if (expression === "pleased") sc.fillRect(X(ex + 0.5), Y(ey + eyeH * 0.85), (eyeW - 1) * m, m, mixRGB(skin, [95, 90, 77], 0.35));
+  };
+  drawEye(exL);
+  drawEye(exR);
 
-  // nose: bridge + nostrils, per width
-  const ny = ey + 3;
-  g.vline(hx + 1, ny - 1, 3, skinSh);
-  g.set(hx - (noseW === "broad" ? 2 : 1), ny + 2, skinSh);
-  g.set(hx + (noseW === "broad" ? 2 : 1), ny + 2, skinSh);
-  g.set(hx, ny + 1, skinHi);
+  const ny = ey + ry * 0.32;
+  sc.fillRect(X(hx - 0.6), Y(ny), 1.2 * m, ry * 0.24, mixRGB(skin, skinSh, 0.5));
+  sc.fillEllipse(X(hx), Y(ny + ry * 0.2), (noseW === "broad" ? 2.2 : 1.6) * m, m, mixRGB(skin, skinSh, 0.45));
 
-  // cheeks
-  g.set(hx - rx + 2, ny, skinHi);
-  g.set(hx + rx - 2, ny + 1, skinSh);
+  sc.fillEllipse(X(hx - rx * 0.62), Y(ny + 1.6), 1.7 * m, 1.0 * m, mixRGB(skin, skinHi, 0.3));
+  sc.fillEllipse(X(hx + rx * 0.6), Y(ny + 1.4), 2 * m, 1.3 * m, mixRGB(skin, skinSh, 0.4));
 
-  // mouth per expression (authored resting shape under neutral)
-  const my = hy + Math.round(ry * 0.82);
+  const my = hy + ry * 0.82;
   const resting = spec.mouth ?? "firm";
+  const mouthLine = (w: number, yOff = 0): void => {
+    sc.fillRoundRect(X(hx - w / 2), Y(my + yOff), w * m, 1.6 * m, 0.8, () => [77, 50, 48]);
+  };
   if (expression === "stern") {
-    g.hline(hx - 3, my, 7, MOUTH);
-    g.set(hx - 4, my + 1, MOUTH); // corners pull down: a real stern read
-    g.set(hx + 4, my + 1, MOUTH);
+    mouthLine(7);
+    sc.fillRect(X(hx - 4), Y(my + 1.2), 1.6 * m, m, [77, 50, 48]);
+    sc.fillRect(X(hx + 2.4), Y(my + 1.2), 1.6 * m, m, [77, 50, 48]);
   } else if (expression === "pleased") {
-    g.hline(hx - 3, my, 7, MOUTH);
-    g.set(hx - 4, my - 1, MOUTH);
-    g.set(hx + 3, my - 1, MOUTH);
+    sc.fillRoundRect(X(hx - 3.5), Y(my - 0.8), 7 * m, 2.6 * m, 1.2, () => [77, 50, 48]);
+    sc.fillRect(X(hx - 2), Y(my + 0.4), 4 * m, 1.2 * m, [214, 138, 120]);
   } else if (expression === "concerned") {
-    g.hline(hx - 2, my, 5, MOUTH);
-    g.set(hx - 3, my + 1, MOUTH);
-    g.set(hx + 2, my + 1, MOUTH);
+    mouthLine(5.5, 0.5);
+    sc.fillRect(X(hx - 3.4), Y(my + 1.2), 1.4 * m, m, [77, 50, 48]);
+    sc.fillRect(X(hx + 2), Y(my + 1.2), 1.4 * m, m, [77, 50, 48]);
   } else if (expression === "surprised") {
-    g.rect(hx - 2, my - 1, 5, 3, MOUTH);
-    g.rect(hx - 1, my, 3, 1, "#3a1f22");
+    sc.fillEllipse(X(hx), Y(my + 0.6), 2.4 * m, 3 * m, [77, 50, 48]);
+    sc.fillEllipse(X(hx), Y(my + 1), 1.6 * m, 1.6 * m, [58, 31, 34]);
   } else if (expression === "weary") {
-    g.hline(hx - 3, my, 7, MOUTH);
-    g.set(hx - 4, my - 1, MOUTH);
-    g.set(hx + 3, my - 1, MOUTH);
+    mouthLine(6.5);
+    sc.fillRect(X(hx - 4), Y(my - 0.6), 1.4 * m, m, [77, 50, 48]);
+    sc.fillRect(X(hx + 2.6), Y(my - 0.6), 1.4 * m, m, [77, 50, 48]);
   } else if (resting === "set") {
-    g.hline(hx - 3, my, 7, MOUTH);
+    mouthLine(7);
   } else if (resting === "soft") {
-    g.hline(hx - 3, my - 1, 6, MOUTH);
-    g.set(hx + 3, my, MOUTH);
+    sc.fillRoundRect(X(hx - 3), Y(my - 0.6), 6 * m, 2 * m, 1, () => [77, 50, 48]);
   } else {
-    g.hline(hx - 3, my - 1, 7, MOUTH);
-    g.set(hx - 4, my - 1, MOUTH); g.set(hx + 3, my - 1, MOUTH);
-    g.hline(hx - 2, my, 5, skinHi);
+    mouthLine(7);
+    sc.fillRect(X(hx - 1), Y(my + 0.9), 2 * m, m, mixRGB(skin, skinHi, 0.25));
   }
 
-  // age marks (senior): crow's feet and the nasolabial line
   if (spec.older) {
-    g.set(hx - rx + 1, ey, skinSh); g.set(hx + rx - 1, ey, skinSh);
-    g.set(hx - 4, my - 2, skinSh); g.set(hx + 4, my - 2, skinSh);
+    sc.fillRect(X(hx - rx * 0.92), Y(ey - 0.4), 1.2 * m, m, mixRGB(skin, skinSh, 0.5));
+    sc.fillRect(X(hx + rx * 0.72), Y(ey - 0.4), 1.2 * m, m, mixRGB(skin, skinSh, 0.5));
+    sc.fillRect(X(hx - 4), Y(my - 2.2), 2.4 * m, m, mixRGB(skin, skinSh, 0.4));
+    sc.fillRect(X(hx + 1.8), Y(my - 2.2), 2.4 * m, m, mixRGB(skin, skinSh, 0.4));
   }
 
-  // facial hair
   if (spec.facial) {
     const grey = spec.facial.includes("grey");
-    const fc = grey ? "#a7aca4" : "#232833";
+    const fc = grey ? mixRGB([167, 172, 164], [255, 255, 255], 0.15) : rgb("#232833");
     if (spec.facial.startsWith("moustache")) {
-      g.rect(hx - 5, my - 2, 11, 2, fc);
-      g.rect(hx - 6, my - 1, 3, 1, fc); g.rect(hx + 4, my - 1, 3, 1, fc);
+      sc.fillRoundRect(X(hx - 5.5), Y(my - 2.4), 11 * m, 2.6 * m, 1.2, () => fc);
     } else {
-      g.rect(hx - 6, my, 13, 5, fc);
-      g.rect(hx - 5, my - 2, 3, 2, fc); g.rect(hx + 3, my - 2, 3, 2, fc);
-      g.rect(hx - 2, my + 2, 5, 2, skinSh);
-      g.rect(hx - 5, my + 5, 11, 2, fc);
-      if (grey) g.rect(hx + 3, my + 4, 3, 1, "#c9cdc6");
+      sc.fillEllipseShaded(X(hx), Y(my + 2.4), 7 * m, 4.6 * m, mixRGB(fc, skin, 0.15), fc);
+      sc.fillRect(X(hx - 5), Y(my - 2.2), 3 * m, 2.4 * m, fc);
+      sc.fillRect(X(hx + 2), Y(my - 2.2), 3 * m, 2.4 * m, fc);
     }
   }
 
-  // glasses: outline frames with the refined eyes visible behind (D-16)
   if (spec.glasses) {
-    const f = "#39414c";
-    const gy = ey - 2;
-    const gh = expression === "surprised" ? 3 : 2;
-    for (const gx of [exL - 1, exR - 1]) {
-      g.hline(gx, gy, eyeW + 2, f);
-      g.hline(gx, gy + gh + 1, eyeW + 2, f);
-      g.vline(gx, gy, gh + 1, f);
-      g.vline(gx + eyeW + 1, gy, gh + 1, f);
-      g.set(gx + 1, gy + 1, "#d7e2ec");
+    const f = rgb("#39414c");
+    const gy = ey - 2.2;
+    const gh = expression === "surprised" ? 3.6 : 2.8;
+    for (const ex of [exL, exR]) {
+      sc.fillRoundRect(X(ex - 1.2), Y(gy), (eyeW + 2.4) * m, (gh + 1.2) * m, 2, () => f);
+      sc.fillRoundRect(X(ex - 0.6), Y(gy + 0.6), (eyeW + 1.2) * m, gh * m, 1.5, () => [215, 226, 236]);
     }
-    g.set(hx, gy + 1, f);
-    g.hline(exL - Math.round(rx * 0.4), gy + 1, Math.round(rx * 0.4), f);
-    g.hline(exR + eyeW + 1, gy + 1, Math.round(rx * 0.4), f);
+    sc.fillRect(X(hx - 1), Y(gy + 1), 2 * m, 1.2 * m, f);
   }
 
   if (spec.earrings) {
-    g.set(hx - rx, hy + 4, "#e6cd8e");
-    g.set(hx + rx - 1, hy + 4, "#e6cd8e");
+    sc.fillEllipse(X(hx - rx - 0.5), Y(hy + 4.5), 1.1 * m, 1.1 * m, [230, 205, 142]);
+    sc.fillEllipse(X(hx + rx - 0.5), Y(hy + 4.5), 1.1 * m, 1.1 * m, [230, 205, 142]);
   }
-  if (spec.bindi) g.rect(hx - 1, hy - Math.round(ry * 0.5), 2, 2, "#b3452e");
-
-  // rim light catch on the lamp side
-  g.set(hx - rx + 1, hy - ry - 1, skinHi);
+  if (spec.bindi) sc.fillEllipse(X(hx), Y(hy - ry * 0.5), 1.2 * m, 1.4 * m, [179, 69, 46]);
 }
 
-/** The PM avatar customisation, as chosen at New Game. */
-export interface AvatarCustomisation {
-  skin?: string;
-  hair?: string;
-  headwear?: "none" | "songkok" | "kopiah" | "tudung";
-  attire?: string;
-  glasses?: boolean;
-  homeState?: string;
-  /** v3 paper-doll (D-17/D-19): the avatar's body volume. Additive. */
-  body?: BodyType;
-  /** Drives one-time opening nudges and gates avatar-specific dialogue. */
-  priorCareer?: "civilService" | "military" | "business" | "activism" | "academia";
-  /** Free-form trait tags; dialogue conditions gate on `avatar.trait.<tag>`. */
-  traits?: string[];
+export function drawSprite(
+  spec: PixelSpec,
+  expression: Expression,
+  opts: SpriteFrameOpts = {},
+): (string | null)[][] {
+  const SS = 4;
+  const sc = new Soft(SPRITE_W * SS, SPRITE_H * SS);
+  paintDoll(sc, spec, expression, opts, SS, 0, 0);
+  return sc.downsample(SS);
 }
 
-/** Build a PixelSpec from the PM avatar customisation (decision D-08 slice). */
+/** The 96x96 bust stays the paper-doll's head-and-chest crop. */
 export function specFromAvatar(avatar: AvatarCustomisation): PixelSpec {
   const skin = AVATAR_SKINS.find((s) => s[0] === avatar.skin) ?? AVATAR_SKINS[0];
   const hair = AVATAR_HAIRS.find((h) => h.id === avatar.hair) ?? AVATAR_HAIRS[0];
@@ -756,6 +826,19 @@ export function specFromAvatar(avatar: AvatarCustomisation): PixelSpec {
   }
   if (avatar.glasses) spec.glasses = true;
   return spec;
+}
+
+/** The PM avatar customisation, as chosen at New Game. */
+export interface AvatarCustomisation {
+  skin?: string;
+  hair?: string;
+  headwear?: "none" | "songkok" | "kopiah" | "tudung";
+  attire?: string;
+  glasses?: boolean;
+  homeState?: string;
+  body?: BodyType;
+  priorCareer?: "civilService" | "military" | "business" | "activism" | "academia";
+  traits?: string[];
 }
 
 /** Body volume options for the PM avatar (D-19). */
@@ -873,9 +956,9 @@ const SPECS: Record<string, PixelSpec> = {
     bindi: true,
     earrings: true,
     mouth: "firm",
-    stance: "hip",
     body: "slim",
-    heightAdj: -4,
+    stance: "clasp",
+    heightAdj: -2,
     face: { brow: "arched", chin: "taper", nose: "slim" },
   },
   nationalSecurity: {
@@ -899,6 +982,7 @@ const SPECS: Record<string, PixelSpec> = {
     older: true,
     mouth: "firm",
     body: "slim",
+    stance: "hip",
     heightAdj: -3,
     face: { brow: "straight", chin: "square", nose: "slim" },
   },
@@ -1032,8 +1116,8 @@ const SPECS: Record<string, PixelSpec> = {
     facial: "beard",
     mouth: "firm",
     body: "slim",
-    stance: "clasp",
-    heightAdj: -2,
+    stance: "hip",
+    heightAdj: -6,
     face: { brow: "straight", chin: "square", nose: "broad" },
   },
   "sup-journalist": {

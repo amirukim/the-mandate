@@ -56,8 +56,8 @@ function CharacterCard({ id, tier }: CharacterCardProps) {
       )}
     >
       <div className="shrink-0 self-start flex flex-col items-center gap-1.5">
-        <PixelSprite characterId={id} mode="idle" scale={3} className="rounded-[2px] bg-navy/90 border border-rule" />
-        <span className="kicker text-[8px] text-muted">{SPRITE_W} × {SPRITE_H}</span>
+        <PixelSprite characterId={id} mode="idle" scale={1} className="rounded-[2px] bg-navy/90 border border-rule" />
+        <span className="kicker text-[8px] text-muted">{SPRITE_W} × {SPRITE_H} · illustrated</span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
